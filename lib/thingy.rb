@@ -38,7 +38,8 @@ class Thingy
   def handle_event event, n
     case event
     when SDL::Event::KeyDown then
-      case event.sym.chr
+      key = event.sym.chr rescue event.sym
+      case key
       when "q", "Q", "\e" then
         exit
       when " " then
