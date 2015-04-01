@@ -22,7 +22,7 @@ class TargetThingy < Thingy
   end
 
   def draw n
-    blank
+    clear
 
     x, y, * = SDL::Mouse.state
 

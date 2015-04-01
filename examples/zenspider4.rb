@@ -70,7 +70,7 @@ class ZenspiderGolThingy < Thingy
   end
 
   def draw n
-    blank
+    clear
 
     gol.cells.each do |(x, y)|
       # fill_rect x*SIZE, y*SIZE, SIZE-1, SIZE-1, :white
