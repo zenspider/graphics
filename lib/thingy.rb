@@ -85,8 +85,8 @@ class Thingy
 
   ### drawing routines:
 
-  def blank
-    fill_rect 0, 0, w, h, :black
+  def clear c = :black
+    fill_rect 0, 0, w, h, c
   end
 
   def line x1, y1, x2, y2, c
