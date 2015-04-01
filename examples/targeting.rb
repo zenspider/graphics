@@ -1,6 +1,6 @@
 #!/usr/bin/ruby -w
 
-require "./thingy"
+require "thingy"
 
 class TargetThingy < Thingy
   attr_accessor :bombs
