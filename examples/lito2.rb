@@ -37,9 +37,13 @@ class LitoGol
   attr_accessor :matrix
 
   def initialize width
-    self.matrix = Matrix[[1, 1, 1],
-                         [0, 0, 1],
-                         [1, 1, 1]].take(width, width).rotate(-(width/2), -(width/2))
+    count = ((width*width) * 0.15).to_i
+    dimensions = width.times.to_a
+    data = dimensions.product(dimensions).sample(count).sort
+
+    self.matrix = Matrix.build(width, width) do |r, c|
+      data.include?([r, c]) ? 1 : 0
+    end
   end
 
   def sum l
