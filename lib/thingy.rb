@@ -18,7 +18,7 @@ class Thingy
     self.w, self.h = screen.w, screen.h
 
     self.color = {}
-    self.rgb   = Hash.new { |h, k| h[k] = screen.get_rgb(color[k]) }
+    self.rgb   = Hash.new { |hash, k| hash[k] = screen.get_rgb(color[k]) }
 
     register_color :black,     0,   0,   0
     register_color :white,     255, 255, 255
@@ -73,6 +73,10 @@ class Thingy
 
       exit if max && n >= max
     end
+  end
+
+  def draw n
+    raise NotImplementedError, "Subclass Responsibility"
   end
 
   def update n
