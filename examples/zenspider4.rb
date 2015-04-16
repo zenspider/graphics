@@ -73,11 +73,10 @@ class ZenspiderGolThingy < Thingy
     clear
 
     gol.cells.each do |(x, y)|
-      # fill_rect x*SIZE, y*SIZE, SIZE-1, SIZE-1, :white
-      ellipse x*SIZE, y*SIZE, (SIZE-1)/2, (SIZE-1)/2, color.keys.sample
-
-      text n.to_s, 10, 10, :green
+      ellipse x*SIZE, y*SIZE, (SIZE-1)/2, (SIZE-1)/2, :white, :filled
     end
+
+    fps n
   end
 
   def update n
