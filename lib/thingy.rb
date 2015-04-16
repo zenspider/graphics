@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 require "sdl"
 
 class Thingy
@@ -83,16 +85,6 @@ class Thingy
   def update n
     # do nothing
   end
-
-  ## utilities for later
-  # .blit(src,srcX,srcY,srcW,srcH,dst,dstX,dstY)
-  # put_pixel(x, y, color)
-  # []=(x, y, color)
-  # get_pixel(x, y)
-  # [](x, y)
-  # put(src, x, y) # see blit
-  # copy_rect(x,y,w,h)
-  # transform_surface(bgcolor,angle,xscale,yscale,flags)
 
   ### drawing routines:
 
@@ -181,5 +173,48 @@ class Thingy
 
   def text s, x, y, c, f = font
     f.draw_solid_utf8 screen, s, x, y, *rgb[c]
+  end
+
+  ### Blitting Methods:
+
+  ## utilities for later
+
+  # put_pixel(x, y, color)
+  # []=(x, y, color)
+  # get_pixel(x, y)
+  # [](x, y)
+  # put(src, x, y) # see blit
+  # copy_rect(x,y,w,h)
+  # transform_surface(bgcolor,angle,xscale,yscale,flags)
+
+  ##
+  # Load an image at path into a new surface.
+
+  def load path
+    SDL::Surface.load path
+  end
+
+  ##
+  # Draw a bitmap at x/y with an angle and optional x/y scale.
+
+  def blit o, x, y, a°, xs=1, ys=1, opt=0
+    SDL::Surface.transform_blit o, screen, a°, 1, 1, o.w/2, o.h/2, x, y, opt
+  end
+
+  ##
+  # Create a new surface with a given width and height and yield to a
+  # block with the new surface as the current screen. All drawing
+  # primitives will work and the resulting surface is returned.
+
+  def new_surface w, h
+    new_screen = SDL::Surface.new SDL::SWSURFACE, w, h, screen
+    old_screen = screen
+
+    self.screen = new_screen
+    yield if block_given?
+
+    new_screen
+  ensure
+    self.screen = old_screen
   end
 end
