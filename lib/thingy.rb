@@ -203,7 +203,7 @@ class Thingy
   ##
   # Load an image at path into a new surface.
 
-  def load path
+  def image path
     SDL::Surface.load path
   end
 
@@ -230,4 +230,11 @@ class Thingy
   ensure
     self.screen = old_screen
   end
+end
+
+if $0 == __FILE__ then
+  SDL.init SDL::INIT_EVERYTHING
+  SDL.set_video_mode(640, 480, 16, SDL::SWSURFACE)
+  sleep 1
+  puts "if you saw a window, it was working"
 end
