@@ -372,14 +372,15 @@ class Trail
     self.a = []
     self.max = max
     unless @@c[color] then
-      @@c[color] ||= max.times.map { |n| ("%s%02d" % [color, n]).to_sym }.reverse
+      @@c[color] ||= (0..99).map { |n| ("%s%02d" % [color, n]).to_sym }.reverse
     end
     self.c = @@c[color]
   end
 
   def draw
-    a.reverse.each_cons(2).with_index do |((x1, y1), (x2, y2)), i|
-      w.line x1, y1, x2, y2, c[i] || :black
+    m = 100.0 / max
+    a.reverse_each.each_cons(2).with_index do |((x1, y1), (x2, y2)), i|
+      w.line x1, y1, x2, y2, c[(i*m).round] || :black
     end
   end
 
