@@ -347,7 +347,7 @@ class Body
     end
 
     if normal then
-      self.a = 2 * normal - 180 - a
+      self.a = (2 * normal - 180 - a).degrees
       self.m *= 0.8
     end
   end
