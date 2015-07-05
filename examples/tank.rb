@@ -31,8 +31,8 @@ class Tank
   def update
     rad = angle * D2R
 
-    self.x += Math.sin(rad) * speed
-    self.y -= Math.cos(rad) * speed
+    self.x += Math.cos(rad) * speed
+    self.y -= Math.sin(rad) * speed
 
     self.energy += TICK_ENERGY
 
@@ -53,8 +53,8 @@ class Tank
 
   def fire
     rad = turret * D2R
-    x2 = x + Math.sin(rad) * 20
-    y2 = y - Math.cos(rad) * 20
+    x2 = x + Math.cos(rad) * 20
+    y2 = y - Math.sin(rad) * 20
 
     if energy >= SHOT_ENERGY then
       self.energy -= SHOT_ENERGY
@@ -62,11 +62,11 @@ class Tank
     end
   end
 
-  def turn_right; self.angle += ROTATION; aim_right; end
-  def turn_left;  self.angle -= ROTATION; aim_left;  end
+  def turn_right; self.angle -= ROTATION; aim_right; end
+  def turn_left;  self.angle += ROTATION; aim_left;  end
 
-  def aim_right;  self.turret += ROTATION; end
-  def aim_left;   self.turret -= ROTATION; end
+  def aim_right;  self.turret -= ROTATION; end
+  def aim_left;   self.turret += ROTATION; end
 
   def accelerate; self.speed += ACCELERATE; end
   def decelerate; self.speed -= DECELERATE; end
@@ -85,8 +85,8 @@ class Bullet
   def update
     rad = a * D2R
 
-    self.x += Math.sin(rad) * v
-    self.y -= Math.cos(rad) * v
+    self.x += Math.cos(rad) * v
+    self.y -= Math.sin(rad) * v
   end
 end
 

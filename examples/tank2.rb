@@ -31,8 +31,8 @@ class Tank
   def update
     rad = angle * D2R
 
-    self.x += Math.sin(rad) * speed
-    self.y -= Math.cos(rad) * speed
+    self.x += Math.cos(rad) * speed
+    self.y -= Math.sin(rad) * speed
 
     self.energy += TICK_ENERGY
 
@@ -53,8 +53,8 @@ class Tank
 
   def fire
     rad = turret * D2R
-    x2 = x + Math.sin(rad) * 20
-    y2 = y - Math.cos(rad) * 20
+    x2 = x + Math.cos(rad) * 20
+    y2 = y - Math.sin(rad) * 20
 
     if energy >= SHOT_ENERGY then
       self.energy -= SHOT_ENERGY
@@ -62,11 +62,11 @@ class Tank
     end
   end
 
-  def turn_right; self.angle += ROTATION; aim_right; end
-  def turn_left;  self.angle -= ROTATION; aim_left;  end
+  def turn_right; self.angle -= ROTATION; aim_right; end
+  def turn_left;  self.angle += ROTATION; aim_left;  end
 
-  def aim_right;  self.turret += ROTATION; end
-  def aim_left;   self.turret -= ROTATION; end
+  def aim_right;  self.turret -= ROTATION; end
+  def aim_left;   self.turret += ROTATION; end
 
   def accelerate; self.speed += ACCELERATE; end
   def decelerate; self.speed -= DECELERATE; end
@@ -85,8 +85,8 @@ class Bullet
   def update
     rad = a * D2R
 
-    self.x += Math.sin(rad) * v
-    self.y -= Math.cos(rad) * v
+    self.x += Math.cos(rad) * v
+    self.y -= Math.sin(rad) * v
   end
 end
 
@@ -103,23 +103,21 @@ class TargetThingy < Thingy
     self.tank = Tank.new w/2, h/2
     self.bullets = []
 
-    self.body_img = sprite 30, 40 do
-      rect 0,  0, 29, 39, :white
-      rect 4,  0, 21, 39, :white
+    screen.set_alpha SDL::SRCALPHA, 128
 
-      line 2,  0, 2,  39, :white
-      line 27, 0, 27, 39, :white
+    self.body_img = sprite 40, 30 do
+      rect 0,  0, 39, 29, :white
+      rect 0,  4, 39, 21, :white
 
-      screen.set_alpha SDL::SRCALPHA, 128
+      line 0,  2, 39,  2, :white
+      line 0, 27, 39, 27, :white
     end
 
-    a, b = 16, 41
+    a, b = 41, 16
     self.turret_img = sprite a, b do
       rect a/2-8, b/2-8, 15, 15, :white
-      line a/2, b/2, a/2, b/2-20, :white
-      line a/2-1, b/2-20, a/2+1, b/2-20, :white
-
-      screen.set_alpha SDL::SRCALPHA, 128
+      angle a/2, b/2, 0, 28, :white
+      line a/2+20, b/2-2, a/2+20, b/2+2, :white
     end
   end
 
