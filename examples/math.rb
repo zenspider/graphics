@@ -11,10 +11,6 @@ class MathThingy < Thingy
     graph_paper
 
     (0..w).each do |x|
-      # (x + 3)(2x - 4)
-      # 2x^2 -4x +6x -12
-      # 2x^2 +2x -12
-
       y = 2*x*x + 2*x - 12
       y /= 320.0
 

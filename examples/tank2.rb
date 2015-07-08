@@ -1,5 +1,4 @@
 #!/usr/bin/ruby -w
-# -*- coding: utf-8 -*-
 
 require "thingy"
 
@@ -153,8 +152,7 @@ class TargetThingy < Thingy
     fps n
   end
 
-  # AA = SDL::Surface::TRANSFORM_AA
-  AA = 0
+  AA = SDL::Surface::TRANSFORM_AA
 
   def draw_tank
     x, y, a, t = tank.x, tank.y, tank.angle, tank.turret

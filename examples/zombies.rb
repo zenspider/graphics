@@ -54,8 +54,6 @@ class Entity
     self.x = max - 1 if x >= max
     self.y = 0       if y < 0
     self.y = max - 1 if y >= max
-    # self.x = [[0, @x].max, sim.max - 1].min
-    # self.y = [[0, @y].max, sim.max - 1].min
   end
 
   def move_towards entity
@@ -63,12 +61,6 @@ class Entity
     self.y += (entity.y - y) <=> 0
     limit_bounds
   end
-
-  # def move_away_from entity
-  #   @x += (x - entity.x) <=> 0 # 2 - 1 = 1
-  #   @y += (y - entity.y) <=> 0 # 2 - 1 = 1
-  #   limit_bounds
-  # end
 
   def draw
     raise "subclass responsibility"
@@ -155,15 +147,14 @@ class Person < Entity
     limit_bounds
 
     nearest = self.nearest
-    # nearby_zombies = sim.part_z[partition].find_all { |p| self.near? p }
 
-    unless nearest then # nearby_zombies.empty? then # no zombies nearby
+    unless nearest then
       if state == FREAKD then
         self.state = NORMAL
         self.speed = 5
       end
     else
-      unless touching? nearest then # nearby_zombies.find_all { |z| touching? z }.empty? then
+      unless touching? nearest then
         if state == NORMAL then
           self.state = FREAKD
           self.speed = 9
@@ -197,7 +188,7 @@ class Hunter < Person
     random_walk
     limit_bounds
 
-    baddies = sim.zombie + sim.person.select(&:infect) # sim.part_z[partition] + sim.part_p[partition].select { |p| p.infect }
+    baddies = sim.zombie + sim.person.select(&:infect)
     nearest = baddies.sort_by { |z| self.distance_from_squared z }.first
     if nearest then
       if self.touching? nearest then
@@ -215,8 +206,6 @@ class Hunter < Person
         move_towards nearest
       else
         move_towards nearest
-        # nearest_p, nearest_z = baddies.partition { |o| Person === o }.map(&:first)
-        # move_towards nearest_z || nearest_p
       end
     end
   end
@@ -367,27 +356,6 @@ class ZombieGame < Thingy
         to[0] << p if idx >= -2
         to[1] << p if idx >= -1
       end
-
-      #       case idx
-      #       when -2 then
-      #         to[0] << p
-      #       when -1 then
-      #         to[0] << p
-      #         to[1] << p
-      #       else
-      #         to[idx]   << p
-      #         to[idx+1] << p
-      #         to[idx+2] << p
-      #       end
-
-      ############################################################
-
-      #       idx = part - side - 1
-      #       to[idx] << p if idx >= 0
-      #       idx += 1
-      #       to[idx] << p if idx >= 0
-      #       idx += 1
-      #       to[idx] << p if idx >= 0
 
       idx = part - 1
       to[idx] << p if idx >= 0
