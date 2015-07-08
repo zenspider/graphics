@@ -255,6 +255,8 @@ class Thingy
     self.screen = new_screen
     yield if block_given?
 
+    new_screen.set_color_key SDL::SRCCOLORKEY, 0
+
     new_screen
   ensure
     self.screen = old_screen
