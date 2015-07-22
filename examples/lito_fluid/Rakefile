@@ -1,0 +1,3 @@
+task :default do
+  `rsdl -I../../lib ./src/draw.rb`
+end
