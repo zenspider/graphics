@@ -15,7 +15,7 @@ class TargetThingy < Thingy
   end
 
   def handle_event event, n
-    bombs << [n, event.x, event.y] if SDL::Event::MouseButtonDown === event
+    bombs << [n, event.x, h-event.y] if SDL::Event::MouseButtonDown === event
     super
   end
 
@@ -35,7 +35,7 @@ class TargetThingy < Thingy
       circle 320, 320, r, :dark_green unless r > 320
     end
 
-    x, y, * = SDL::Mouse.state
+    x, y, * = mouse
     line x, 0, x, 640, :white
     line 0, y, 640, y, :white
 

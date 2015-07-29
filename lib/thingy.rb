@@ -113,7 +113,8 @@ class Thingy
   # Draw an antialiased line from x1/y1 to x2/y2 in color c.
 
   def line x1, y1, x2, y2, c
-    screen.draw_line x1, y1, x2, y2, color[c], :antialiased
+    h = self.h
+    screen.draw_line x1, h-y1, x2, h-y2, color[c], :antialiased
   end
 
   ##
@@ -134,7 +135,7 @@ class Thingy
     rad = a * D2R
 
     x2 = x1 + Math.cos(rad) * m
-    y2 = y1 - Math.sin(rad) * m
+    y2 = y1 + Math.sin(rad) * m
 
     line x1, y1, x2, y2, c
   end
@@ -143,35 +144,35 @@ class Thingy
   # Draw a rect at x/y with w by h dimensions in color c. Ignores blending.
 
   def fast_rect x, y, w, h, c
-    screen.fill_rect x, y, w, h, color[c]
+    screen.fill_rect x, self.h-y-h, w, h, color[c]
   end
 
   ##
   # Draw a point at x/y w/ color c.
 
   def point x, y, c
-    screen[x, y] = color[c]
+    screen[x, h-y] = color[c]
   end
 
   ##
   # Draw a rect at x/y with w by h dimensions in color c.
 
   def rect x, y, w, h, c, fill = false
-    screen.draw_rect x, y, w, h, color[c], fill
+    screen.draw_rect x, self.h-y-h, w, h, color[c], fill
   end
 
   ##
   # Draw a circle at x/y with radius r in color c.
 
   def circle x, y, r, c, fill = false
-    screen.draw_circle x, y, r, color[c], fill, :antialiased
+    screen.draw_circle x, h-y, r, color[c], fill, :antialiased
   end
 
   ##
   # Draw a circle at x/y with radiuses w/h in color c.
 
   def ellipse x, y, w, h, c, fill = false
-    screen.draw_ellipse x, y, w, h, color[c], fill, :antialiased
+    screen.draw_ellipse x, self.h-y, w, h, color[c], fill, :antialiased
   end
 
   ##
@@ -179,7 +180,8 @@ class Thingy
   # cx1/cy1 & cx2/cy2 in color c.
 
   def bezier x1, y1, cx1, cy1, cx2, cy2, x2, y2, c, l = 7
-    screen.draw_bezier x1, y1, cx1, cy1, cx2, cy2, x2, y2, l, color[c], :antialiased
+    h = self.h
+    screen.draw_bezier x1, h-y1, cx1, h-cy1, cx2, h-cy2, x2, h-y2, l, color[c], :antialiased
   end
 
   ## Text
@@ -202,12 +204,12 @@ class Thingy
   # Draw text s at x/y in color c in font f.
 
   def text s, x, y, c, f = font
-    f.draw_solid_utf8 screen, s, x, y, *rgb[c]
+    f.draw_solid_utf8 screen, s, x, self.h-y-f.height, *rgb[c]
   end
 
   def debug fmt, *args
     s = fmt % args
-    text s, 10, 50, :white
+    text s, 10, h-40-font.height, :white
   end
 
   attr_accessor :start_time
@@ -215,7 +217,7 @@ class Thingy
   def fps n
     secs = Time.now - start_time
     fps = "%5.1f fps" % [n / secs]
-    text fps, 10, 10, :green
+    text fps, 10, h-font.height, :green
   end
 
   ### Blitting Methods:
@@ -237,11 +239,17 @@ class Thingy
     SDL::Surface.load path
   end
 
+  def mouse
+    r = SDL::Mouse.state
+    r[1] = h-r[1]
+    r
+  end
+
   ##
   # Draw a bitmap at x/y with an angle and optional x/y scale.
 
   def blit o, x, y, a°, xs=1, ys=1, opt=0
-    SDL::Surface.transform_blit o, screen, -a°, 1, 1, o.w/2, o.h/2, x, y, opt
+    SDL::Surface.transform_blit o, screen, -a°, 1, 1, o.w/2, o.h/2, x, h-y, opt
   end
 
   ##
@@ -252,6 +260,8 @@ class Thingy
   def sprite w, h
     new_screen = SDL::Surface.new SDL::SWSURFACE, w, h, screen
     old_screen = screen
+    old_w, old_h = self.w, self.h
+    self.w, self.h = w, h
 
     self.screen = new_screen
     yield if block_given?
@@ -261,6 +271,7 @@ class Thingy
     new_screen
   ensure
     self.screen = old_screen
+    self.w, self.h = old_w, old_h
   end
 end
 
@@ -345,7 +356,7 @@ class Body
   def move_by a, m
     rad = a * D2R
     self.x += Math.cos(rad) * m
-    self.y -= Math.sin(rad) * m
+    self.y += Math.sin(rad) * m
   end
 
   def clip
