@@ -68,8 +68,8 @@ class TestBody < Minitest::Test
 
   def test_conversions_vel_45
     b.velocity = V[10, 10]
-    assert_in_delta 10, b.velocity[0]
-    assert_in_delta 10, b.velocity[1]
+    assert_in_delta 10, b.velocity.x
+    assert_in_delta 10, b.velocity.y
 
     assert_in_delta 14.142, b.m, 0.001, "magnitude"
     assert_in_delta 45, b.a, 0.001, "angle"

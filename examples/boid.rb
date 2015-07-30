@@ -1,8 +1,6 @@
 #!/usr/local/bin/ruby -w
 # -*- coding: utf-8 -*-
 
-srand 42
-
 require "thingy"
 
 class Boid < Body
@@ -21,9 +19,9 @@ class Boid < Body
   end
 
   def draw
-    cm = center_mass.to_a
-    w.line(x, y, *cm, :gray40)
-    w.circle(*cm, 3, :gray40)
+    cm = center_mass
+    w.line(x, y, cm.x, cm.y, :gray40)
+    w.circle(cm.x, cm.y, 3, :gray40)
 
     # the blit looks HORRIBLE when rotated... dunno why
     w.blit w.body_img, x, y, 0, AA
