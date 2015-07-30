@@ -24,10 +24,6 @@ class Vec2 < Struct.new(:x, :y)
     Vec2.new x-other.x, y-other.y
   end
 
-  def scale s
-    Vec2.new x*s, y*s
-  end
-
   def * s
     Vec2.new x*s, y*s
   end
