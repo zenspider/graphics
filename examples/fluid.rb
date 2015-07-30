@@ -1,7 +1,5 @@
 require 'thingy'
 
-WINSIZE = 500
-
 class Float
   ##
   # A floating-point friendly `between?` function that excludes
@@ -56,69 +54,22 @@ class Particle
   end
 end
 
-##
-# Constants
-#
-
-NUM_PARTICLES = 150
-MASS          = 5  # Particle mass
-DENSITY       = 1  # Rest density
-GRAVITY       = Vec2.new 0, -0.5
-H             = 1  # Smoothing cutoff- essentially, particle size
-H2 = H*H
-K             = 20 # Temperature constant- higher means particle repel more strongly
-ETA           = 1  # Viscosity constant- higher for more viscous
-
-##
-# A weighting function (kernel) for the contribution of each neighbor
-# to a particle's density. Forms a nice smooth gradient from the center
-# of a particle to H, where it's 0
-#
-
-def W r, h
-  len_r2 = r.magnitude
-
-  if len_r2.xbetween? 0, h*h
-    315.0/(64 * Math::PI * h**9) * (h**2 - len_r2)**3
-  else
-    0.0
-  end
-end
-
-##
-# Gradient ( that is, Vec2(dx, dy) ) of a weighting function for
-# a particle's pressure. This weight function is spiky (not flat or
-# smooth at x=0) so particles close together repel strongly.
-#
-
-def gradient_Wspiky r, h
-  len_r2 = r.magnitude
-
-  if len_r2.xbetween? 0, h*h
-    s = (45.0/(Math::PI * h**6 * len_r2)) * (h*h - len_r2) * (-1.0)
-    r * s
-  else
-    Vec2::ZERO
-  end
-end
-
-##
-# The laplacian of a weighting function that tends towards infinity when
-# approching 0 (slows down particles moving faster than their neighbors)
-#
-
-def laplacian_W_viscosity r, h
-  len_r2 = r.magnitude
-
-  if len_r2.xbetween? 0, h*h
-    45.0/(2 * Math::PI * h**5) * (1 - len_r2/h)
-  else
-    0.0
-  end
-end
-
 class SPH
+  ##
+  # Constants
+  #
+
+  MASS          = 5  # Particle mass
+  DENSITY       = 1  # Rest density
+  GRAVITY       = Vec2.new 0, -0.5
+  H             = 1  # Smoothing cutoff- essentially, particle size
+  H2 = H*H
+  K             = 20 # Temperature constant- higher means particle repel more strongly
+  ETA           = 1  # Viscosity constant- higher for more viscous
+
+
   attr_reader :particles
+
   def initialize
     # Instantiate particles!
     @particles = []
@@ -129,6 +80,56 @@ class SPH
       end
     end
   end
+
+  ##
+  # A weighting function (kernel) for the contribution of each neighbor
+  # to a particle's density. Forms a nice smooth gradient from the center
+  # of a particle to H, where it's 0
+  #
+
+  def W r, h
+    len_r2 = r.magnitude
+
+    if len_r2.xbetween? 0, h*h
+      315.0/(64 * Math::PI * h**9) * (h**2 - len_r2)**3
+    else
+      0.0
+    end
+  end
+
+  ##
+  # Gradient ( that is, Vec2(dx, dy) ) of a weighting function for
+  # a particle's pressure. This weight function is spiky (not flat or
+  # smooth at x=0) so particles close together repel strongly.
+  #
+
+  def gradient_Wspiky r, h
+    len_r2 = r.magnitude
+
+    if len_r2.xbetween? 0, h*h
+      s = (45.0/(Math::PI * h**6 * len_r2)) * (h*h - len_r2) * (-1.0)
+      r * s
+    else
+      Vec2::ZERO
+    end
+  end
+
+  ##
+  # The laplacian of a weighting function that tends towards infinity when
+  # approching 0 (slows down particles moving faster than their neighbors)
+  #
+
+  def laplacian_W_viscosity r, h
+    len_r2 = r.magnitude
+
+    if len_r2.xbetween? 0, h*h
+      45.0/(2 * Math::PI * h**5) * (1 - len_r2/h)
+    else
+      0.0
+    end
+  end
+
+
 
   def step delta_time
 
@@ -226,7 +227,10 @@ class SPH
 end
 
 class SimulationWindow < Thingy
+  WINSIZE = 500
+
   attr_reader :simulation
+
   def initialize
     super WINSIZE, WINSIZE, 16, "Smoothed Particle Hydrodynamics"
     @simulation = SPH.new
@@ -244,20 +248,14 @@ class SimulationWindow < Thingy
     s = WINSIZE.div @scale
 
     simulation.particles.each do |particle|
+      pos = particle.position * s
+      vel = particle.velocity * s
 
       # Particles
-      ellipse((particle.position.x*s).to_i,
-              (particle.position.y*s).to_i,
-              5,
-              5,
-              :white)
+      circle(*pos, 5, :white)
 
       # Velocity vectors
-      line((particle.position.x*s),                       # start
-           (particle.position.y*s),
-           ((particle.position.x+particle.velocity.x)*s), # end
-           ((particle.position.y+particle.velocity.y)*s),
-           :red)
+      line(*pos, *(pos+vel), :red)
 
       fps time
     end
