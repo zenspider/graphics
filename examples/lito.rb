@@ -90,8 +90,9 @@ step = false
   while event = SDL::Event.poll
     case event
     when SDL::Event::KeyDown then
-      exit if event.sym.chr == "q" or event.sym.chr == "Q"
-      step = true if event.sym.chr == " "
+      c = event.sym.chr
+      exit if c == "q" or c == "Q" or c == "\e"
+      step = true if c == " "
       puts n
       paused = ! paused
     when SDL::Event::Quit then
