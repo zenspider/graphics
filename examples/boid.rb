@@ -31,6 +31,7 @@ class Boid < Body
 
   def draw
     # the blit looks HORRIBLE when rotated... dunno why
+    w.circle x, y, @@max_distance, :gray if w.visual_debug?
     w.blit w.body_img, x, y, 0, AA
     w.angle x, y, a, 3 * m, :red
   end
@@ -246,10 +247,16 @@ class Boid < Body
 end
 
 class Boids < Thingy
-  attr_accessor :boids, :body_img, :cmap
+  attr_accessor :boids, :body_img, :cmap, :visual_debug
+
+  alias :visual_debug? :visual_debug
 
   def initialize
     super 850, 850, 16, "Boid"
+
+    SDL::Key.enable_key_repeat 500, 250
+
+    self.visual_debug = false
 
     self.boids = populate Boid
 
@@ -264,11 +271,24 @@ class Boids < Thingy
     # sleep 0.1
   end
 
+  def handle_event e, n
+    case e
+    when SDL::Event::KeyDown then
+      self.visual_debug = ! visual_debug if SDL::Key.press? SDL::Key::D
+
+      Boid.max_distance += 5 if SDL::Key.press? SDL::Key::B
+      Boid.max_distance -= 5 if SDL::Key.press? SDL::Key::S
+    else
+      super
+    end
+  end
+
   def draw n
     clear
 
     boids.each(&:draw)
 
+    debug "r = #{Boid.max_distance}" if visual_debug?
     fps n
   end
 end
