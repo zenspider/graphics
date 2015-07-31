@@ -11,8 +11,6 @@ class Float
   end
 end
 
-Vec2 = V
-
 class Particle
   attr_accessor :density, :position, :velocity,
                 :pressure_force, :viscosity_force
@@ -22,9 +20,9 @@ class Particle
 
     # Forces
     @position        = pos
-    @velocity        = Vec2::ZERO
-    @pressure_force  = Vec2::ZERO
-    @viscosity_force = Vec2::ZERO
+    @velocity        = V::ZERO
+    @pressure_force  = V::ZERO
+    @viscosity_force = V::ZERO
   end
 end
 
@@ -35,7 +33,7 @@ class SPH
 
   MASS          = 5  # Particle mass
   DENSITY       = 1  # Rest density
-  GRAVITY       = Vec2.new 0, -0.5
+  GRAVITY       = V[0, -0.5]
   H             = 1  # Smoothing cutoff- essentially, particle size
   H2 = H*H
   K             = 20 # Temperature constant- higher means particle repel more strongly
@@ -50,7 +48,7 @@ class SPH
     (0..10).each do |x|
       (0..10).each do |y|
         jitter = rand * 0.1
-        particles << Particle.new(Vec2.new x+1+jitter, y+5)
+        particles << Particle.new(V[x+1+jitter, y+5])
       end
     end
   end
@@ -72,7 +70,7 @@ class SPH
   end
 
   ##
-  # Gradient ( that is, Vec2(dx, dy) ) of a weighting function for
+  # Gradient ( that is, V(dx, dy) ) of a weighting function for
   # a particle's pressure. This weight function is spiky (not flat or
   # smooth at x=0) so particles close together repel strongly.
   #
@@ -84,7 +82,7 @@ class SPH
       s = (45.0/(Math::PI * h**6 * len_r2)) * (h*h - len_r2) * (-1.0)
       r * s
     else
-      Vec2::ZERO
+      V::ZERO
     end
   end
 
@@ -103,15 +101,12 @@ class SPH
     end
   end
 
-
-
   def step delta_time
-
     # Clear everything
     particles.each do |particle|
       particle.density = DENSITY
-      particle.pressure_force = Vec2::ZERO
-      particle.viscosity_force = Vec2::ZERO
+      particle.pressure_force = V::ZERO
+      particle.viscosity_force = V::ZERO
     end
 
     # Calculate fluid density around each particle
