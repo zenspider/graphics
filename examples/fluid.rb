@@ -60,10 +60,10 @@ class SPH
   #
 
   def W r, h
-    len_r2 = r.magnitude
+    len_r = r.magnitude
 
-    if len_r2.xbetween? 0, h*h
-      315.0/(64 * Math::PI * h**9) * (h**2 - len_r2)**3
+    if len_r.xbetween? 0, h
+      315.0 / (64 * Math::PI * h**9) * (h**2 - len_r**2)**3
     else
       0.0
     end
@@ -76,11 +76,10 @@ class SPH
   #
 
   def gradient_Wspiky r, h
-    len_r2 = r.magnitude
+    len_r = r.magnitude
 
-    if len_r2.xbetween? 0, h*h
-      s = (45.0/(Math::PI * h**6 * len_r2)) * (h*h - len_r2) * (-1.0)
-      r * s
+    if len_r.xbetween? 0, h
+      r * (45.0 / (Math::PI * h**6 * len_r)) * (h - len_r)**2 * (-1.0)
     else
       V::ZERO
     end
@@ -92,10 +91,10 @@ class SPH
   #
 
   def laplacian_W_viscosity r, h
-    len_r2 = r.magnitude
+    len_r = r.magnitude
 
-    if len_r2.xbetween? 0, h*h
-      45.0/(2 * Math::PI * h**5) * (1 - len_r2/h)
+    if len_r.xbetween? 0, h
+      45.0 / (2 * Math::PI * h**5) * (1 - len_r / h)
     else
       0.0
     end
@@ -116,7 +115,7 @@ class SPH
         # If particles are close together, density increases
         distance = particle.position - neighbor.position
 
-        if distance.magnitude < H2  # Particles are close enough to matter
+        if distance.magnitude < H  # Particles are close enough to matter
           particle.density += MASS * W(distance, H)
         end
       end
@@ -127,7 +126,7 @@ class SPH
       particles.each do |neighbor|
 
         distance = particle.position - neighbor.position
-        if  distance.magnitude <= H2
+        if  distance.magnitude <= H
           # Temporary terms used to caclulate forces
           density_p = particle.density
           density_n = neighbor.density
