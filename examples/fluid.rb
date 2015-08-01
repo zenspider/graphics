@@ -35,7 +35,6 @@ class SPH
   DENSITY       = 1  # Rest density
   GRAVITY       = V[0, -0.5]
   H             = 1  # Smoothing cutoff- essentially, particle size
-  H2 = H*H
   K             = 20 # Temperature constant- higher means particle repel more strongly
   ETA           = 1  # Viscosity constant- higher for more viscous
 
@@ -59,7 +58,7 @@ class SPH
   # of a particle to H, where it's 0
   #
 
-  def W r, h
+  def weight r, h
     len_r = r.magnitude
 
     if len_r.xbetween? 0, h
@@ -75,7 +74,7 @@ class SPH
   # smooth at x=0) so particles close together repel strongly.
   #
 
-  def gradient_Wspiky r, h
+  def gradient_weight_spiky r, h
     len_r = r.magnitude
 
     if len_r.xbetween? 0, h
@@ -90,7 +89,7 @@ class SPH
   # approching 0 (slows down particles moving faster than their neighbors)
   #
 
-  def laplacian_W_viscosity r, h
+  def laplacian_weight_viscosity r, h
     len_r = r.magnitude
 
     if len_r.xbetween? 0, h
@@ -116,7 +115,7 @@ class SPH
         distance = particle.position - neighbor.position
 
         if distance.magnitude < H  # Particles are close enough to matter
-          particle.density += MASS * W(distance, H)
+          particle.density += MASS * weight(distance, H)
         end
       end
     end
@@ -124,12 +123,12 @@ class SPH
     # Calculate forces on each particle based on density
     particles.each do |particle|
       particles.each do |neighbor|
-
         distance = particle.position - neighbor.position
-        if  distance.magnitude <= H
+        if  distance.magnitude <= H then
           # Temporary terms used to caclulate forces
           density_p = particle.density
           density_n = neighbor.density
+
           # This *should* never happen, but it's good to check,
           # because we're dividing by density later
           raise "Particle density is, impossibly, 0" unless density_n != 0
@@ -140,13 +139,12 @@ class SPH
 
           # Navier-Stokes equations for pressure and viscosity
           # (ignoring surface tension)
-          particle.pressure_force +=
-            gradient_Wspiky(distance, H) *
+          particle.pressure_force += gradient_weight_spiky(distance, H) *
             (-1.0 * MASS * (pressure_p + pressure_n) / (2 * density_n))
 
           particle.viscosity_force +=
             (neighbor.velocity - particle.velocity) *
-            (ETA * MASS * (1/density_n) * laplacian_W_viscosity(distance, H))
+            (ETA * MASS * (1/density_n) * laplacian_weight_viscosity(distance, H))
         end
       end
     end
