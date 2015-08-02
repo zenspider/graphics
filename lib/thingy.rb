@@ -2,7 +2,7 @@
 
 require "sdl"
 
-class Thingy
+class Simulation
   D2R = Math::PI / 180.0
   R2D = 1 / D2R
 
@@ -323,8 +323,8 @@ class V
 end
 
 class Body
-  D2R = Thingy::D2R
-  R2D = Thingy::R2D
+  D2R = Simulation::D2R
+  R2D = Simulation::R2D
 
   V_ZERO = V::ZERO
 

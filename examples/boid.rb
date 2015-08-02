@@ -246,7 +246,7 @@ class Boid < Body
   end
 end
 
-class Boids < Thingy
+class Boids < Simulation
   attr_accessor :boids, :body_img, :cmap, :visual_debug
 
   alias :visual_debug? :visual_debug

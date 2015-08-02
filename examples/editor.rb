@@ -3,7 +3,7 @@
 
 require "thingy"
 
-class Editor < Thingy
+class Editor < Simulation
   attr_accessor :overlay, :s, :lines
 
   alias :overlay? :overlay

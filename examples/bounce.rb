@@ -40,7 +40,7 @@ class Ball < Body
   end
 end
 
-class BounceThingy < Thingy
+class BounceSimulation < Simulation
   attr_accessor :bs
 
   def initialize
@@ -83,4 +83,4 @@ class BounceThingy < Thingy
   end
 end
 
-BounceThingy.new.run
+BounceSimulation.new.run
