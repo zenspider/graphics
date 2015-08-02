@@ -319,6 +319,7 @@ class V
   def inspect
     "#{self.class.name}[%.2f, %.2f]" % [x, y]
   end
+  alias to_s inspect
 end
 
 class Body
