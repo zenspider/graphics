@@ -4,7 +4,7 @@
 require "thingy"
 
 class Editor < Thingy
-  attr_accessor :overlay, :s, :ls
+  attr_accessor :overlay, :s, :lines
 
   alias :overlay? :overlay
 
@@ -13,7 +13,7 @@ class Editor < Thingy
 
     self.overlay = true
     self.s = ""
-    self.ls = []
+    self.lines = []
   end
 
   def handle_event e, n
@@ -30,7 +30,7 @@ class Editor < Thingy
         case c
         when "\r" then
           c = "\n"
-          ls << s.dup
+          lines << s.dup
           s.clear
           return
         when "\b" then
@@ -56,8 +56,8 @@ class Editor < Thingy
 
   def draw_overlay
     if overlay? then
-      ls.each_with_index do |l, i|
-        text l, 10, ((ls.size-i)*font.height), :gray
+      lines.each_with_index do |l, i|
+        text l, 10, ((lines.size-i)*font.height), :gray
       end
 
       text "> #{s}_", 10, 0, :white
