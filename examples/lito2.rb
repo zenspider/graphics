@@ -1,5 +1,5 @@
 require "matrix"
-require "thingy"
+require "graphics"
 
 class Matrix
   def rotate x, y

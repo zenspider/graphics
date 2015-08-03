@@ -3,7 +3,7 @@
 
 srand 42
 
-require "thingy"
+require "graphics"
 
 ##
 # Virtual Ants -- inspired by a model in NetLogo.

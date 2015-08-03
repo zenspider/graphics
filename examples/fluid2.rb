@@ -1,4 +1,4 @@
-require 'thingy'
+require "graphics"
 
 class Particle < Body
   MASS       = 5          # Particle mass

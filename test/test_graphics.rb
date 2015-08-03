@@ -5,7 +5,7 @@ require "minitest/autorun"
 $: << File.expand_path("~/Work/p4/zss/src/minitest-focus/dev/lib")
 require "minitest/focus"
 
-require "thingy"
+require "graphics"
 
 class TestBody < Minitest::Test
   attr_accessor :w, :b

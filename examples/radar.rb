@@ -1,6 +1,6 @@
 #!/usr/bin/ruby -w
 
-require "thingy"
+require "graphics"
 
 class TargetSimulation < Simulation
   def initialize

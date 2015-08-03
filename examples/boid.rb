@@ -1,7 +1,7 @@
 #!/usr/local/bin/ruby -w
 # -*- coding: utf-8 -*-
 
-require "thingy"
+require "graphics"
 
 class Boid < Body
   COUNT = 50
