@@ -2,7 +2,7 @@
 
 require "graphics"
 
-class Ball < Body
+class Ball < Graphics::Body
   COUNT = 50
 
   G = V[0, -18 / 60.0]
@@ -40,7 +40,7 @@ class Ball < Body
   end
 end
 
-class BounceSimulation < Simulation
+class BounceSimulation < Graphics::Simulation
   attr_accessor :bs
 
   def initialize

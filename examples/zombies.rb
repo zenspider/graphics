@@ -261,7 +261,7 @@ class Zombie < Entity
   end
 end
 
-class ZombieGame < Simulation
+class ZombieGame < Graphics::Simulation
   attr_accessor :person, :zombie
   attr_accessor :part_p, :part_z
   attr_accessor :scale, :partitions

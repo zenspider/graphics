@@ -4,7 +4,7 @@ require "graphics"
 
 D2R = Math::PI / 180.0
 
-class Tank < Body
+class Tank < Graphics::Body
   ACCELERATE   = 0.25
   DECELERATE   = 0.125
   ROTATION     = 2
@@ -70,7 +70,7 @@ class Tank < Body
   def decelerate; self.m -= DECELERATE; self.t.m = m; end
 end
 
-class Turret < Body
+class Turret < Graphics::Body
   def initialize tank
     self.w = tank.w
     self.x = tank.x
@@ -94,7 +94,7 @@ class Turret < Body
   end
 end
 
-class Bullet < Body
+class Bullet < Graphics::Body
   def initialize w, x, y, a, m
     self.w = w
     self.x = x
@@ -115,7 +115,7 @@ class Bullet < Body
   end
 end
 
-class TargetSimulation < Simulation
+class TargetSimulation < Graphics::Simulation
   attr_accessor :tank, :bullets
   attr_accessor :body_img
   attr_accessor :turret_img

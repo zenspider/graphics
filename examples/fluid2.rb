@@ -1,6 +1,6 @@
 require "graphics"
 
-class Particle < Body
+class Particle < Graphics::Body
   MASS       = 5          # Particle mass
   DENSITY    = 1          # Rest density
   GRAVITY    = V[0, -0.5] #
@@ -159,7 +159,7 @@ class Float
   end
 end
 
-class FluidDynamics < Simulation
+class FluidDynamics < Graphics::Simulation
   WINSIZE = 500
   SCALE = 15
   S = WINSIZE / SCALE

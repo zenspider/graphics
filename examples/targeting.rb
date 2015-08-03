@@ -2,7 +2,7 @@
 
 require "graphics"
 
-class TargetSimulation < Simulation
+class TargetSimulation < Graphics::Simulation
   attr_accessor :bombs
 
   def initialize

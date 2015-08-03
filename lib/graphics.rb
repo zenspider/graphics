@@ -3,3 +3,4 @@ class Graphics
 end
 
 require "graphics/simulation"
+require "graphics/body"

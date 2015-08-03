@@ -2,7 +2,7 @@
 
 require "graphics"
 
-class Sprite < Body
+class Sprite < Graphics::Body
   COUNT = 8
 
   attr_accessor :image
@@ -32,7 +32,7 @@ class Sprite < Body
   end
 end
 
-class Collision < Simulation
+class Collision < Graphics::Simulation
   attr_accessor :sprites, :cmap, :image
 
   def initialize

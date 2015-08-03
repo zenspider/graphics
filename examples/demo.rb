@@ -3,7 +3,7 @@
 
 require "graphics"
 
-class Ball < Body
+class Ball < Graphics::Body
   def initialize w
     super
 
@@ -27,7 +27,7 @@ class Ball < Body
   end
 end
 
-class Demo < Simulation
+class Demo < Graphics::Simulation
   attr_accessor :ball, :img
 
   def initialize

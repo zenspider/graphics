@@ -5,7 +5,7 @@ require "graphics"
 $: << "."
 require "examples/editor"
 
-class Turtle < Body
+class Turtle < Graphics::Body
   attr_accessor :src, :pen
 
   def initialize w, src

@@ -2,7 +2,7 @@
 
 require "graphics"
 
-class MathSimulation < Simulation
+class MathSimulation < Graphics::Simulation
   def initialize
     super 640, 640, 16, "Math"
   end

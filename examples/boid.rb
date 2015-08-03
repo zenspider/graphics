@@ -3,7 +3,7 @@
 
 require "graphics"
 
-class Boid < Body
+class Boid < Graphics::Body
   COUNT = 50
 
   AA = SDL::Surface::TRANSFORM_AA
@@ -246,7 +246,7 @@ class Boid < Body
   end
 end
 
-class Boids < Simulation
+class Boids < Graphics::Simulation
   attr_accessor :boids, :body_img, :cmap, :visual_debug
 
   alias :visual_debug? :visual_debug
