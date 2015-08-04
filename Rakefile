@@ -10,6 +10,9 @@ Hoe.plugin :rdoc
 Hoe.spec "graphics" do
   developer "Ryan Davis", "ryand-ruby@zenspider.com"
   license "MIT"
+
+  dependency "rsdl", "~> 0.1"
+  dependency "rubysdl", "~> 2.2"
 end
 
 task :demos do
