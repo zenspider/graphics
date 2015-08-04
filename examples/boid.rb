@@ -67,7 +67,7 @@ class Boid < Graphics::Body
   end
 
   def center_mass
-    pos = V_ZERO
+    pos = V::ZERO
     nearby.each do |b|
       next if self == b
 
@@ -187,7 +187,7 @@ class Boid < Graphics::Body
   # enough apart for our liking.
 
   def rule2
-    c = V_ZERO
+    c = V::ZERO
 
     hits = 0
 
@@ -229,7 +229,7 @@ class Boid < Graphics::Body
   #   END PROCEDURE
 
   def rule3
-    v = V_ZERO
+    v = V::ZERO
 
     nearby.each do |b|
       next if self == b
