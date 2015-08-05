@@ -31,4 +31,7 @@ lib/graphics/extensions.rb
 lib/graphics/simulation.rb
 lib/graphics/trail.rb
 lib/graphics/v.rb
+resources/images/body.png
+resources/images/turret.png
 rubysdl_setup.sh
+test/test_graphics.rb
