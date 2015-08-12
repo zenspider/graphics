@@ -190,6 +190,24 @@ class TestBody < Minitest::Test
 
     assert_body   0, 50, 10, 0, 0, b # TODO: maybe should be 9?
   end
+
+  def test_angle_to
+    # b is at 50, 50
+
+    b2 = Graphics::Body.new w
+
+    b2.x, b2.y = 60, 50
+    assert_equal 0, b.angle_to(b2)   # 50, 60
+
+    b2.x, b2.y = 50, 40
+    assert_equal 270, b.angle_to(b2) # 50, 60
+
+    b2.x, b2.y = 60, 60
+    assert_equal 45, b.angle_to(b2)  # 60, 60
+
+    b2.x, b2.y = 0, 0
+    assert_equal 225, b.angle_to(b2) # 60, 60
+  end
 end
 
 class TestInteger < Minitest::Test
