@@ -99,6 +99,12 @@ class Graphics::Body
     (R2D * Math.atan2(dy, dx)).degrees
   end
 
+  def distance_to_squared p
+    dx = p.x - x
+    dy = p.y - y
+    dx * dx + dy * dy
+  end
+
   def m_a # :nodoc:
     [m, a]
   end
