@@ -12,7 +12,7 @@ class Person < Graphics::Body
 
   AA = SDL::Surface::TRANSFORM_AA
 
-  attr_accessor :trail, :attack
+  attr_accessor :trail
 
   def initialize w
     super
@@ -21,7 +21,6 @@ class Person < Graphics::Body
 
     self.a  = random_angle
     self.ga = random_angle
-    self.attack = false
   end
 
   def update
@@ -42,12 +41,6 @@ class Person < Graphics::Body
 
   def draw
     trail.draw
-
-    if attack then
-      w.angle x, y, a-45, 50, :yellow
-      w.angle x, y, a,    60, :red
-      w.angle x, y, a+45, 50, :yellow
-    end
 
     w.angle x, y, ga,   60, :red
 
