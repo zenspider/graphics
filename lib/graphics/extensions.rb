@@ -1,3 +1,6 @@
+##
+# Integer extensions for graphics
+
 class Integer
   ##
   # Calculate a random chance using easy notation: 1 =~ 50 :: 1 in 50 chance
@@ -6,6 +9,9 @@ class Integer
     rand(n) <= (self - 1)
   end
 end
+
+##
+# Numeric extensions for graphics
 
 class Numeric
   ##
