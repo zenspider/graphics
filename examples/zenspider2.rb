@@ -49,7 +49,7 @@ class GameOfLife
     cells.map { |(x, y)| neighbors_for(x, y) }.flatten(1).uniq
   end
 
-  def binary_search(container, item)
+  def binary_search container, item
     return nil if item.nil?
     low = 0
     high = container.size - 1
@@ -85,7 +85,7 @@ gol = GameOfLife.new
 gol.randomize width, count
 
 if ARGV.first == "prof" then
-  gol.run 50 do |n|
+  gol.run 50 do
     $stderr.print "."
   end
   warn "done"
@@ -93,7 +93,7 @@ else
   require "sdl"
 
   SDL.init SDL::INIT_VIDEO
-  SDL::WM::set_caption "Conway's Game of Life", "Conway's Game of Life"
+  SDL::WM.set_caption "Conway's Game of Life", "Conway's Game of Life"
 
   screen = SDL::Screen.open 640, 640, 16, SDL::DOUBLEBUF
 

@@ -34,9 +34,8 @@ class Turtle < Graphics::Body
         self.a += $1.to_i
       when /f (\d+)/ then
         dist = $1.to_i
-        if pen then
-          w.angle x, y, a, dist, :white
-        end
+
+        w.angle x, y, a, dist, :white if pen
         move_by a, dist
       else
         src.delete line
@@ -68,6 +67,4 @@ class Logo < Editor
   end
 end
 
-if $0 == __FILE__
-  Logo.new.run
-end
+Logo.new.run if $0 == __FILE__

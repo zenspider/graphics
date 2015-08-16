@@ -52,7 +52,7 @@ class Particle < Graphics::Body
     nearby.each do |neighbor|
       distance = (position - neighbor.position)
 
-      self.density += MASS * weight(distance, H) # if distance.magnitude < H
+      self.density += MASS * weight(distance, H)
     end
   end
 

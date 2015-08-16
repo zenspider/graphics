@@ -111,15 +111,14 @@ class SPH
     # Calculate fluid density around each particle
     particles.each do |particle|
       particles.each do |neighbor|
-
         # If particles are close together, density increases
         distance = particle.position - neighbor.position
 
-        if distance.magnitude < H  # Particles are close enough to matter
+        if distance.magnitude < H then
+          # Particles are close enough to matter
           particle.density += MASS * weight(distance, H)
         end
       end
-      # p particle.density if particle.density > 2*H
     end
   end
 

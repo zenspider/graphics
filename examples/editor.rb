@@ -55,16 +55,14 @@ class Editor < Graphics::Simulation
   end
 
   def draw_overlay
-    if overlay? then
-      lines.each_with_index do |l, i|
-        text l, 10, ((lines.size-i)*font.height), :gray
-      end
+    return unless overlay?
 
-      text "> #{s}_", 10, 0, :white
+    lines.each_with_index do |l, i|
+      text l, 10, ((lines.size-i)*font.height), :gray
     end
+
+    text "> #{s}_", 10, 0, :white
   end
 end
 
-if $0 == __FILE__
-  Editor.new.run
-end
+Editor.new.run if $0 == __FILE__
