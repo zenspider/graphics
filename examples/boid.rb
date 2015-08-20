@@ -254,8 +254,6 @@ class Boids < Graphics::Simulation
   def initialize
     super 850, 850, 16, "Boid"
 
-    SDL::Key.enable_key_repeat 500, 250
-
     self.visual_debug = false
 
     self.boids = populate Boid
