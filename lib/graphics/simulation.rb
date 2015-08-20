@@ -38,6 +38,9 @@ class Graphics::Simulation
   # A hash of color values to their rgb values. For text, apparently. *shrug*
   attr_accessor :rgb
 
+  # Number of update iterations per drawing tick
+  attr_accessor :iter_per_tick
+
   ##
   # Create a new simulation of a certain width and height. Optionally,
   # you can set the bits per pixel (0 for current screen settings),
@@ -61,6 +64,8 @@ class Graphics::Simulation
     self.color = {}
     self.rgb   = Hash.new { |hash, k| hash[k] = screen.get_rgb(color[k]) }
     self.paused = false
+
+    self.iter_per_tick = 1
 
     initialize_colors
   end
@@ -122,6 +127,11 @@ class Graphics::Simulation
   def handle_keys
     exit                  if SDL::Key.press? SDL::Key::ESCAPE
     exit                  if SDL::Key.press? SDL::Key::Q
+
+    self.iter_per_tick += 1 if SDL::Key.press? SDL::Key::SLASH
+    self.iter_per_tick -= 1 if SDL::Key.press? SDL::Key::MINUS
+    self.iter_per_tick = 1 if iter_per_tick < 1
+
     self.paused = !paused if SDL::Key.press? SDL::Key::P
   end
 
@@ -135,6 +145,7 @@ class Graphics::Simulation
     self.start_time = Time.now
     n = 0
     event = nil
+
     loop do
       handle_event event, n while event = SDL::Event.poll
       SDL::Key.scan
@@ -142,9 +153,8 @@ class Graphics::Simulation
 
       next if paused
 
-      update n
+      iter_per_tick.times { |i| update n; n += 1 }
       draw_and_flip n
-      n += 1
     end
   end
 
