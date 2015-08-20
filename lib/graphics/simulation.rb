@@ -181,7 +181,7 @@ class Graphics::Simulation
 
   def line x1, y1, x2, y2, c
     h = self.h
-    screen.draw_line x1, h-y1, x2, h-y2, color[c], :antialiased
+    screen.draw_line x1, h-y1-1, x2, h-y2-1, color[c], :antialiased
   end
 
   ##
