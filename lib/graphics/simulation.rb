@@ -231,14 +231,14 @@ class Graphics::Simulation
   # Draw a rect at x/y with w by h dimensions in color c. Ignores blending.
 
   def fast_rect x, y, w, h, c
-    screen.fill_rect x, self.h-y-h, w, h, color[c]
+    screen.fill_rect x, self.h-y-h-1, w, h, color[c]
   end
 
   ##
   # Draw a point at x/y w/ color c.
 
   def point x, y, c
-    screen[x, h-y] = color[c]
+    screen[x, h-y-1] = color[c]
   end
 
   ##
@@ -254,21 +254,21 @@ class Graphics::Simulation
   # Draw a rect at x/y with w by h dimensions in color c.
 
   def rect x, y, w, h, c, fill = false
-    screen.draw_rect x, self.h-y-h, w, h, color[c], fill
+    screen.draw_rect x, self.h-y-h-1, w, h, color[c], fill
   end
 
   ##
   # Draw a circle at x/y with radius r in color c.
 
   def circle x, y, r, c, fill = false
-    screen.draw_circle x, h-y, r, color[c], fill, :antialiased
+    screen.draw_circle x, h-y-1, r, color[c], fill, :antialiased
   end
 
   ##
   # Draw a circle at x/y with radiuses w/h in color c.
 
   def ellipse x, y, w, h, c, fill = false
-    screen.draw_ellipse x, self.h-y, w, h, color[c], fill, :antialiased
+    screen.draw_ellipse x, self.h-y-1, w, h, color[c], fill, :antialiased
   end
 
   ##
@@ -277,7 +277,7 @@ class Graphics::Simulation
 
   def bezier x1, y1, cx1, cy1, cx2, cy2, x2, y2, c, l = 7
     h = self.h
-    screen.draw_bezier x1, h-y1, cx1, h-cy1, cx2, h-cy2, x2, h-y2, l, color[c], :antialiased
+    screen.draw_bezier x1, h-y1-1, cx1, h-cy1, cx2, h-cy2, x2, h-y2-1, l, color[c], :antialiased
   end
 
   ## Text
@@ -300,7 +300,7 @@ class Graphics::Simulation
   # Draw text s at x/y in color c in font f.
 
   def text s, x, y, c, f = font
-    f.draw_blended_utf8 screen, s, x, self.h-y-f.height, *rgb[c]
+    f.draw_blended_utf8 screen, s, x, self.h-y-f.height-1, *rgb[c]
   end
 
   ##
@@ -355,7 +355,7 @@ class Graphics::Simulation
   # Draw a bitmap at x/y with an angle and optional x/y scale.
 
   def blit o, x, y, a°, xs = 1, ys = 1, opt = 0
-    SDL::Surface.transform_blit o, screen, -a°, 1, 1, o.w/2, o.h/2, x, h-y, opt
+    SDL::Surface.transform_blit o, screen, -a°, 1, 1, o.w/2, o.h/2, x, h-y-1, opt
   end
 
   ##
