@@ -1,35 +1,44 @@
-#!/bin/sh
+#!/bin/bash
 set -ex
 
-brew uninstall libogg || true
-brew uninstall libvorbis || true
-brew uninstall libpng || true
+if [[ $OSTYPE == "darwin"* ]]; then
 
-brew uninstall sdl || true
-brew uninstall sdl_ttf || true
-brew uninstall sdl_mixer || true
-brew uninstall sdl_image || true
-brew uninstall sge || true
+    brew uninstall libpng || true
 
-# brew update
+    brew uninstall sdl || true
+    brew uninstall sdl_image || true
+    brew uninstall sdl_ttf || true
 
-brew install libogg
-brew install libvorbis
-brew install libpng
+    brew install libpng
 
-brew install sdl
-brew install sdl_mixer -- --with-libvorbis
-brew install sdl_ttf
-brew install sdl_image
+    brew install sdl
+    brew install sdl_image
+    brew install sdl_ttf
 
-gem uninstall -ax rsdl || true
-gem uninstall -ax rubysdl || true
+elif [[ "$OSTYPE" == "linux-gnu" ]]; then
+    if [[ -f /etc/debian_version ]]; then
+
+        apt-get update -qq && \
+            apt-get install -y \
+        libsdl-ttf2.0.0 \
+        libsdl-sdl-sge \
+        libsdl-image1.2-dev \
+        libsdl-dev || true
+
+    else
+        echo "Unknown version of linux"
+        exit 1
+    fi
+else
+    echo "$OSTYPE not supported"
+    exit 1
+fi
+
+gem uninstall -axI rsdl || true
+gem uninstall -axI rubysdl || true
 
 gem install rsdl
 gem install rubysdl -- --enable-bundled-sge
 
-ruby -r sdl -e 'p [:ttf, SDL.constants.include?(:TTF)]'
-ruby -r sdl -e 'p [:mixer, SDL.constants.include?(:Mixer)]'
 ruby -r sdl -e 'p [:sge, SDL.respond_to?(:auto_lock)]'
-
 rsdl -r sdl -e 'SDL.init(SDL::INIT_EVERYTHING); SDL.set_video_mode(640, 480, 16, SDL::SWSURFACE); sleep(1)'
