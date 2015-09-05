@@ -10,8 +10,6 @@ class Person < Graphics::Body
   D_M = 0.25
   M_M = 5.0
 
-  AA = SDL::Surface::TRANSFORM_AA
-
   attr_accessor :trail
 
   def initialize w
@@ -45,7 +43,7 @@ class Person < Graphics::Body
     w.angle x, y, ga,   60, :red
 
     # the blit looks HORRIBLE when rotated... dunno why
-    w.blit w.body_img, x, y, 0, AA
+    w.blit w.body_img, x, y
   end
 
   def turn_towards_goal

@@ -69,7 +69,7 @@ class Demo < Graphics::Simulation
     bezier 275, 50, 275, 100, 285, 0, 300, 50, :white
 
     rect 300, 25, 50, 50, :white
-    blit img, 325, 50, 0
+    blit img, 325, 50
 
     text "blah", 350, 50, :white
 

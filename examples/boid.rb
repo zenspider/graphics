@@ -6,8 +6,6 @@ require "graphics"
 class Boid < Graphics::Body
   COUNT = 50
 
-  AA = SDL::Surface::TRANSFORM_AA
-
   PCT_DAMPENER = 0.01
   TOO_CLOSE    = 50
   MAX_VELOCITY = 5
@@ -32,7 +30,7 @@ class Boid < Graphics::Body
   def draw
     # the blit looks HORRIBLE when rotated... dunno why
     w.circle x, y, @@max_distance, :gray if w.visual_debug?
-    w.blit w.body_img, x, y, 0, AA
+    w.blit w.body_img, x, y
     w.angle x, y, a, 3 * m, :red
   end
 

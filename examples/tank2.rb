@@ -152,13 +152,11 @@ class TargetSimulation < Graphics::Simulation
     fps n
   end
 
-  AA = SDL::Surface::TRANSFORM_AA
-
   def draw_tank
     x, y, a, t = tank.x, tank.y, tank.angle, tank.turret
 
-    blit body_img, x, y, a, AA
-    blit turret_img, x, y, t, AA
+    blit body_img, x, y, a
+    blit turret_img, x, y, t
 
     debug "%3d @ %.2f @ %d", tank.angle, tank.speed, tank.energy
   end
