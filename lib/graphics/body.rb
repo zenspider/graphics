@@ -158,10 +158,10 @@ class Graphics::Body
 
     if y < 0 then
       self.y = 0
-      return :north
+      return :south
     elsif y > max_h then
       self.y = max_h
-      return :south
+      return :north
     end
 
     nil
