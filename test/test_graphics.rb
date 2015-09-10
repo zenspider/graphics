@@ -295,20 +295,20 @@ class TestSimulation < Minitest::Test
     h = t.h-1
 
     t.angle 50, 50, 0, 10, :white
-    exp << [:draw_line, 50, h-50, 60.0, h-50.0, white, :antialiased]
+    exp << [:draw_line, 50, h-50, 60.0, h-50.0, white]
 
     t.angle 50, 50, 90, 10, :white
-    exp << [:draw_line, 50, 49, 50.0, h-60.0, white, :antialiased]
+    exp << [:draw_line, 50, 49, 50.0, h-60.0, white]
 
     t.angle 50, 50, 180, 10, :white
-    exp << [:draw_line, 50, h-50, 40.0, h-50.0, white, :antialiased]
+    exp << [:draw_line, 50, h-50, 40.0, h-50.0, white]
 
     t.angle 50, 50, 270, 10, :white
-    exp << [:draw_line, 50, h-50, 50.0, h-40.0, white, :antialiased]
+    exp << [:draw_line, 50, h-50, 50.0, h-40.0, white]
 
     t.angle 50, 50, 45, 10, :white
     d45 = 10 * Math.sqrt(2) / 2
-    exp << [:draw_line, 50, h-50, 50+d45, h-50-d45, white, :antialiased]
+    exp << [:draw_line, 50, h-50, 50+d45, h-50-d45, white]
 
     assert_equal exp, t.screen.data
   end
@@ -345,7 +345,7 @@ class TestSimulation < Minitest::Test
     t.ellipse 0, 0, 25, 25, :white
 
     h = t.h-1
-    exp << [:draw_ellipse, 0, h, 25, 25, t.color[:white], false, :antialiased]
+    exp << [:draw_ellipse, 0, h, 25, 25, t.color[:white]]
 
     assert_equal exp, t.screen.data
   end
@@ -369,7 +369,7 @@ class TestSimulation < Minitest::Test
   def test_hline
     t.hline 42, :white
     h = t.h - 1
-    exp << [:draw_line, 0, h-42, 100, h-42, t.color[:white], :antialiased]
+    exp << [:draw_line, 0, h-42, 100, h-42, t.color[:white]]
 
     assert_equal exp, t.screen.data
   end
@@ -381,7 +381,7 @@ class TestSimulation < Minitest::Test
   def test_line
     t.line 0, 0, 25, 25, :white
     h = t.h - 1
-    exp << [:draw_line, 0, h, 25, h-25, t.color[:white], :antialiased]
+    exp << [:draw_line, 0, h, 25, h-25, t.color[:white]]
 
     assert_equal exp, t.screen.data
   end

@@ -15,7 +15,7 @@ class TargetSimulation < Graphics::Simulation
   end
 
   def handle_event event, n
-    bombs << [n, event.x, h-event.y] if SDL::Event::MouseButtonDown === event
+    bombs << [n, event.x, h-event.y] if SDL::Event::Mousedown === event
     super
   end
 

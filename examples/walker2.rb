@@ -99,7 +99,7 @@ class Person < Graphics::Body
       nearby.each do |o|
         w.line x, y, o.x, o.y, :yellow
       end
-      sleep 0.25 unless nearby.empty?
+      # sleep 0.25 unless nearby.empty?
     end
 
     w.angle x, y,  a,   20, :green
@@ -125,7 +125,7 @@ class Person < Graphics::Body
   end
 
   def collide_with? other
-    w.cmap.collision_check(x, y, w.cmap, other.x, other.y) != nil
+    w.cmap.check(x, y, w.cmap, other.x, other.y) != nil
   end
 
   def collide b

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-require "sdl"
+require "sdl/sdl"
 
 module SDL; end # :nodoc: -- stupid rdoc :(
 
@@ -38,8 +38,11 @@ class Graphics::Simulation
   # A hash of color values to their rgb values. For text, apparently. *shrug*
   attr_accessor :rgb
 
-  # Number of update iterations per drawing tick
+  # Number of update iterations per drawing tick.
   attr_accessor :iter_per_tick
+
+  # Procs registered to handle key events.
+  attr_accessor :key_handler
 
   ##
   # Create a new simulation of a certain width and height. Optionally,
@@ -54,7 +57,7 @@ class Graphics::Simulation
 
     full = full ? SDL::FULLSCREEN : 0
 
-    self.font = SDL::TTF.open("/System/Library/Fonts/Menlo.ttc", 32, 0)
+    self.font = find_font("Menlo", 32)
 
     SDL::WM.set_caption name, name
 
@@ -62,15 +65,29 @@ class Graphics::Simulation
     self.w, self.h = screen.w, screen.h
 
     self.color = {}
-    self.rgb   = Hash.new { |hash, k| hash[k] = screen.get_rgb(color[k]) }
+    self.rgb   = Hash.new { |hash, k| hash[k] = screen.format.get_rgb(color[k]) }
     self.paused = false
 
     self.iter_per_tick = 1
 
+    self.key_handler = []
+
+    initialize_keys
     initialize_colors
   end
 
-  def initialize_colors
+  ##
+  # Register default key events. Handles ESC & Q (quit) and P (pause).
+
+  def initialize_keys
+    add_key_handler(:ESCAPE) { exit }
+    add_key_handler(:Q)      { exit }
+    add_key_handler(:P)      { self.paused = !paused }
+    add_key_handler(:SLASH)  { self.iter_per_tick += 1 }
+    add_key_handler(:MINUS)  { self.iter_per_tick -= 1; self.iter_per_tick = 1  if iter_per_tick < 1 }
+  end
+
+  def initialize_colors # :nodoc:
     register_color :black,     0,   0,   0
     register_color :white,     255, 255, 255
     register_color :red,       255, 0,   0
@@ -87,6 +104,22 @@ class Graphics::Simulation
       register_color(("green%02d" % n).to_sym, 0, m, 0)
       register_color(("blue%02d"  % n).to_sym, 0, 0, m)
     end
+  end
+
+  sys_font  = "/System/Library/Fonts"
+  lib_font  = "/Library/Fonts"
+  user_font = File.expand_path "~/Library/Fonts/"
+  FONT_GLOB = "{#{sys_font},#{lib_font},#{user_font}}" # :nodoc:
+
+  ##
+  # Find and open a (TTF) font. Should be as system agnostic as possible.
+
+  def find_font name, size = 16
+    font = Dir["#{FONT_GLOB}/#{name}.{ttc,ttf}"].first
+
+    raise ArgumentError, "Can't find font named '#{name}'" unless font
+
+    SDL::TTF.open(font, size)
   end
 
   ##
@@ -119,20 +152,22 @@ class Graphics::Simulation
   end
 
   ##
-  # Handle key events. By default handles ESC & Q (quit) and P
-  # (pause). Override this if you want to handle more key events. Be
-  # sure to call super or provide your own means of quitting and/or
-  # pausing.
+  # Register a block to run for a particular key-press.
+
+  def add_key_handler k, remove = nil, &b
+    k = SDL::Key.const_get k
+    key_handler.delete_if { |a,_| k==a } if remove
+    key_handler.unshift [k, b]
+  end
+
+  ##
+  # Handle key events by looking through key_handler and running any
+  # blocks that match the key(s) being pressed.
 
   def handle_keys
-    exit                  if SDL::Key.press? SDL::Key::ESCAPE
-    exit                  if SDL::Key.press? SDL::Key::Q
-
-    self.iter_per_tick += 1 if SDL::Key.press? SDL::Key::SLASH
-    self.iter_per_tick -= 1 if SDL::Key.press? SDL::Key::MINUS
-    self.iter_per_tick = 1 if iter_per_tick < 1
-
-    self.paused = !paused if SDL::Key.press? SDL::Key::P
+    key_handler.each do |k, blk|
+      blk[self] if SDL::Key.press? k
+    end
   end
 
   ##
@@ -191,7 +226,7 @@ class Graphics::Simulation
 
   def line x1, y1, x2, y2, c
     h = self.h
-    screen.draw_line x1, h-y1-1, x2, h-y2-1, color[c], :antialiased
+    screen.draw_line x1, h-y1-1, x2, h-y2-1, color[c]
   end
 
   ##
@@ -231,7 +266,7 @@ class Graphics::Simulation
   # Draw a rect at x/y with w by h dimensions in color c. Ignores blending.
 
   def fast_rect x, y, w, h, c
-    screen.fill_rect x, self.h-y-h, w, h, color[c]
+    screen.fast_rect x, self.h-y-h, w, h, color[c]
   end
 
   ##
@@ -254,21 +289,36 @@ class Graphics::Simulation
   # Draw a rect at x/y with w by h dimensions in color c.
 
   def rect x, y, w, h, c, fill = false
-    screen.draw_rect x, self.h-y-h-1, w, h, color[c], fill
+    y = self.h-y-h-1
+    if fill then
+      screen.fill_rect x, y, w, h, color[c]
+    else
+      screen.draw_rect x, y, w, h, color[c]
+    end
   end
 
   ##
   # Draw a circle at x/y with radius r in color c.
 
   def circle x, y, r, c, fill = false
-    screen.draw_circle x, h-y-1, r, color[c], fill, :antialiased
+    y = h-y-1
+    if fill then
+      screen.fill_circle x, y, r, color[c]
+    else
+      screen.draw_circle x, y, r, color[c]
+    end
   end
 
   ##
   # Draw a circle at x/y with radiuses w/h in color c.
 
   def ellipse x, y, w, h, c, fill = false
-    screen.draw_ellipse x, self.h-y-1, w, h, color[c], fill, :antialiased
+    y = self.h-y-1
+    if fill then
+      screen.fill_ellipse x, y, w, h, color[c]
+    else
+      screen.draw_ellipse x, y, w, h, color[c]
+    end
   end
 
   ##
@@ -277,7 +327,7 @@ class Graphics::Simulation
 
   def bezier x1, y1, cx1, cy1, cx2, cy2, x2, y2, c, l = 7
     h = self.h
-    screen.draw_bezier x1, h-y1-1, cx1, h-cy1, cx2, h-cy2, x2, h-y2-1, l, color[c], :antialiased
+    screen.draw_bezier x1, h-y1-1, cx1, h-cy1, cx2, h-cy2, x2, h-y2-1, l, color[c]
   end
 
   ## Text
@@ -293,14 +343,15 @@ class Graphics::Simulation
   # Return the rendered text s in color c in font f.
 
   def render_text s, c, f = font
-    f.render_solid_utf8 s, *rgb[c]
+    f.render screen, s, color[c]
   end
 
   ##
   # Draw text s at x/y in color c in font f.
 
   def text s, x, y, c, f = font
-    f.draw_blended_utf8 screen, s, x, self.h-y-f.height-1, *rgb[c]
+    y = self.h-y-f.height-1
+    f.draw screen, s, x, y, color[c]
   end
 
   ##
@@ -325,21 +376,27 @@ class Graphics::Simulation
 
   ### Blitting Methods:
 
-  ## utilities for later
-
-  # put_pixel(x, y, color)
-  # []=(x, y, color)
-  # get_pixel(x, y)
-  # [](x, y)
-  # put(src, x, y) # see blit
-  # copy_rect(x,y,w,h)
-  # transform_surface(bgcolor,angle,xscale,yscale,flags)
+  # TODO: copy_rect(x,y,w,h)
 
   ##
   # Load an image at path into a new surface.
 
   def image path
     SDL::Surface.load path
+  end
+
+  ##
+  # Load an audio file at path
+
+  def audio path
+    SDL::Audio.load path
+  end
+
+  ##
+  # Open the audio mixer with a number of +channels+ open.
+
+  def open_mixer channels = 1
+    SDL::Audio.open channels
   end
 
   ##
@@ -352,10 +409,22 @@ class Graphics::Simulation
   end
 
   ##
-  # Draw a bitmap at x/y with an angle and optional x/y scale.
+  # Draw a bitmap centered at x/y with optional angle, x/y scale, and flags.
 
-  def blit o, x, y, a° = 0, xs = 1, ys = 1, opt = 0
-    SDL::Surface.transform_blit o, screen, -a°, xs, ys, o.w/2, o.h/2, x, h-y, opt
+  def blit src, x, y, a° = 0, xscale = 1, yscale = 1, flags = 0
+    img = src.transform src.format.colorkey, -a°, xscale, yscale, flags
+
+    SDL::Surface.blit img, 0, 0, 0, 0, screen, x-img.w/2, h-y-img.h/2
+  end
+
+  ##
+  # Draw a bitmap at x/y with optional angle, x/y scale, and flags.
+
+  def put src, x, y, a° = 0, xscale = 1, yscale = 1, flags = 0
+    img = src.transform src.format.colorkey, -a°, xscale, yscale, flags
+
+    # TODO: why x-1?
+    SDL::Surface.blit img, 0, 0, 0, 0, screen, x-1, h-y-img.h
   end
 
   ##
@@ -364,7 +433,7 @@ class Graphics::Simulation
   # primitives will work and the resulting surface is returned.
 
   def sprite w, h
-    new_screen = SDL::Surface.new SDL::SWSURFACE, w, h, screen
+    new_screen = SDL::Surface.new w, h, screen.format
     old_screen = screen
     old_w, old_h = self.w, self.h
     self.w, self.h = w, h

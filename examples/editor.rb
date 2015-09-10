@@ -16,9 +16,14 @@ class Editor < Graphics::Simulation
     self.lines = []
   end
 
+  def initialize_keys
+    # no super
+    add_key_handler(:ESCAPE) { exit }
+  end
+
   def handle_event e, n
     case e
-    when SDL::Event::KeyDown then
+    when SDL::Event::Keydown then
       if e.mod & (SDL::Key::MOD_LCTRL | SDL::Key::MOD_RCTRL) != 0 then
         case e.sym.chr
         when "t" then

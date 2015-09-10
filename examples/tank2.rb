@@ -97,12 +97,8 @@ class TargetSimulation < Graphics::Simulation
   def initialize
     super 640, 640, 16, "Target Practice"
 
-    SDL::Key.enable_key_repeat 50, 10
-
     self.tank = Tank.new w/2, h/2
     self.bullets = []
-
-    screen.set_alpha SDL::SRCALPHA, 128
 
     self.body_img = sprite 40, 30 do
       rect 0,  0, 39, 29, :white
@@ -120,15 +116,16 @@ class TargetSimulation < Graphics::Simulation
     end
   end
 
-  def handle_keys
-    exit            if SDL::Key.press? SDL::Key::ESCAPE
-    tank.turn_right if SDL::Key.press? SDL::Key::RIGHT
-    tank.turn_left  if SDL::Key.press? SDL::Key::LEFT
-    tank.accelerate if SDL::Key.press? SDL::Key::UP
-    tank.decelerate if SDL::Key.press? SDL::Key::DOWN
-    tank.aim_left   if SDL::Key.press? SDL::Key::SEMICOLON
-    tank.aim_right  if SDL::Key.press? SDL::Key::Q
-    fire            if SDL::Key.press? SDL::Key::SPACE
+  def initialize_keys
+    super
+
+    add_key_handler(:RIGHT)     { tank.turn_right }
+    add_key_handler(:LEFT)      { tank.turn_left }
+    add_key_handler(:UP)        { tank.accelerate }
+    add_key_handler(:DOWN)      { tank.decelerate }
+    add_key_handler(:SEMICOLON) { tank.aim_left }
+    add_key_handler(:Q, :remove){ tank.aim_right }
+    add_key_handler(:SPACE)     { fire }
   end
 
   def fire

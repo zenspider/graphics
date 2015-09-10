@@ -62,7 +62,7 @@ class Vants < Graphics::Simulation
   end
 
   def draw n
-    screen.update_rect 0, 0, 0, 0
+    screen.update 0, 0, 0, 0
   end
 end
 

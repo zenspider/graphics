@@ -27,7 +27,52 @@ when implementing your simulation.
 
 == SYNOPSIS:
 
-See examples/*.rb
+    class Ball < Graphics::Body
+      def initialize w
+        super
+
+        # ...
+      end
+
+      def draw
+        w.angle x, y, a, 10+3*m, :red
+        w.circle x, y, 5, :white, :filled
+      end
+
+      def update
+        fall
+        move
+        bounce
+      end
+
+      # ...
+    end
+
+    class BounceSimulation < Graphics::Simulation
+      attr_accessor :bs
+
+      def initialize
+        super 640, 640, 16, "Bounce"
+
+        self.bs = populate Ball
+      end
+
+      def update n
+        bs.each(&:update)
+      end
+
+      def draw n
+        clear
+        bs.each(&:draw)
+        fps n
+      end
+
+      # ...
+    end
+
+    BounceSimulation.new.run
+
+See examples/*.rb for more
 
 == REQUIREMENTS:
 
