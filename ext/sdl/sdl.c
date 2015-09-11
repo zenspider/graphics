@@ -738,11 +738,6 @@ static void _TTFFont_mark(void* p) {
   UNUSED(p);
 }
 
-static VALUE TTF_s_init(VALUE self) { // TODO: remove
-  UNUSED(self);
-  return Qnil;
-}
-
 static VALUE Font_s_open(VALUE self, VALUE path, VALUE size) {
   UNUSED(self);
 
@@ -920,7 +915,6 @@ void Init_sdl() {
 
   //// SDL::TTFFont methods:
 
-  rb_define_singleton_method(cTTFFont, "init", TTF_s_init,  0);
   rb_define_singleton_method(cTTFFont, "open", Font_s_open, 2);
 
   rb_define_method(cTTFFont, "height", Font_height, 0);

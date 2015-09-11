@@ -53,7 +53,6 @@ class Graphics::Simulation
 
   def initialize w, h, bpp = 0, name = self.class.name, full = false
     SDL.init SDL::INIT_VIDEO
-    SDL::TTF.init
 
     full = full ? SDL::FULLSCREEN : 0
 
