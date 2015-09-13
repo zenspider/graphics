@@ -422,7 +422,7 @@ class Graphics::Simulation
   def put src, x, y, a° = 0, xscale = 1, yscale = 1, flags = 0
     img = src.transform src.format.colorkey, -a°, xscale, yscale, flags
 
-    # TODO: why x-1?
+    # why x-1? because transform adds a pixel to all sides even if a°==0
     SDL::Surface.blit img, 0, 0, 0, 0, screen, x-1, h-y-img.h
   end
 
