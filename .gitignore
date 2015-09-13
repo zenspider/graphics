@@ -1,1 +1,6 @@
 /pkg
+/lib/sdl
+/settings.sh
+/tmp
+/.ruby-version
+/dead

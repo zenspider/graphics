@@ -155,7 +155,7 @@ class Graphics::Simulation
 
   def add_key_handler k, remove = nil, &b
     k = SDL::Key.const_get k
-    key_handler.delete_if { |a,_| k==a } if remove
+    key_handler.delete_if { |a, _| k==a } if remove
     key_handler.unshift [k, b]
   end
 
@@ -187,7 +187,7 @@ class Graphics::Simulation
 
       next if paused
 
-      iter_per_tick.times { |i| update n; n += 1 }
+      iter_per_tick.times { update n; n += 1 }
       draw_and_flip n
     end
   end
