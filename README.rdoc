@@ -77,10 +77,9 @@ See examples/*.rb for more
 == REQUIREMENTS:
 
 * rsdl
-* ruby-sdl
 * libsdl & friends
 
-See and/or run rubysdl_setup.sh. If you're on OSX and have homebrew
+See and/or run graphics_setup.sh. If you're on OSX and have homebrew
 installed, running this will ensure you have a working setup.
 
 You may want to run `brew update` beforehand to ensure you get
