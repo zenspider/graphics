@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
 
-require "sdl/sdl"
+begin
+  require "sdl/sdl"
+rescue LoadError
+  require "sdl" # I dunno... some stupid problem with using local and via gem
+end
 
 module SDL; end # :nodoc: -- stupid rdoc :(
 
