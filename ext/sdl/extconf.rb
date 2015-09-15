@@ -28,4 +28,4 @@ have_library("SDL_ttf", "TTF_Init") or abort "Need sdl_ttf"
 #   $CPPFLAGS += " -D ENABLE_M17N_FILESYSTEM" if enable_config "m17n-filesystem", false
 # end
 
-create_makefile "sdl"
+create_makefile "sdl/sdl"
