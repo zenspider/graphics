@@ -70,6 +70,12 @@ class BounceSimulation < Graphics::Simulation
       b.g *= -1
     end
   end
+
+  LOG_INTERVAL = 120
+
+  def log
+    puts bs.map(&:m).inject(&:+)
+  end
 end
 
 BounceSimulation.new.run

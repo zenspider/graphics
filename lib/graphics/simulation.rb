@@ -16,6 +16,9 @@ class Graphics::Simulation
   # radians to degrees
   R2D = 1 / D2R
 
+  # Call +log+ every N ticks, if +log+ is defined.
+  LOG_INTERVAL = 60
+
   # The window the simulation is drawing in.
   attr_accessor :screen
 
@@ -32,7 +35,6 @@ class Graphics::Simulation
   attr_accessor :font
 
   # A hash of color names to their values.
-
   attr_accessor :color
 
   # A hash of color values to their rgb values. For text, apparently. *shrug*
@@ -180,6 +182,9 @@ class Graphics::Simulation
     n = 0
     event = nil
 
+    logger = respond_to? :log
+    log_interval = self.class::LOG_INTERVAL
+
     loop do
       handle_event event, n while event = SDL::Event.poll
       SDL::Key.scan
@@ -189,6 +194,8 @@ class Graphics::Simulation
 
       iter_per_tick.times { update n; n += 1 }
       draw_and_flip n
+
+      log if logger and n % log_interval == 0
     end
   end
 
