@@ -44,8 +44,8 @@ class BounceSimulation < Graphics::Simulation
 
   def initialize_keys
     super
-    add_key_handler :SPACE, &:randomize
-    add_key_handler :R,     &:reverse
+    add_keydown_handler " ", &:randomize
+    add_keydown_handler "r", &:reverse
   end
 
   def update n

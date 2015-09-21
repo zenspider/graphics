@@ -46,6 +46,9 @@ class Graphics::Simulation
   # Procs registered to handle key events.
   attr_accessor :key_handler
 
+  # Procs registered to handle keydown events.
+  attr_accessor :keydown_handler
+
   ##
   # Create a new simulation of a certain width and height. Optionally,
   # you can set the bits per pixel (0 for current screen settings),
@@ -72,6 +75,7 @@ class Graphics::Simulation
     self.iter_per_tick = 1
 
     self.key_handler = []
+    self.keydown_handler = {}
 
     initialize_keys
     initialize_colors
@@ -81,11 +85,11 @@ class Graphics::Simulation
   # Register default key events. Handles ESC & Q (quit) and P (pause).
 
   def initialize_keys
-    add_key_handler(:ESCAPE) { exit }
-    add_key_handler(:Q)      { exit }
-    add_key_handler(:P)      { self.paused = !paused }
-    add_key_handler(:SLASH)  { self.iter_per_tick += 1 }
-    add_key_handler(:MINUS)  { self.iter_per_tick -= 1; self.iter_per_tick = 1  if iter_per_tick < 1 }
+    add_keydown_handler("\e") { exit }
+    add_keydown_handler("q")  { exit }
+    add_keydown_handler("p")  { self.paused = !paused }
+    add_keydown_handler("/")  { self.iter_per_tick += 1 }
+    add_keydown_handler("-")  { self.iter_per_tick -= 1; self.iter_per_tick = 1  if iter_per_tick < 1 }
   end
 
   def initialize_colors # :nodoc:
@@ -149,11 +153,20 @@ class Graphics::Simulation
   # won't be able to quit.
 
   def handle_event event, n
-    exit if SDL::Event::Quit === event
+    case event
+    when SDL::Event::Quit then
+      exit
+    when SDL::Event::Keydown then
+      c = event.sym.chr rescue nil
+      b = keydown_handler[c]
+      b[self] if b
+    end
   end
 
   ##
-  # Register a block to run for a particular key-press.
+  # Register a block to run for a particular key-press. This allows
+  # you to register multiple blocks for the same key and also to
+  # handle multiple keys down at the same time.
 
   def add_key_handler k, remove = nil, &b
     k = SDL::Key.const_get k
@@ -162,10 +175,19 @@ class Graphics::Simulation
   end
 
   ##
+  # Register a block to run for a particular keydown event. This is a
+  # single key handler per tick and only on a key-down event.
+
+  def add_keydown_handler k, &b
+    keydown_handler[k] = b
+  end
+
+  ##
   # Handle key events by looking through key_handler and running any
   # blocks that match the key(s) being pressed.
 
   def handle_keys
+    SDL::Key.scan
     key_handler.each do |k, blk|
       blk[self] if SDL::Key.press? k
     end
@@ -187,7 +209,6 @@ class Graphics::Simulation
 
     loop do
       handle_event event, n while event = SDL::Event.poll
-      SDL::Key.scan
       handle_keys
 
       next if paused
