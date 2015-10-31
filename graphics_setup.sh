@@ -11,10 +11,10 @@ done
 
 # brew update
 
-brew install sdl
-brew install sdl_mixer --with-smpeg
-brew install sdl_ttf
-brew install sdl_image
+brew install sdl       --universal
+brew install sdl_mixer --universal --with-smpeg
+brew install sdl_ttf   --universal
+brew install sdl_image --universal --without-webp
 
 if [ -f $0 ]; then
     rake clean package
