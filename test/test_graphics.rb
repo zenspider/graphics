@@ -437,6 +437,21 @@ class TestSimulation < Minitest::Test
   # end
 end
 
+require 'graphics/rainbows'
+class TestGraphics < Minitest::Test
+  def setup
+    @t = Graphics::Simulation.new 100, 100, 16, ""
+  end
+
+  def test_registering_rainbows
+    spectrum = Graphics::Hue.new
+    @t.initialize_rainbow spectrum, "spectrum"
+    assert_equal @t.color[:red], @t.color[:spectrum_0]
+    assert_equal @t.color[:green], @t.color[:spectrum_120]
+    assert_equal @t.color[:blue], @t.color[:spectrum_240]
+  end
+end
+
 # class TestTrail < Minitest::Test
 #   def test_draw
 #     raise NotImplementedError, 'Need to write test_draw'
