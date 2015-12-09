@@ -17,7 +17,7 @@ class Person < Graphics::Body
   VISIBILITY_SQ      = VISIBILITY**2
   ATTACK_DISTANCE_SQ = ATTACK_DISTANCE**2
 
-  attr_accessor :attack, :debug
+  attr_accessor :attack, :debug, :ga
   alias attack? attack
   alias debug? debug
 
@@ -27,7 +27,7 @@ class Person < Graphics::Body
     self.a  = random_angle
     self.ga = random_angle
     self.attack = false
-    self.debug = false
+    self.debug  = false
   end
 
   def update
@@ -51,7 +51,7 @@ class Person < Graphics::Body
   end
 
   def visible? o
-    pa = self.angle_to o
+    pa = angle_to o
     da = (pa - self.a + 90).degrees
     da.between?(75, 150)
   end
@@ -61,7 +61,7 @@ class Person < Graphics::Body
                   all_but_me = w.ps.reject(&:attack?)
                   nearby     = all_but_me.find_all { |p| self.near? p }
                   visible    = nearby.select { |p| self.visible? p }
-                  visible.sort_by { |p| self.distance_to_squared(p) }
+                  visible.sort_by { |p| distance_to_squared(p) }
                 end
   end
 
@@ -69,12 +69,12 @@ class Person < Graphics::Body
     @nearby = nil
 
     nearby.each do |p|
-      dist = self.distance_to_squared(p)
+      dist = distance_to_squared(p)
 
       if dist <= ATTACK_DISTANCE_SQ then
         p.kill
       else
-        self.ga = self.angle_to(nearby.first)
+        self.ga = angle_to(nearby.first)
       end
     end
 

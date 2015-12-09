@@ -63,6 +63,7 @@ lib/graphics/extensions.rb
 lib/graphics/simulation.rb
 lib/graphics/trail.rb
 lib/graphics/v.rb
+lib/graphics/xy.rb
 resources/images/body.png
 resources/images/turret.png
 test/test_graphics.rb

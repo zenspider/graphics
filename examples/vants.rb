@@ -16,15 +16,16 @@ class Vant < Graphics::Body
 
   def initialize w
     super
-    self.a = random_angle
     self.s = w.screen
+    self.a = random_angle
+    self.m = M
 
     self.white = w.color[:white]
     self.black = w.color[:black]
   end
 
   def forward
-    move_by a, M
+    move
     mutate
   end
 

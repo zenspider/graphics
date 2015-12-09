@@ -1,71 +1,130 @@
-##
-# Simple and fast 2 dimensional vector
+# Simple and fast 2D vector
 
-class V
-  # x coordinate accessors -- preferably float
+require "graphics/xy"
+
+class Graphics::V
+
+  # degrees to radians
+  D2R = Graphics::Simulation::D2R
+
+  # radians to degrees
+  R2D = Graphics::Simulation::R2D
+
+  # default initialization vector params
+  DEFAULT = { x:0.0, y:0.0, a:0.0, m:0.0 }
+
+  # starting point x coordinate -- preferably float
   attr_accessor :x
-  # y coordinate accessors -- preferably float
+
+  # starting point y coordinate -- preferably float
   attr_accessor :y
 
-  class << self
-    alias :[] :new # :nodoc:
+  # angle accessor -- in degrees
+  attr_accessor :a
+
+  # magnitude accessor (aka velocity)
+  attr_accessor :m
+
+  ##
+  # A vector is defined by starting point, angle of direction, and magnitude.
+
+  def initialize params = {}
+    params = DEFAULT.merge params
+    self.x = params[:x]
+    self.y = params[:y]
+    self.a = params[:a]
+    self.m = params[:m]
   end
 
   ##
-  # Create a new vector with x & y coordinates.
+  # Starting point as XY.
 
-  def initialize x, y
-    @x = x
-    @y = y
-  end
-
-  # zero vector
-  ZERO = V[0.0, 0.0]
-
-  # one vector
-  ONE  = V[1.0, 1.0]
-
-  ##
-  # Add two vectors, returning a new vector.
-
-  def + v
-    V[x+v.x, y+v.y]
+  def position
+    XY[x, y]
   end
 
   ##
-  # Subtract two vectors, returning a new vector.
+  # Set a new starting point, without modifying anything else.
 
-  def - v
-    V[x-v.x, y-v.y]
+  def position= new_xy
+    self.x, self.y = new_xy.to_a
   end
 
   ##
-  # Multiply a vector by a scalar, returning a new vector.
+  # Vector's axial projection in 2D.
 
-  def * s
-    V[x*s, y*s]
+  def dx_dy # :nodoc:
+    rad = a * D2R
+    dx = Math.cos(rad) * m
+    dy = Math.sin(rad) * m
+    XY[dx, dy]
   end
 
   ##
-  # Divide a vector by a scalar, returning a new vector.
+  # Vector's ending Point.
 
-  def / s
-    V[x/s, y/s]
-  end
-
-  def == other # :nodoc:
-    x == other.x && y == other.y
+  def endpoint
+    position + dx_dy
   end
 
   ##
-  # Return the length of the vector from the origin.
+  # Set endpoint, keeping starting position and modifying angle and magnitude.
 
-  def magnitude
-    Math.sqrt(x*x + y*y)
+  def endpoint= new_xy
+    dxy = new_xy - self.position
+    self.a = Math.atan2(dxy.y, dxy.x) * R2D
+    self.m = Math.sqrt(dxy.x**2 + dxy.y**2)
   end
 
-  def inspect # :nodoc:
-    "#{self.class.name}[%.2f, %.2f]" % [x, y]
+  ##
+  # Add another vector and return the resulting vector
+
+  def + v2
+    cp = self.dup
+    cp.endpoint += v2.dx_dy
+    cp
   end
-  alias to_s inspect # :nodoc:
+
+  ##
+  # Add another vector, modifying self
+
+  def apply v2
+    self.endpoint += v2.dx_dy
+  end
+
+  ##
+  # Return the distance to another vector (starting point), squared.
+
+  def distance_to_squared u
+    position.distance_to_squared u.position
+  end
+
+  ##
+  # Return the angle to another body in degrees.
+
+  def angle_to u
+    position.angle_to u.position
+  end
+
+  ##
+  # Return a random angle 0...360.
+
+  def random_angle
+    360 * rand
+  end
+
+  ###
+  # Randomly turn the vector inside an arc of +deg+ degrees from where
+  # it is currently facing.
+
+  def random_turn deg
+    rand(deg) - (deg/2)
+  end
+
+  ##
+  # Turn vector +dir+ degrees.
+
+  def turn dir
+    self.a = (a + dir).degrees if dir
+  end
 end

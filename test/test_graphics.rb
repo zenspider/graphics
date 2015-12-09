@@ -7,6 +7,191 @@ require "minitest/focus"
 
 require "graphics"
 
+class TestVector < Minitest::Test
+  attr_accessor :u
+
+  def setup
+    self.u = Graphics::V.new(x:50, y:50, a:0, m:10)
+  end
+
+  def test_conversions_vector
+    assert_in_delta 50, u.x, 0.001, "x"
+    assert_in_delta 50, u.y, 0.001, "y"
+    assert_in_delta  0, u.a, 0.001, "angle"
+    assert_in_delta 10, u.m, 0.001, "magnitude"
+  end
+
+  def test_projection_on_axis
+    def assert_vector_projection x, y, u1
+      dxy = u1.dx_dy
+      assert_in_delta x, dxy.x, 0.001, "m"
+      assert_in_delta y, dxy.y, 0.001, "a"
+    end
+
+    assert_vector_projection    10,   0, Graphics::V.new(a:0,      m:10)
+    assert_vector_projection    10,   0, Graphics::V.new(a:360,    m:10)
+    assert_vector_projection    10,   0, Graphics::V.new(a:24*360, m:10)
+    assert_vector_projection     0,  10, Graphics::V.new(a:90, m:10)
+    assert_vector_projection     0, -10, Graphics::V.new(a:-90, m:10)
+    assert_vector_projection     0, -10, Graphics::V.new(a:270, m:10)
+    assert_vector_projection (-10),   0, Graphics::V.new(a:180, m:10)
+  end
+
+  def test_reset_vector_by_changing_endpoint
+    def assert_reset a, m, xy
+      u1 = Graphics::V.new
+      u1.endpoint = xy
+      assert_in_delta a, u1.a, 0.001, 'a'
+      assert_in_delta m, u1.m, 0.001, 'm'
+    end
+
+    assert_reset      0, 10, XY[10, 0]
+    assert_reset     90, 10, XY[0, 10]
+    assert_reset  (-90), 10, XY[0, -10]
+    assert_reset    180, 10, XY[-10, 0]
+    assert_reset    135, Math.sqrt(200), XY[-10, 10]
+    assert_reset (-135), Math.sqrt(200), XY[-10, -10]
+  end
+
+  def test_random_angle
+    srand 42
+    assert_in_delta 134.834, u.random_angle
+  end
+
+  def test_random_turn
+    srand 42
+    assert_in_delta 16, u.random_turn(45)
+  end
+
+  def test_turn
+    assert_in_delta 0, u.a
+    u.turn 90
+    assert_in_delta 90, u.a
+  end
+
+  def test_conversions_readers
+    assert_equal XY[50, 50], u.position
+    assert_equal 10, u.m
+    assert_equal  0, u.a
+  end
+
+  def test_change_position
+    u.position = XY[50, 40]
+    assert_in_delta 50, u.x
+    assert_in_delta 40, u.y
+    assert_equal 10, u.m
+    assert_equal 0, u.a
+  end
+
+  def test_push_to_the_right
+    u.a = 0
+    u.m = 10
+    assert_equal XY[50, 50], u.position
+    assert_equal XY[60, 50], u.endpoint
+  end
+
+  def test_push_up
+    u.a = 90
+    u.m = 10
+    assert_equal XY[50, 50], u.position
+    assert_equal XY[50, 60], u.endpoint
+  end
+
+  def test_push_to_the_left
+    u.a = 180
+    u.m = 10
+    assert_equal XY[50, 50], u.position
+    assert_equal XY[40, 50], u.endpoint
+  end
+
+  def test_push_down
+    u.a = 270
+    u.m = 10
+    assert_equal XY[50, 50], u.position
+    assert_equal XY[50, 40], u.endpoint
+  end
+
+  def test_setting_endpoint_at_0
+    u.endpoint = XY[60, 50]
+    assert_in_delta 10, u.m, 0.001, "magnitude"
+    assert_in_delta 0, u.a, 0.001, "angle"
+  end
+
+  def test_setting_endpoint_at_1Q
+    u.endpoint = XY[75, 75]
+    assert_in_delta 35.355, u.m, 0.001, "magnitude"
+    assert_in_delta 45, u.a, 0.001, "angle"
+  end
+
+  def test_setting_endpoint_at_90
+    u.endpoint = XY[50, 60]
+    assert_in_delta 10, u.m, 0.001, "magnitude"
+    assert_in_delta 90, u.a, 0.001, "angle"
+  end
+
+  def test_setting_endpoint_at_2Q
+    u.endpoint = XY[25, 75]
+    assert_in_delta 35.355, u.m, 0.001, "magnitude"
+    assert_in_delta 135, u.a, 0.001, "angle"
+  end
+
+  def test_setting_endpoint_at_180
+    u.endpoint = XY[40, 50]
+    assert_in_delta 10, u.m, 0.001, "magnitude"
+    assert_in_delta 180, u.a, 0.001, "angle"
+  end
+
+  def test_setting_endpoint_at_3Q
+    u.endpoint = XY[25, 25]
+    assert_in_delta 35.355, u.m, 0.001, "magnitude"
+    assert_in_delta (-135), u.a, 0.001, "angle"
+  end
+
+  def test_setting_endpoint_at_270
+    u.endpoint = XY[50, 40]
+    assert_in_delta 10, u.m, 0.001, "magnitude"
+    assert_in_delta (-90), u.a, 0.001, "angle"
+  end
+
+  def test_setting_endpoint_at_4Q
+    u.endpoint = XY[75, 25]
+    assert_in_delta 35.355, u.m, 0.001, "magnitude"
+    assert_in_delta (-45), u.a, 0.001, "angle"
+  end
+
+  def test_adding_vectors
+    q = Graphics::V.new a:90, m:10
+
+    r = u + q
+    assert_equal 45, r.a
+    assert_equal Math.sqrt(200), r.m
+  end
+
+  def test_add_annulling_vectors
+    q = Graphics::V.new a:180, m:10
+
+    r = u + q
+    assert_equal 0, r.a
+    assert_in_delta 0, r.m, 0.001, "m"
+  end
+
+  def test_add_reinforcing_vectors
+    u.a = 30
+    q = Graphics::V.new a:30, m:10
+
+    r = u + q
+    assert_in_delta 30, r.a, 0.001, "a"
+    assert_in_delta 20, r.m, 0.001, "m"
+  end
+
+  def test_application
+    gravity = Graphics::V.new a:270, m:10
+    u.apply gravity
+    assert_in_delta -45, u.a, 0.001, "a"
+  end
+
+end
+
 class TestBody < Minitest::Test
   attr_accessor :w, :b
 
@@ -15,9 +200,8 @@ class TestBody < Minitest::Test
   def assert_body x, y, m, a, ga, b
     assert_in_delta x,  b.x,  0.001, "x"
     assert_in_delta y,  b.y,  0.001, "y"
-    assert_in_delta m,  b.m,  0.001, "m"
     assert_in_delta a,  b.a,  0.001, "a"
-    assert_in_delta ga, b.ga, 0.001, "ga"
+    assert_in_delta m,  b.m,  0.001, "m"
   end
 
   def setup
@@ -30,154 +214,36 @@ class TestBody < Minitest::Test
     b.a = 0
   end
 
-  def test_conversions_readers
-    assert_equal V[50, 50], b.position
-    assert_equal V[10, 0], b.velocity
+  def test_move_right
+    assert_body  50, 50, 10, 0, 0, b
+
+    b.move
+    assert_body  60, 50, 10, 0, 0, b
   end
 
-  def test_conversions_pos
-    b.position = V[50, 40]
-    assert_in_delta 50, b.x
-    assert_in_delta 40, b.y
-  end
-
-  def test_conversions_vel_0
-    b.velocity = V[10, 0]
-    assert_in_delta 10, b.m, 0.001, "magnitude"
-    assert_in_delta 0, b.a, 0.001, "angle"
-    assert_equal V[10, 0], b.velocity
-  end
-
-  def test_conversions_vel_90
-    b.velocity = V[0, 10]
-    assert_in_delta 10, b.m, 0.001, "magnitude"
-    assert_in_delta 90, b.a, 0.001, "angle"
-  end
-
-  def test_conversions_vel_180
-    b.velocity = V[-10, 0]
-    assert_in_delta 10, b.m, 0.001, "magnitude"
-    assert_in_delta 180, b.a, 0.001, "angle"
-  end
-
-  def test_conversions_vel_270
-    b.velocity = V[0, -10]
-    assert_in_delta 10, b.m, 0.001, "magnitude"
-    assert_in_delta(-90, b.a, 0.001, "angle")
-  end
-
-  def test_conversions_vel_45
-    b.velocity = V[10, 10]
-    assert_in_delta 10, b.velocity.x
-    assert_in_delta 10, b.velocity.y
-
-    assert_in_delta 14.142, b.m, 0.001, "magnitude"
-    assert_in_delta 45, b.a, 0.001, "angle"
-  end
-
-  def test_dx_dy
-    exp = 14.142
-
-    b.velocity = V[10, 10]
-
-    assert_in_delta 45, b.a
-    assert_in_delta exp, b.m
-
-    assert_in_delta 10, b.dx_dy[0]
-    assert_in_delta 10, b.dx_dy[1]
-
-    b.a = 45
-    b.m = 10
-
-    dx, dy = b.dx_dy
-
-    assert_in_delta exp/2, dx
-    assert_in_delta exp/2, dy
-  end
-
-  def test_m_a
-    b.velocity = V[10, 10]
-
-    assert_in_delta 14.142, b.m
-    assert_in_delta 45, b.a
-
-    assert_in_delta 14.142, b.m_a[0]
-    assert_in_delta 45, b.m_a[1]
-  end
-
-  def test_bounce
+  def test_move_bounded_east
     b.x = 99
+
+    b.move_bounded
+    assert_body 100, 50, 0, 0, 0, b
+  end
+
+  def test_move_bounded_NE
+    b.x = b.y = 99
     b.a = 45
 
-    assert_body  99,  50,     10,  45, 0, b
-
-    b.move
-    b.bounce
-
-    assert_body  100, w.h-42.929,  8, 135, 0, b
+    b.move_bounded
+    assert_equal XY[100, 100], b.position
+    assert_in_delta 0, b.m, 0.001, "resulting magnitude"
   end
 
-  def test_clip
+  def test_move_bounced
     b.x = 99
+    b.m = 10000
 
-    assert_body  99, 50, 10, 0, 0, b
-
-    b.move
-    b.clip
-
-    assert_body 100, 50, 10, 0, 0, b
-  end
-
-  def test_clip_off_wall
-    b.x = 99
-
-    assert_body 99,  50, 10, 0, 0,   b
-
-    srand 42
-    b.move
-    b.clip_off_wall
-
-    assert_body 100, 50, 10, 0, 186, b
-  end
-
-  def test_move
-    assert_body 50, 50, 10, 0, 0,   b
-
-    b.move
-
-    assert_body 60, 50, 10, 0, 0,   b
-  end
-
-  def test_move_by
-    assert_body 50, 50, 10, 0, 0,   b
-
-    b.move_by 180, 10
-
-    assert_body 40, 50, 10, 0, 0,   b
-  end
-
-  def test_random_angle
-    srand 42
-
-    assert_in_delta 134.834, b.random_angle
-
-    assert_body 50, 50, 10, 0, 0, b
-  end
-
-  def test_random_turn
-    srand 42
-
-    assert_in_delta 16, b.random_turn(45)
-
-    assert_body 50, 50, 10, 0, 0, b
-  end
-
-  def test_turn
-    assert_body 50, 50, 10,  0, 0, b
-
-    b.turn 90
-
-    assert_body 50, 50, 10, 90, 0, b
+    assert_body  99,  50, 10000,  0, 0, b
+    b.move_bouncing
+    assert b.x < 100
   end
 
   def test_wrap
@@ -191,41 +257,47 @@ class TestBody < Minitest::Test
     assert_body   0, 50, 10, 0, 0, b # TODO: maybe should be 9?
   end
 
+end
+
+class TestXY < Minitest::Test
+  attr_accessor :p
+
+  def setup
+    self.p = XY.new 50, 50
+  end
+
   def test_angle_to
-    # b is at 50, 50
+    q = XY[0, 0]
 
-    b2 = Graphics::Body.new w
+    q.x, q.y = 60, 50
+    assert_in_epsilon 0, p.angle_to(q)
 
-    b2.x, b2.y = 60, 50
-    assert_in_epsilon 0, b.angle_to(b2)
+    q.x, q.y = 50, 40
+    assert_in_epsilon 270, p.angle_to(q)
 
-    b2.x, b2.y = 50, 40
-    assert_in_epsilon 270, b.angle_to(b2)
+    q.x, q.y = 60, 60
+    assert_in_epsilon 45, p.angle_to(q)
 
-    b2.x, b2.y = 60, 60
-    assert_in_epsilon 45, b.angle_to(b2)
-
-    b2.x, b2.y = 0, 0
-    assert_in_epsilon 225, b.angle_to(b2)
+    q.x, q.y = 0, 0
+    assert_in_epsilon 225, p.angle_to(q)
   end
 
   def test_distance_to_squared
-    # b is at 50, 50
+    q = XY[0, 0]
 
-    b2 = Graphics::Body.new w
+    q.x, q.y = 60, 50
+    assert_in_epsilon 100, p.distance_to_squared(q)
 
-    b2.x, b2.y = 60, 50
-    assert_in_epsilon 100, b.distance_to_squared(b2)
+    q.x, q.y = 50, 40
+    assert_in_epsilon 100, p.distance_to_squared(q)
 
-    b2.x, b2.y = 50, 40
-    assert_in_epsilon 100, b.distance_to_squared(b2)
+    q.x, q.y = 60, 60
+    assert_in_epsilon((10*Math.sqrt(2))**2, p.distance_to_squared(q))
 
-    b2.x, b2.y = 60, 60
-    assert_in_epsilon((10*Math.sqrt(2))**2, b.distance_to_squared(b2))
-
-    b2.x, b2.y = 0, 0
-    assert_in_epsilon((50*Math.sqrt(2))**2, b.distance_to_squared(b2))
+    q.x, q.y = 0, 0
+    assert_in_epsilon((50*Math.sqrt(2))**2, p.distance_to_squared(q))
   end
+
 end
 
 class TestInteger < Minitest::Test
@@ -437,20 +509,20 @@ class TestSimulation < Minitest::Test
   # end
 end
 
-require 'graphics/rainbows'
-class TestGraphics < Minitest::Test
-  def setup
-    @t = Graphics::Simulation.new 100, 100, 16, ""
-  end
-
-  def test_registering_rainbows
-    spectrum = Graphics::Hue.new
-    @t.initialize_rainbow spectrum, "spectrum"
-    assert_equal @t.color[:red], @t.color[:spectrum_0]
-    assert_equal @t.color[:green], @t.color[:spectrum_120]
-    assert_equal @t.color[:blue], @t.color[:spectrum_240]
-  end
-end
+# require 'graphics/rainbows'
+# class TestGraphics < Minitest::Test
+#   def setup
+#     @t = Graphics::Simulation.new 100, 100, 16, ""
+#   end
+#
+#   def test_registering_rainbows
+#     spectrum = Graphics::Hue.new
+#     @t.initialize_rainbow spectrum, "spectrum"
+#     assert_equal @t.color[:red], @t.color[:spectrum_0]
+#     assert_equal @t.color[:green], @t.color[:spectrum_120]
+#     assert_equal @t.color[:blue], @t.color[:spectrum_240]
+#   end
+# end
 
 # class TestTrail < Minitest::Test
 #   def test_draw

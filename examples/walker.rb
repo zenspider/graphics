@@ -10,10 +10,10 @@ class Person < Graphics::Body
   D_M = 0.25
   M_M = 5.0
 
-  attr_accessor :trail
+  attr_accessor :trail, :ga
 
   def initialize w
-    super
+    super w
 
     self.trail = Graphics::Trail.new w, 100, :green
 
@@ -25,12 +25,34 @@ class Person < Graphics::Body
     turn_towards_goal
     possibly_change_goal
 
-    accelerate
-    move
+    move_weird
 
     trail << self
+  end
 
-    clip_off_wall
+  def move_weird
+    accelerate
+
+    wall_vectors.each do |v|
+      cone = random_turn 90
+      case v.a
+      when EAST
+        self.x = 0
+        self.ga = cone
+      when WEST
+        self.x = w.w
+        self.ga = 180 + cone
+      when NORTH
+        self.y = 0
+        self.ga = 90 + cone
+      when SOUTH
+        self.y = w.h
+        self.ga = -90 + cone
+      end
+      self.apply v
+    end
+
+    move
   end
 
   def accelerate
@@ -40,7 +62,7 @@ class Person < Graphics::Body
   def draw
     trail.draw
 
-    w.angle x, y, ga,   60, :red
+    w.angle x, y, ga, 60, :red
 
     # the blit looks HORRIBLE when rotated... dunno why
     w.blit w.body_img, x, y

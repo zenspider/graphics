@@ -6,51 +6,18 @@ require "graphics/extensions"
 ##
 # A body in the simulation.
 #
-# All bodies know their position, their angle, goal angle (optional),
-# and momentum.
+# A body is a fat vector (knows its position, direction and magnitude),
+# that knows its daddy (the simulation where it exists) plus some hot moves.
 
-class Graphics::Body
-
-  # degrees to radians
-  D2R = Graphics::Simulation::D2R
-
-  # radians to degrees
-  R2D = Graphics::Simulation::R2D
+class Graphics::Body < Graphics::V
 
   ##
-  # The normals for the cardinal directions.
+  # The cardinal directions.
 
-  NORMAL = {
-           :north => 270,
-           :south => 90,
-           :east  => 180,
-           :west  => 0,
-           }
-
-  ##
-  # Body's x coordinate.
-
-  attr_accessor :x
-
-  ##
-  # Body's y coordinate.
-
-  attr_accessor :y
-
-  ##
-  # Body's angle, in degrees.
-
-  attr_accessor :a
-
-  ##
-  # Body's goal angle, in degrees.
-
-  attr_accessor :ga
-
-  ##
-  # Body's magnitude.
-
-  attr_accessor :m
+  NORTH = 90
+  SOUTH = -90
+  EAST  = 0
+  WEST  = 180
 
   ##
   # Body's window.
@@ -58,194 +25,77 @@ class Graphics::Body
   attr_accessor :w
 
   ##
-  # Create a new body in windowing system +w+ with a random x/y and
-  # everything else zero'd out.
+  # Create a new body in windowing system +w+ with a new vector.
 
   def initialize w
     self.w = w
-
-    self.x, self.y = rand(w.w), rand(w.h)
-    self.a = 0.0
-    self.ga = 0.0
-    self.m = 0.0
-  end
-
-  def inspect # :nodoc:
-    "%s(%.2fx%.2f @ %.2f°x%.2f == %p @ %p)" %
-      [self.class, x, y, a, m, position, velocity]
+    super x:rand(w.w), y:rand(w.h)
   end
 
   ##
-  # Convert the body to a vector representing its velocity.
-  #
-  # DO NOT modify this vector expecting it to modify the body. It is a
-  # copy.
-
-  def velocity
-    x, y = dx_dy
-    V[x, y]
-  end
-
-  ##
-  # Set the body's magnitude and angle from a velocity vector.
-
-  def velocity= o
-    dx, dy = o.x, o.y
-    self.m = Math.sqrt(dx*dx + dy*dy)
-    self.a = Math.atan2(dy, dx) * R2D
-  end
-
-  ##
-  # Convert the body to a vector representing its position.
-  #
-  # DO NOT modify this vector expecting it to modify the body. It is a
-  # copy.
-
-  def position
-    V[x, y]
-  end
-
-  ##
-  # Set the body's position from a velocity vector.
-
-  def position= o
-    self.x = o.x
-    self.y = o.y
-  end
-
-  def dx_dy # :nodoc:
-    rad = a * D2R
-    dx = Math.cos(rad) * m
-    dy = Math.sin(rad) * m
-    [dx, dy]
-  end
-
-  ##
-  # Return the angle to another body in degrees.
-
-  def angle_to body
-    dx = body.x - self.x
-    dy = body.y - self.y
-
-    (R2D * Math.atan2(dy, dx)).degrees
-  end
-
-  ##
-  # Return the distance to another body, squared.
-
-  def distance_to_squared p
-    dx = p.x - x
-    dy = p.y - y
-    dx * dx + dy * dy
-  end
-
-  def m_a # :nodoc:
-    [m, a]
-  end
-
-  ##
-  # Turn the body +dir+ degrees.
-
-  def turn dir
-    self.a = (a + dir).degrees if dir
-  end
-
-  ##
-  # Move the body via its current angle and momentum.
+  # Hop along the vector, so the endpoint becomes the new position.
 
   def move
-    move_by a, m
+    self.position = endpoint
   end
 
   ##
-  # Move the body by a specified angle and momentum.
+  # Check see if the vector's endpoint is beyond the window boundaries.
+  # If out of bounds, return the rebounding vector of the wall it hit.
 
-  def move_by a, m
-    rad = a * D2R
-    self.x += Math.cos(rad) * m
-    self.y += Math.sin(rad) * m
-  end
-
-  ##
-  # Keep the body in bounds of the window. If it went out of bounds,
-  # set its position to be on that bound and return the cardinal
-  # direction of the wall it hit.
-  #
-  # See also: NORMALS
-
-  def clip
+  def wall_vectors
     max_h, max_w = w.h, w.w
+    normals = []
 
-    if x < 0 then
-      self.x = 0
-      return :west
-    elsif x > max_w then
-      self.x = max_w
-      return :east
+    x2, y2 = endpoint.to_a
+    dx, dy = dx_dy.to_a
+
+    if x2 < 0 then
+      normals << Graphics::V.new(a:EAST, m:-dx)
+    elsif x2 > max_w then
+      normals << Graphics::V.new(a:WEST, m:dx)
     end
 
-    if y < 0 then
-      self.y = 0
-      return :south
-    elsif y > max_h then
-      self.y = max_h
-      return :north
+    if y2 < 0 then
+      normals << Graphics::V.new(a:NORTH, m:-dy)
+    elsif y2 > max_h then
+      normals << Graphics::V.new(a:SOUTH, m:dy)
     end
 
-    nil
+    normals
   end
 
   ##
-  # Return a random angle 0...360.
+  # Keep the body in bounds of the window. If out of bounds, take body to the
+  # limit and apply a vector equal to it, and in the opposite direction (in
+  # effect annulling its magnitude).
 
-  def random_angle
-    360 * rand
-  end
-
-  ###
-  # Randomly turn the body inside an arc of +deg+ degrees from where
-  # it is currently facing.
-
-  def random_turn deg
-    rand(deg) - (deg/2)
-  end
-
-  ##
-  # clip and then set the goal angle to the normal plus or minus a
-  # random 45 degrees.
-
-  def clip_off_wall
-    if wall = clip then
-      normal = NORMAL[wall]
-      self.ga = (normal + random_turn(90)).degrees unless (normal - ga).abs < 45
+  def move_bounded
+    wall_vectors.each do |u|
+      case u.a
+      when EAST  then self.x = 0
+      when WEST  then self.x = w.w
+      when NORTH then self.y = 0
+      when SOUTH then self.y = w.h
+      end
+      self.apply u
     end
+
+    move
   end
 
   ##
-  # Like clip, keep the body in bounds of the window, but set the
-  # angle to the angle of reflection. Also slows momentum by 20%.
+  # Keep the body in bounds of the window, bouncing off the walls.
+  # At wall the body encounters an opposite vector twice its magnitude (minus
+  # friction) so in effect, rebounds.
 
-  def bounce
-    # TODO: rewrite this using clip + NORMAL to clean it up
-    max_h, max_w = w.h, w.w
-    normal = nil
-
-    if x < 0 then
-      self.x, normal = 0, 0
-    elsif x > max_w then
-      self.x, normal = max_w, 180
+  def move_bouncing
+    wall_vectors.each do |u|
+      u.m *= 1.9
+      self.apply u
     end
 
-    if y < 0 then
-      self.y, normal = 0, 90
-    elsif y > max_h then
-      self.y, normal = max_h, 270
-    end
-
-    if normal then
-      self.a = (2 * normal - 180 - a).degrees
-      self.m *= 0.8
-    end
+    move
   end
 
   ##
