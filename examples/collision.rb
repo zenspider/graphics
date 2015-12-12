@@ -15,7 +15,7 @@ class Sprite < Graphics::Body
   end
 
   def update
-    move_bouncing
+    move &:bounce
   end
 
   def collide

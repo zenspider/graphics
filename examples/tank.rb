@@ -34,7 +34,7 @@ class Tank < Graphics::Body
 
     t.update x, y
     limit
-    move_bouncing
+    move &:bounce
   end
 
   def limit

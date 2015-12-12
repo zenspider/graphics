@@ -224,7 +224,7 @@ class TestBody < Minitest::Test
   def test_move_bounded_east
     b.x = 99
 
-    b.move_bounded
+    b.move &:bound
     assert_body 100, 50, 0, 0, 0, b
   end
 
@@ -232,7 +232,7 @@ class TestBody < Minitest::Test
     b.x = b.y = 99
     b.a = 45
 
-    b.move_bounded
+    b.move &:bound
     assert_equal XY[100, 100], b.position
     assert_in_delta 0, b.m, 0.001, "resulting magnitude"
   end
@@ -242,7 +242,7 @@ class TestBody < Minitest::Test
     b.m = 10000
 
     assert_body  99,  50, 10000,  0, 0, b
-    b.move_bouncing
+    b.move &:bounce
     assert b.x < 100
   end
 

@@ -19,7 +19,7 @@ class Ball < Graphics::Body
 
   def update
     self.apply w.g
-    move_bouncing
+    move &:bounce
   end
 end
 

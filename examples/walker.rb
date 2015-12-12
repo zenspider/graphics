@@ -25,12 +25,12 @@ class Person < Graphics::Body
     turn_towards_goal
     possibly_change_goal
 
-    move_weird
+    move &:clip_off
 
     trail << self
   end
 
-  def move_weird
+  def clip_off
     accelerate
 
     wall_vectors.each do |v|
@@ -51,8 +51,6 @@ class Person < Graphics::Body
       end
       self.apply v
     end
-
-    move
   end
 
   def accelerate

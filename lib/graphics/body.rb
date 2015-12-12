@@ -6,8 +6,8 @@ require "graphics/extensions"
 ##
 # A body in the simulation.
 #
-# A body is a fat vector (knows its position, direction and magnitude),
-# that knows its daddy (the simulation where it exists) plus some hot moves.
+# A body is a fat vector (position, direction and magnitude), that knows
+# its daddy (the simulation where it exists) plus some hot moves.
 
 class Graphics::Body < Graphics::V
 
@@ -34,8 +34,11 @@ class Graphics::Body < Graphics::V
 
   ##
   # Hop along the vector, so the endpoint becomes the new position.
+  # Optionally pass a block to modify the body's vector before moving.
 
-  def move
+  def move &pre_block
+    pre_block.yield(self) if block_given?
+
     self.position = endpoint
   end
 
@@ -66,11 +69,11 @@ class Graphics::Body < Graphics::V
   end
 
   ##
-  # Keep the body in bounds of the window. If out of bounds, take body to the
-  # limit and apply a vector equal to it, and in the opposite direction (in
-  # effect annulling its magnitude).
+  # Optional block when moving to keep body in bounds of the window. If out of
+  # bounds, take body to the limit and apply a vector equal to it, and in the
+  # opposite direction (in effect annulling its magnitude).
 
-  def move_bounded
+  def bound
     wall_vectors.each do |u|
       case u.a
       when EAST  then self.x = 0
@@ -80,22 +83,18 @@ class Graphics::Body < Graphics::V
       end
       self.apply u
     end
-
-    move
   end
 
   ##
-  # Keep the body in bounds of the window, bouncing off the walls.
-  # At wall the body encounters an opposite vector twice its magnitude (minus
-  # friction) so in effect, rebounds.
+  # Optional block when moving to keep the body in bounds of the window,
+  # bouncing off the walls. At wall the body encounters an opposite vector
+  # twice its magnitude (minus friction) so in effect, rebounds.
 
-  def move_bouncing
+  def bounce
     wall_vectors.each do |u|
       u.m *= 1.9
       self.apply u
     end
-
-    move
   end
 
   ##
