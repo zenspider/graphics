@@ -7,22 +7,24 @@ srand 42
 require "graphics"
 
 module GOL
-  def self.tick(alive)
-    new_board = alive.select { |c, _v| alive_around(c, alive).between?(2, 3) }
+  def self.tick old_cells
+    new_cells = {}
 
-    nearby = alive.keys.map { |c| neighbors(c) }.flatten(1).uniq - alive.keys
-    nearby.each do |c|
-      new_board[c] = true if alive_around(c, alive) == 3
+    old_cells.each do |c, _|
+      nearby = neighbors c
+
+      new_cells[c] = nearby.count { |x| old_cells[x] }.between? 2, 3  # rule I
+
+      nearby.each do |n|
+        next if old_cells[n] || new_cells.member?(n)
+        new_cells[n] = neighbors(n).count { |x| old_cells[x] } == 3   # rule II
+      end
     end
 
-    return new_board
+    return new_cells.select{ |_, v| v }
   end
 
-  def self.alive_around(cell, board)
-    neighbors(cell).count { |c| board.has_key? c }
-  end
-
-  def self.neighbors(cell)
+  def self.neighbors cell
     x, y = cell
     [x + 1, x, x - 1].product([y - 1, y, y + 1]) - [[x, y]]
   end
@@ -55,7 +57,7 @@ class SotoGOL < Graphics::Simulation
 
   def update n
     self.board = GOL::tick self.board
-    board.delete_if do |c, _v|
+    board.delete_if do |c, _|
       x, y = c
       x < 0 || y < 0 || x > @w - 1 || y > @h - 1
     end
