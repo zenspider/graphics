@@ -4,7 +4,7 @@
 require "graphics"
 
 class Boid < Graphics::Body
-  COUNT = 50
+  COUNT = 90
 
   PCT_DAMPENER = 0.01
   TOO_CLOSE    = 50
@@ -21,10 +21,10 @@ class Boid < Graphics::Body
   end
 
   def initialize w
-    super
+    super w
 
     self.m = rand(20)
-    self.a = random_angle
+    self.a = rand 360
   end
 
   def draw
@@ -40,13 +40,10 @@ class Boid < Graphics::Body
   end
 
   def update
-    v1 = rule1
-    v2 = rule2
-    v3 = rule3
-
-    self.velocity += v1 + v2 + v3
-    limit_velocity
-    self.position += self.velocity
+    r = rule1 + rule2 + rule3
+    self.apply r
+    limit_velocity r
+    move
 
     @nearby = nil
   end
@@ -54,31 +51,15 @@ class Boid < Graphics::Body
   def nearby
     @nearby ||= begin
                   p = self.position
-                  w.boids.find_all { |b| (b.position - p).magnitude.abs < @@max_distance }
+                  w.boids.find_all do |b|
+                    b != self &&
+                    (b.position - p).magnitude.abs < @@max_distance
+                  end
                 end
   end
 
-  def limit_velocity
-    if velocity.magnitude > MAX_VELOCITY then
-      self.velocity = (self.velocity / self.velocity.magnitude) * MAX_VELOCITY
-    end
-  end
-
-  def center_mass
-    pos = V::ZERO
-    nearby.each do |b|
-      next if self == b
-
-      pos += b.position
-    end
-
-    size = nearby.size - 1
-
-    return self.position if size == 0
-
-    pos /= size
-
-    pos
+  def limit_velocity v2
+    self.m = MAX_VELOCITY if self.m > MAX_VELOCITY
   end
 
   ##
@@ -133,7 +114,13 @@ class Boid < Graphics::Body
   # Thus we have calculated the first vector offset, v1, for the boid.
 
   def rule1
-    (center_mass - self.position) * PCT_DAMPENER
+    return Graphics::V.new if nearby.empty?
+
+    center_mass = nearby.map(&:position).reduce(:+) / nearby.size
+
+    r1 = Graphics::V.new
+    r1.endpoint = (center_mass - self.position) * PCT_DAMPENER
+    r1
   end
 
   ##
@@ -185,12 +172,10 @@ class Boid < Graphics::Body
   # enough apart for our liking.
 
   def rule2
-    c = V::ZERO
-
+    c = XY::ZERO
     hits = 0
 
     nearby.each do |b|
-      next if self == b
       diff = b.position - self.position
       next unless diff.magnitude.abs < TOO_CLOSE
       hits += 1
@@ -199,7 +184,9 @@ class Boid < Graphics::Body
 
     c /= hits unless hits == 0 # average it out so they don't overdo it
 
-    c / 8
+    r2 = Graphics::V.new
+    r2.endpoint = c/8
+    r2
   end
 
   ##
@@ -227,20 +214,14 @@ class Boid < Graphics::Body
   #   END PROCEDURE
 
   def rule3
-    v = V::ZERO
-
-    nearby.each do |b|
-      next if self == b
-      v += b.velocity
-    end
+    r3 = Graphics::V.new
+    nearby.each { |bv| r3.apply bv }
 
     size = nearby.size - 1
+    return self if size == 0
 
-    return self.velocity if size == 0
-
-    v /= size unless size == 0
-
-    (v - self.velocity) / 4
+    r3.m /= (4 * size)
+    r3
   end
 end
 

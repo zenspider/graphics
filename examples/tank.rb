@@ -20,7 +20,7 @@ class Tank < Graphics::Body
   attr_accessor :e
 
   def initialize w
-    super
+    super w
 
     self.x = w.w / 2
     self.y = w.h / 2
@@ -33,9 +33,8 @@ class Tank < Graphics::Body
     self.e += TICK_ENERGY
 
     t.update x, y
-    move
     limit
-    clip
+    move &:bounce
   end
 
   def limit
@@ -72,11 +71,10 @@ end
 
 class Turret < Graphics::Body
   def initialize tank
-    self.w = tank.w
-    self.x = tank.x
-    self.y = tank.y
-    self.a = tank.a
+    super tank.w
+    self.position = tank.position
     self.m = tank.m
+    self.a = tank.a
   end
 
   def fire

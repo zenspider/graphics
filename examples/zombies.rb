@@ -4,49 +4,41 @@ srand 42
 
 require "graphics"
 
-class Entity
-  attr_accessor :x, :y
-  attr_accessor :speed
-  attr_accessor :sim
+class Entity < Graphics::Body
 
   @@colors = false
 
-  def initialize sim
-    self.sim = sim
-    self.speed = 5
+  def initialize w
+    super
+    self.w = w
+    self.m = 5
 
-    self.x = rand(sim.w / sim.scale)
-    self.y = rand(sim.h / sim.scale)
-  end
-
-  def distance_from_squared p
-    dx = p.x - x
-    dy = p.y - y
-    dx * dx + dy * dy
+    self.x = rand(w.w / w.scale)
+    self.y = rand(w.h / w.scale)
   end
 
   VISIBILITY = 16
   VIS_SQ = VISIBILITY * VISIBILITY
 
   def near? p
-    distance_from_squared(p) < VIS_SQ
+    distance_to_squared(p) < VIS_SQ
   end
 
   def touching? p
-    distance_from_squared(p) < 4 # 2 * 2
+    distance_to_squared(p) < 4 # 2 * 2
   end
 
   def partition
-    (x / sim.width_of_partition) + sim.side * (y / sim.width_of_partition)
+    (x / w.width_of_partition) + w.side * (y / w.width_of_partition)
   end
 
   def random_walk
-    self.x += rand(speed)-speed/2
-    self.y += rand(speed)-speed/2
+    self.x += rand(m)-m/2
+    self.y += rand(m)-m/2
   end
 
   def max
-    @@max ||= sim.max
+    @@max ||= w.max
   end
 
   def limit_bounds
@@ -79,13 +71,13 @@ class Person < Entity
   NORMAL_COLOR = :blue
   FREAKD_COLOR = :yellow
 
-  attr_accessor :state, :infect, :speed
+  attr_accessor :state, :infect
 
-  def initialize sim, state = NORMAL
-    super(sim)
+  def initialize w, state = NORMAL
+    super w
 
     self.state = state
-    self.speed = 5
+    self.m = 5
     self.infect = nil
 
     initialize_colors unless @@colors
@@ -98,7 +90,7 @@ class Person < Entity
       r = (255 * ((INFECT_STEPS - n) / INFECT_STEPS)).to_i
       g = (192 * (n / INFECT_STEPS)).to_i
       b = 0
-      sim.register_color "infect#{n}", r, g, b
+      w.register_color "infect#{n}", r, g, b
     end
   end
 
@@ -122,23 +114,23 @@ class Person < Entity
   end
 
   def draw
-    sim.fast_rect x*2, y*2, 2, 2, color
+    w.fast_rect x*2, y*2, 2, 2, color
   end
 
   def update_infection
     return unless @infect
 
     @infect -= 1
-    sim.zombie << Zombie.from_person(sim.person.delete(self), sim) if @infect <= 0
+    w.zombie << Zombie.from_person(w.person.delete(self), w) if @infect <= 0
     true
   end
 
   def visible
-    sim.part_z[partition].find_all { |p| self.near? p }
+    w.part_z[partition].find_all { |p| self.near? p }
   end
 
   def nearest
-    visible.sort_by { |p| self.distance_from_squared p }.first
+    visible.sort_by { |p| self.distance_to_squared p }.first
   end
 
   def update i
@@ -151,13 +143,13 @@ class Person < Entity
     unless nearest then
       if state == FREAKD then
         self.state = NORMAL
-        self.speed = 5
+        self.m = 5
       end
     else
       unless touching? nearest then
         if state == NORMAL then
           self.state = FREAKD
-          self.speed = 9
+          self.m = 9
         end
       else
         self.state  = INFECT
@@ -167,7 +159,7 @@ class Person < Entity
   end
 
   def kill
-    sim.person.delete self
+    w.person.delete self
   end
 end
 
@@ -188,8 +180,8 @@ class Hunter < Person
     random_walk
     limit_bounds
 
-    baddies = sim.zombie + sim.person.select(&:infect)
-    nearest = baddies.sort_by { |z| self.distance_from_squared z }.first
+    baddies = w.zombie + w.person.select(&:infect)
+    nearest = baddies.sort_by { |z| self.distance_to_squared z }.first
 
     return unless nearest
 
@@ -212,7 +204,7 @@ class Hunter < Person
   end
 
   def draw
-    sim.circle x*2, y*2, VISIBILITY, color
+    w.circle x*2, y*2, VISIBILITY, color
     super
   end
 end
@@ -221,28 +213,28 @@ class Zombie < Entity
   COUNT = 5
   ZOMBIE_COLOR = :red
 
-  def self.from_person p, sim
-    z = new sim
+  def self.from_person p, w
+    z = new w
     z.x = p.x
     z.y = p.y
     z
   end
 
-  def initialize sim
+  def initialize w
     super
-    self.speed = 3
+    self.m = 3
   end
 
   def draw
-    sim.fast_rect x*2, y*2, 2, 2, ZOMBIE_COLOR
+    w.fast_rect x*2, y*2, 2, 2, ZOMBIE_COLOR
   end
 
   def visible
-    sim.part_p[partition].find_all { |p| Hunter === p || p.freaked? }
+    w.part_p[partition].find_all { |p| Hunter === p || p.freaked? }
   end
 
   def nearest
-    visible.sort_by { |p| self.distance_from_squared p }.first
+    visible.sort_by { |p| self.distance_to_squared p }.first
   end
 
   def update i
@@ -258,7 +250,7 @@ class Zombie < Entity
   end
 
   def kill
-    sim.zombie.delete self
+    w.zombie.delete self
   end
 end
 

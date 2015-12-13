@@ -1,3 +1,6 @@
+# require "graphics"
+# require "graphics/trail"
+
 require "graphics"
 require "graphics/trail"
 
@@ -14,7 +17,7 @@ class Polygnome < Array
   def initialize center_x, center_y, w
     @s = w
     @r = w.r
-    @origin = V[center_x, center_y]
+    @origin = XY[center_x, center_y]
   end
 
   def draw
@@ -59,7 +62,6 @@ class Polygnome < Array
 end
 
 class Bouncer < Graphics::Body
-  attr_reader :x, :y, :a, :m, :r, :s
   attr_accessor :trail
 
   def initialize w, magnitude
@@ -67,26 +69,21 @@ class Bouncer < Graphics::Body
     self.trail = Graphics::Trail.new(w, 6, color = :red)
     @s = w
     @r = w.r
-    @x = rand(w.screen.w/4) + w.r
-    @y = rand(w.screen.h/4) + w.r
-    @a = random_angle
-    @m = magnitude
+    self.x = rand(w.screen.w/4) + w.r
+    self.y = rand(w.screen.h/4) + w.r
+    self.a = random_angle
+    self.m = magnitude
   end
 
-  def target_point
-    rad = @a * D2R
-    V[@x + Math.cos(rad) * @m, @y + Math.sin(rad) * @m]
-  end
-
-  def outside_circle? v
-    (v.x - @r)**2 + (v.y - @r)**2 > @r**2
+  def outside_circle? p
+    (p.x - @r)**2 + (p.y - @r)**2 > @r**2
   end
 
   ##
   # Slope and offset of line given 2 points
   def line_to p
-    slope  = (p.y - @y) / (p.x - @x)
-    offset = @y - (slope * @x)
+    slope  = (p.y - y) / (p.x - x)
+    offset = y - (slope * x)
     [slope, offset]
   end
 
@@ -98,9 +95,9 @@ class Bouncer < Graphics::Body
     alfa = @r - (a * (b - @r))
     gama = (1 + a**2)
 
-    x0 = [(alfa + beta)/gama, (alfa - beta)/gama].min_by {|e| (e - @x).abs}
+    x0 = [(alfa + beta)/gama, (alfa - beta)/gama].min_by {|e| (e - x).abs}
     y0 = a*x0 + b
-    V[x0, y0]
+    XY[x0, y0]
   end
 
   def draw
@@ -108,20 +105,23 @@ class Bouncer < Graphics::Body
   end
 
   def update
-    t = target_point
-    if outside_circle? t
-      t = intersection_circle_and line_to(t)
-      turn (160 + rand(15) - 15)
-      @s.poly.add t
+    e = endpoint
+    if outside_circle? e
+      i = intersection_circle_and line_to(e)
+      self.position = i
+      # turn (160 + rand(15) - 15)
+      self.a = (a % 360) + (160 + rand(15) - 15)
+      @s.poly.add i
+    else
+      move
+      trail << self
     end
-    self.position = t
-    trail << self
   end
 end
 
 class PiPolygon < Graphics::Simulation
   RADIO = 400
-  BALLS = 10   #  2  30   100
+  BALLS = 15   #  2  30   100
   MAGND = 10   # 10  10   50
 
   attr_reader :r, :ball, :poly

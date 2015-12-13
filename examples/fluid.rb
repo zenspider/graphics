@@ -20,9 +20,9 @@ class Particle
 
     # Forces
     @position        = pos
-    @velocity        = V::ZERO
-    @pressure_force  = V::ZERO
-    @viscosity_force = V::ZERO
+    @velocity        = XY::ZERO
+    @pressure_force  = XY::ZERO
+    @viscosity_force = XY::ZERO
   end
 end
 
@@ -33,7 +33,7 @@ class SPH
 
   MASS          = 5  # Particle mass
   DENSITY       = 1  # Rest density
-  GRAVITY       = V[0, -0.5]
+  GRAVITY       = XY[0, -0.5]
   H             = 1  # Smoothing cutoff- essentially, particle size
   K             = 20 # Temperature constant- higher means particle repel more strongly
   ETA           = 1  # Viscosity constant- higher for more viscous
@@ -46,7 +46,7 @@ class SPH
     (0..10).each do |x|
       (0..10).each do |y|
         jitter = rand * 0.1
-        particles << Particle.new(V[x+1+jitter, y+5])
+        particles << Particle.new(XY[x+1+jitter, y+5])
       end
     end
   end
@@ -79,7 +79,7 @@ class SPH
     if len_r.xbetween? 0, h
       r * (45.0 / (Math::PI * h**6 * len_r)) * (h - len_r)**2 * (-1.0)
     else
-      V::ZERO
+      XY::ZERO
     end
   end
 
@@ -102,8 +102,8 @@ class SPH
     # Clear everything
     particles.each do |particle|
       particle.density = DENSITY
-      particle.pressure_force = V::ZERO
-      particle.viscosity_force = V::ZERO
+      particle.pressure_force = XY::ZERO
+      particle.viscosity_force = XY::ZERO
     end
   end
 

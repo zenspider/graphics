@@ -5,16 +5,11 @@ require "graphics"
 class Ball < Graphics::Body
   COUNT = 50
 
-  G = V[0, -18 / 60.0]
-
-  attr_accessor :g
-
   def initialize w
     super
 
     self.a = random_angle / 2
     self.m = rand 25
-    self.g = G
   end
 
   def draw
@@ -23,23 +18,19 @@ class Ball < Graphics::Body
   end
 
   def update
-    fall
-    move
-    bounce
-  end
-
-  def fall
-    self.velocity += g
+    self.apply w.g
+    move &:bounce
   end
 end
 
 class BounceSimulation < Graphics::Simulation
-  attr_accessor :bs
+  attr_accessor :bs, :g
 
   def initialize
     super 640, 640, 16, "Bounce"
 
     self.bs = populate Ball
+    self.g = Graphics::V.new a:-90, m:(3 / 10.0)
   end
 
   def initialize_keys
@@ -66,9 +57,7 @@ class BounceSimulation < Graphics::Simulation
   end
 
   def reverse
-    bs.each do |b|
-      b.g *= -1
-    end
+    g.turn 180
   end
 
   LOG_INTERVAL = 120

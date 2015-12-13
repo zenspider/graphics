@@ -15,12 +15,11 @@ class Sprite < Graphics::Body
   end
 
   def update
-    move
-    bounce
+    move &:bounce
   end
 
   def collide
-    self.a = (a + 180).degrees
+    self.a += 180
   end
 
   def draw
