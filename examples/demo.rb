@@ -4,12 +4,10 @@
 require "graphics"
 
 class Ball < Graphics::Body
-  def initialize w
-    super
+  def initialize e
+    super e
 
-    self.x = 50
-    self.y = 50
-
+    self.x = self.y = 50
     self.a = 60
     self.m = 3
   end
@@ -19,11 +17,65 @@ class Ball < Graphics::Body
     wrap
   end
 
-  def draw n
-    a = n % 360
+  class View
+    def self.draw w, o
+      w.angle  o.x, o.y, o.env.n % 360, 50, :green
+      w.circle o.x, o.y, 5, :white, :filled
 
-    w.angle  x, y, a, 50,     :green
-    w.circle x, y, 5, :white, :filled
+      w.fps o.env.n, o.env.start_time
+      w.debug "debug"
+    end
+  end
+end
+
+class StaticStuff < Graphics::Body
+  class View
+    def self.draw w, o
+      w.line 100, 50, 125, 75, :white
+
+      w.hline 100, :white
+
+      w.vline 100, :white
+
+      w.angle 125, 50, 45, 10, :white
+
+      w.fast_rect 150, 50, 10, 10, :white
+
+      w.point 175, 50, :green
+
+      w.rect 200, 50, 10, 10, :white
+
+      w.circle 225, 50, 10, :white
+
+      w.ellipse 250, 50, 10, 20, :white
+
+      w.bezier 275, 50, 275, 100, 285, 0, 300, 50, :white
+
+      w.text "blah", 350, 50, :white
+
+      x_m, y_m, * = w.mouse
+      w.rect x_m, y_m, 150, 50, :white
+      w.text "#{x_m}/#{y_m}", x_m, y_m, :white
+    end
+  end
+end
+
+class BlitiThing < Graphics::Body
+  attr_accessor :img
+
+  def initialize e, img
+    super e
+    self.img = img
+    self.x = 325
+    self.y = 50
+  end
+
+  class View
+    def self.draw w, o
+      w.rect 300, 25, 50, 50, :white
+      w.blit o.img, o.x,    o.y # centered
+      w.put  o.img, o.x+10, o.y # cornered
+    end
   end
 end
 
@@ -32,56 +84,14 @@ class Demo < Graphics::Simulation
 
   def initialize
     super 800, 800, 16, "Boid"
-    self.ball = Ball.new self
 
-    self.img = sprite 10, 10 do
-      circle 5, 5, 5, :white, :filled
+    blip = canvas.sprite 11, 11 do
+      canvas.circle 5, 5, 5, :white, :filled
     end
-  end
 
-  def update n
-    ball.update
-  end
-
-  def draw n
-    clear
-
-    line 100, 50, 125, 75, :white
-
-    hline 100, :white
-
-    vline 100, :white
-
-    angle 125, 50, 45, 10, :white
-
-    fast_rect 150, 50, 10, 10, :white
-
-    point 175, 50, :green
-
-    rect 200, 50, 10, 10, :white
-
-    circle 225, 50, 10, :white
-
-    ellipse 250, 50, 10, 20, :white
-
-    bezier 275, 50, 275, 100, 285, 0, 300, 50, :white
-
-    rect 300, 25, 50, 50, :white
-
-    blit img, 325, 50 # centered
-    put img, 335, 50  # cornered
-
-    text "blah", 350, 50, :white
-
-    x, y, * = mouse
-    rect x, y, 150, 50, :white
-    text "#{x}/#{y}", x, y, :white
-
-    debug "debug"
-
-    ball.draw n
-
-    fps n
+    env._bodies << [Ball.new(self.env)]           \
+                << [StaticStuff.new(self.env)]    \
+                << [BlitiThing.new(self.env, blip)]
   end
 end
 

@@ -20,16 +20,22 @@ class Graphics::Body < Graphics::V
   WEST  = 180
 
   ##
-  # Body's window.
+  # Body's environment.
 
-  attr_accessor :w
+  attr_accessor :env
 
   ##
-  # Create a new body in windowing system +w+ with a new vector.
+  # Create a new body in windowing system +env+ with a new vector.
 
-  def initialize w
-    self.w = w
-    super x:rand(w.w), y:rand(w.h)
+  def initialize env
+    self.env = env
+    super x:rand(env.w), y:rand(env.h)
+  end
+
+  ##
+  # Update the body's state (usually its vector). To be overriden.
+
+  def update
   end
 
   ##
@@ -47,7 +53,7 @@ class Graphics::Body < Graphics::V
   # If out of bounds, return the rebounding vector of the wall it hit.
 
   def wall_vectors
-    max_h, max_w = w.h, w.w
+    max_h, max_w = env.h, env.w
     normals = []
 
     x2, y2 = endpoint.to_a
@@ -77,9 +83,9 @@ class Graphics::Body < Graphics::V
     wall_vectors.each do |u|
       case u.a
       when EAST  then self.x = 0
-      when WEST  then self.x = w.w
+      when WEST  then self.x = env.w
       when NORTH then self.y = 0
-      when SOUTH then self.y = w.h
+      when SOUTH then self.y = env.h
       end
       self.apply u
     end
@@ -101,7 +107,7 @@ class Graphics::Body < Graphics::V
   # Wrap the body if it hits an edge.
 
   def wrap
-    max_h, max_w = w.h, w.w
+    max_h, max_w = env.h, env.w
 
     self.x = max_w if x < 0
     self.y = max_h if y < 0

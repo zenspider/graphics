@@ -4,34 +4,31 @@
 require "graphics"
 
 class Boid < Graphics::Body
+  attr_accessor :img
+
   COUNT = 90
 
   PCT_DAMPENER = 0.01
   TOO_CLOSE    = 50
   MAX_VELOCITY = 5
 
-  @@max_distance = 100
-
-  def self.max_distance= n
-    @@max_distance = n
-  end
-
-  def self.max_distance
-    @@max_distance
-  end
-
-  def initialize w
+  def initialize w, img
     super w
 
-    self.m = rand(20)
     self.a = rand 360
+    self.m = rand(20)
+
+    self.img = img
+    self.env.max_distance = 100
   end
 
-  def draw
-    # the blit looks HORRIBLE when rotated... dunno why
-    w.circle x, y, @@max_distance, :gray if w.visual_debug?
-    w.blit w.body_img, x, y
-    w.angle x, y, a, 3 * m, :red
+  class View
+    def self.draw w, o
+      # the blit looks HORRIBLE when rotated... dunno why
+      w.circle o.x, o.y, o.env.max_distance, :gray if o.env.visual_debug
+      w.blit o.img, o.x, o.y
+      w.angle o.x, o.y, o.a, 3 * o.m, :red
+    end
   end
 
   def label
@@ -44,6 +41,7 @@ class Boid < Graphics::Body
     self.apply r
     limit_velocity r
     move
+    wrap
 
     @nearby = nil
   end
@@ -51,9 +49,9 @@ class Boid < Graphics::Body
   def nearby
     @nearby ||= begin
                   p = self.position
-                  w.boids.find_all do |b|
+                  self.env._bodies.flatten.find_all do |b|
                     b != self &&
-                    (b.position - p).magnitude.abs < @@max_distance
+                    (b.position - p).magnitude.abs < env.max_distance
                   end
                 end
   end
@@ -226,42 +224,23 @@ class Boid < Graphics::Body
 end
 
 class Boids < Graphics::Simulation
-  attr_accessor :boids, :body_img, :cmap, :visual_debug
-
-  alias :visual_debug? :visual_debug
-
   def initialize
     super 850, 850, 16, "Boid"
 
-    self.visual_debug = false
+    self.env.visual_debug = true
 
-    self.boids = populate Boid
-
-    self.body_img = sprite 20, 20 do
-      circle 10, 10, 5, :white, :filled
+    body_img = canvas.sprite 20, 20 do
+      canvas.circle 10, 10, 5, :white, :filled
     end
+    self.env._bodies << Array.new(50) { Boid.new self.env, body_img }
   end
 
   def initialize_keys
     super
 
-    add_key_handler(:D) { self.visual_debug = ! visual_debug }
+    add_key_handler(:D) { self.env.visual_debug = ! visual_debug }
     add_key_handler(:B) { Boid.max_distance += 5 }
     add_key_handler(:S) { Boid.max_distance -= 5 }
-  end
-
-  def update n
-    boids.each(&:update)
-    self.boids.each(&:wrap)
-  end
-
-  def draw n
-    clear
-
-    boids.each(&:draw)
-
-    debug "r = #{Boid.max_distance}" if visual_debug?
-    fps n
   end
 end
 

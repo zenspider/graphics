@@ -1,6 +1,7 @@
 # Simple and fast 2D vector
 
-require "graphics/xy"
+# require "graphics/xy"
+require_relative "./xy"
 
 class Graphics::V
 

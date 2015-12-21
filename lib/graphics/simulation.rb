@@ -1,12 +1,29 @@
 # -*- coding: utf-8 -*-
 
 require "sdl/sdl"
+require "ostruct"
+require "graphics/canvas"
 
 module SDL; end # :nodoc: -- stupid rdoc :(
+
 
 ##
 # A simulation. This ties everything together and provides a bunch of
 # convenience methods to make life easier.
+#
+# In the Model View Controller (MVC) pattern, the simulation is the
+# Controller and controls both the window and all bodies involved in
+# the simulation. The bodies are the Model and each body class is
+# expected to have an inner View class w/ a #draw class method for the
+# View.
+#
+# For example, in examples/bounce.rb:
+#
+#  BounceSimulation subclasses Graphics::Simulation
+#  BounceSimulation has many Balls
+#  Ball#update maintains all ball movement.
+#  BounceSimulation#draw automatically calls Ball::View.draw on all balls.
+#  Ball::View.draw takes a window and a ball and draws it.
 
 class Graphics::Simulation
 
@@ -20,22 +37,16 @@ class Graphics::Simulation
   LOG_INTERVAL = 60
 
   # The window the simulation is drawing in.
-  attr_accessor :screen
+  attr_accessor :canvas
 
-  # The window width.
-  attr_accessor :w
-
-  # The window height.
-  attr_accessor :h
+  # The environment of the simulation. Keeps track of:
+  #   - width and height of canvas
+  #   - bodies updated/drawn in engine loop
+  #   - any other info needed for updating the simulation
+  attr_accessor :env
 
   # Pause the simulation.
   attr_accessor :paused
-
-  # The current font for rendering text.
-  attr_accessor :font
-
-  # A hash of color names to their values.
-  attr_accessor :color
 
   # A hash of color values to their rgb values. For text, apparently. *shrug*
   attr_accessor :rgb
@@ -61,24 +72,22 @@ class Graphics::Simulation
 
     full = full ? SDL::FULLSCREEN : 0
 
-    self.font = find_font("Menlo", 32)
+    self.canvas = Canvas.new w, h, bpp, name, full
 
-    SDL::WM.set_caption name, name
+    self.env = OpenStruct.new :w => w, :h => h, :_bodies => []
 
-    self.screen = SDL::Screen.open w, h, bpp, SDL::HWSURFACE|SDL::DOUBLEBUF|full
-    self.w, self.h = screen.w, screen.h
-
-    self.color = {}
-    self.rgb   = Hash.new { |hash, k| hash[k] = screen.format.get_rgb(color[k]) }
     self.paused = false
-
     self.iter_per_tick = 1
 
     self.key_handler = []
     self.keydown_handler = {}
 
+    def register_bodies ary
+      self.env._bodies << ary
+      ary
+    end
+
     initialize_keys
-    initialize_colors
   end
 
   ##
@@ -92,48 +101,6 @@ class Graphics::Simulation
     add_keydown_handler("-")  { self.iter_per_tick -= 1; self.iter_per_tick = 1  if iter_per_tick < 1 }
   end
 
-  def initialize_colors # :nodoc:
-    register_color :black,     0,   0,   0
-    register_color :white,     255, 255, 255
-    register_color :red,       255, 0,   0
-    register_color :green,     0,   255, 0
-    register_color :blue,      0,   0,   255
-    register_color :gray,      127, 127, 127
-    register_color :yellow,    255, 255, 0
-    register_color :alpha,     0, 0, 0, 0
-
-    (0..99).each do |n|
-      m = (255 * (n / 100.0)).to_i
-      register_color(("gray%02d"  % n).to_sym, m, m, m)
-      register_color(("red%02d"   % n).to_sym, m, 0, 0)
-      register_color(("green%02d" % n).to_sym, 0, m, 0)
-      register_color(("blue%02d"  % n).to_sym, 0, 0, m)
-    end
-  end
-
-  sys_font  = "/System/Library/Fonts"
-  lib_font  = "/Library/Fonts"
-  user_font = File.expand_path "~/Library/Fonts/"
-  FONT_GLOB = "{#{sys_font},#{lib_font},#{user_font}}" # :nodoc:
-
-  ##
-  # Find and open a (TTF) font. Should be as system agnostic as possible.
-
-  def find_font name, size = 16
-    font = Dir["#{FONT_GLOB}/#{name}.{ttc,ttf}"].first
-
-    raise ArgumentError, "Can't find font named '#{name}'" unless font
-
-    SDL::TTF.open(font, size)
-  end
-
-  ##
-  # Name a color w/ rgba values.
-
-  def register_color name, r, g, b, a = 255
-    color[name] = screen.format.map_rgba r, g, b, a
-  end
-
   ##
   # Return an array populated by instances of +klass+. You can specify
   # how many to create here or it will access +klass::COUNT+ as the
@@ -141,7 +108,7 @@ class Graphics::Simulation
 
   def populate klass, n = klass::COUNT
     n.times.map {
-      o = klass.new self
+      o = klass.new self.env
       yield o if block_given?
       o
     }
@@ -200,7 +167,7 @@ class Graphics::Simulation
   # On each tick, call update, then draw the scene.
 
   def run
-    self.start_time = Time.now
+    self.env.start_time = Time.now
     n = 0
     event = nil
 
@@ -222,183 +189,53 @@ class Graphics::Simulation
 
   def draw_and_flip n # :nodoc:
     self.draw n
-    screen.flip
+    canvas.screen.flip
   end
 
   ##
-  # Draw the scene. This is a subclass responsibility and must draw
-  # the entire window (including calling clear).
+  # Draw the scene by clearing the window and drawing all registered
+  # bodies. You are free to completely override this or call super and
+  # add any extras at the end.
 
   def draw n
-    raise NotImplementedError, "Subclass Responsibility"
+    clear
+
+    self.env._bodies.each do |ary|
+      draw_collection ary
+    end
   end
 
   ##
-  # Update the simulation. This does nothing by default and must be
-  # overridden by the subclass.
+  # Draw a homogeneous collection of bodies. This assumes that the MVC
+  # pattern described on this class is being used.
+
+  def draw_collection ary
+    return if ary.empty?
+
+    cls = ary.first.class.const_get :View
+
+    ary.each do |obj|
+      cls.draw canvas, obj
+    end
+  end
+
+  ##
+  # Update the simulation by telling all registered bodies to update.
+  # You are free to completely override this or call super and add any
+  # extras at the end.
 
   def update n
-    # do nothing
+    self.env.n = n
+    self.env._bodies.each do |ary|
+      ary.each(&:update)
+    end
   end
 
   ##
   # Clear the whole screen
 
   def clear c = :black
-    fast_rect 0, 0, w, h, c
-  end
-
-  ##
-  # Draw an antialiased line from x1/y1 to x2/y2 in color c.
-
-  def line x1, y1, x2, y2, c
-    h = self.h
-    screen.draw_line x1, h-y1-1, x2, h-y2-1, color[c]
-  end
-
-  ##
-  # Draw a horizontal line from x1 to x2 at y in color c.
-
-  def hline y, c, x1 = 0, x2 = h
-    line x1, y, x2, y, c
-  end
-
-  ##
-  # Draw a vertical line from y1 to y2 at y in color c.
-
-  def vline x, c, y1 = 0, y2 = w
-    line x, y1, x, y2, c
-  end
-
-  ##
-  # Draw a closed form polygon from an array of points in a particular
-  # color.
-
-  def polygon *points, color
-    points << points.first
-    points.each_cons(2) do |p1, p2|
-      line(*p1, *p2, color)
-    end
-  end
-
-  ##
-  # Draw a line from x1/y1 to a particular magnitude and angle in color c.
-
-  def angle x1, y1, a, m, c
-    x2, y2 = project x1, y1, a, m
-    line x1, y1, x2, y2, c
-  end
-
-  ##
-  # Draw a rect at x/y with w by h dimensions in color c. Ignores blending.
-
-  def fast_rect x, y, w, h, c
-    screen.fast_rect x, self.h-y-h, w, h, color[c]
-  end
-
-  ##
-  # Draw a point at x/y w/ color c.
-
-  def point x, y, c
-    screen[x, h-y-1] = color[c]
-  end
-
-  ##
-  # Calculate the x/y coordinate offset from x1/y1 with an angle and a
-  # magnitude.
-
-  def project x1, y1, a, m
-    rad = a * D2R
-    [x1 + Math.cos(rad) * m, y1 + Math.sin(rad) * m]
-  end
-
-  ##
-  # Draw a rect at x/y with w by h dimensions in color c.
-
-  def rect x, y, w, h, c, fill = false
-    y = self.h-y-h-1
-    if fill then
-      screen.fill_rect x, y, w, h, color[c]
-    else
-      screen.draw_rect x, y, w, h, color[c]
-    end
-  end
-
-  ##
-  # Draw a circle at x/y with radius r in color c.
-
-  def circle x, y, r, c, fill = false
-    y = h-y-1
-    if fill then
-      screen.fill_circle x, y, r, color[c]
-    else
-      screen.draw_circle x, y, r, color[c]
-    end
-  end
-
-  ##
-  # Draw a circle at x/y with radiuses w/h in color c.
-
-  def ellipse x, y, w, h, c, fill = false
-    y = self.h-y-1
-    if fill then
-      screen.fill_ellipse x, y, w, h, color[c]
-    else
-      screen.draw_ellipse x, y, w, h, color[c]
-    end
-  end
-
-  ##
-  # Draw an antialiased curve from x1/y1 to x2/y2 via control points
-  # cx1/cy1 & cx2/cy2 in color c.
-
-  def bezier x1, y1, cx1, cy1, cx2, cy2, x2, y2, c, l = 7
-    h = self.h
-    screen.draw_bezier x1, h-y1-1, cx1, h-cy1, cx2, h-cy2, x2, h-y2-1, l, color[c]
-  end
-
-  ## Text
-
-  ##
-  # Return the w/h of the text s in font f.
-
-  def text_size s, f = font
-    f.text_size s
-  end
-
-  ##
-  # Return the rendered text s in color c in font f.
-
-  def render_text s, c, f = font
-    f.render screen, s, color[c]
-  end
-
-  ##
-  # Draw text s at x/y in color c in font f.
-
-  def text s, x, y, c, f = font
-    y = self.h-y-f.height-1
-    f.draw screen, s, x, y, color[c]
-  end
-
-  ##
-  # Print out some extra debugging information underneath the fps line
-  # (if any).
-
-  def debug fmt, *args
-    s = fmt % args
-    text s, 10, h-40-font.height, :white
-  end
-
-  attr_accessor :start_time # :nodoc:
-
-  ##
-  # Draw the current frames-per-second in the top left corner in green.
-
-  def fps n
-    secs = Time.now - start_time
-    fps = "%5.1f fps" % [n / secs]
-    text fps, 10, h-font.height, :green
+    canvas.fast_rect 0, 0, env.w, env.h, c
   end
 
   ### Blitting Methods:
@@ -424,56 +261,6 @@ class Graphics::Simulation
 
   def open_mixer channels = 1
     SDL::Audio.open channels
-  end
-
-  ##
-  # Return the current mouse state: x, y, buttons.
-
-  def mouse
-    r = SDL::Mouse.state
-    r[1] = h-r[1]
-    r
-  end
-
-  ##
-  # Draw a bitmap centered at x/y with optional angle, x/y scale, and flags.
-
-  def blit src, x, y, a° = 0, xscale = 1, yscale = 1, flags = 0
-    img = src.transform src.format.colorkey, -a°, xscale, yscale, flags
-
-    SDL::Surface.blit img, 0, 0, 0, 0, screen, x-img.w/2, h-y-img.h/2
-  end
-
-  ##
-  # Draw a bitmap at x/y with optional angle, x/y scale, and flags.
-
-  def put src, x, y, a° = 0, xscale = 1, yscale = 1, flags = 0
-    img = src.transform src.format.colorkey, -a°, xscale, yscale, flags
-
-    # why x-1? because transform adds a pixel to all sides even if a°==0
-    SDL::Surface.blit img, 0, 0, 0, 0, screen, x-1, h-y-img.h
-  end
-
-  ##
-  # Create a new sprite with a given width and height and yield to a
-  # block with the new sprite as the current screen. All drawing
-  # primitives will work and the resulting surface is returned.
-
-  def sprite w, h
-    new_screen = SDL::Surface.new w, h, screen.format
-    old_screen = screen
-    old_w, old_h = self.w, self.h
-    self.w, self.h = w, h
-
-    self.screen = new_screen
-    yield if block_given?
-
-    new_screen.set_color_key SDL::SRCCOLORKEY, 0
-
-    new_screen
-  ensure
-    self.screen = old_screen
-    self.w, self.h = old_w, old_h
   end
 end
 

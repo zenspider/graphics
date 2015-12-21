@@ -59,14 +59,14 @@ class SotoGOL < Graphics::Simulation
     self.board = GOL::tick self.board
     board.delete_if do |c, _|
       x, y = c
-      x < 0 || y < 0 || x > @w - 1 || y > @h - 1
+      x < 0 || y < 0 || x > env.w - 1 || y > env.h - 1
     end
   end
 
   def draw n
     clear
-    self.board.keys.each { |x, y| circle x*@k+@r, y*@k+@r, @r, :green, :fill }
-    fps n
+    self.board.keys.each { |x, y| canvas.circle x*@k+@r, y*@k+@r, @r, :green, :fill }
+    canvas.fps n, env.start_time
   end
 end
 

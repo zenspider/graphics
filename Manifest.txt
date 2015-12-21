@@ -61,6 +61,7 @@ lib/graphics.rb
 lib/graphics/body.rb
 lib/graphics/extensions.rb
 lib/graphics/simulation.rb
+lib/graphics/canvas.rb
 lib/graphics/trail.rb
 lib/graphics/v.rb
 lib/graphics/xy.rb
