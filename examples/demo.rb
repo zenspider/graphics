@@ -19,32 +19,34 @@ class Ball < Graphics::Body
     wrap
   end
 
-  def draw n
-    a = n % 360
+  class View
+    def self.draw w, b
+      a = w.n % 360
+      x, y = b.x, b.y
 
-    w.angle  x, y, a, 50,     :green
-    w.circle x, y, 5, :white, :filled
+      w.angle  x, y, a, 50,     :green
+      w.circle x, y, 5, :white, :filled
+    end
   end
 end
 
 class Demo < Graphics::Simulation
-  attr_accessor :ball, :img
+  attr_accessor :ball, :img, :n
 
   def initialize
     super 800, 800, 16, "Boid"
     self.ball = Ball.new self
+    register_body ball
 
     self.img = sprite 10, 10 do
       circle 5, 5, 5, :white, :filled
     end
   end
 
-  def update n
-    ball.update
-  end
-
   def draw n
-    clear
+    self.n = n
+
+    super
 
     line 100, 50, 125, 75, :white
 
@@ -78,8 +80,6 @@ class Demo < Graphics::Simulation
     text "#{x}/#{y}", x, y, :white
 
     debug "debug"
-
-    ball.draw n
 
     fps n
   end

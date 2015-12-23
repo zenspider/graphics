@@ -27,13 +27,6 @@ class Boid < Graphics::Body
     self.a = random_angle
   end
 
-  def draw
-    # the blit looks HORRIBLE when rotated... dunno why
-    w.circle x, y, @@max_distance, :gray if w.visual_debug?
-    w.blit w.body_img, x, y
-    w.angle x, y, a, 3 * m, :red
-  end
-
   def label
     l = "%.1f [%.2f, %.2f]" % [a, *dx_dy]
     w.text l, x-10, y+10, :white
@@ -47,6 +40,8 @@ class Boid < Graphics::Body
     self.velocity += v1 + v2 + v3
     limit_velocity
     self.position += self.velocity
+
+    wrap
 
     @nearby = nil
   end
@@ -242,6 +237,16 @@ class Boid < Graphics::Body
 
     (v - self.velocity) / 4
   end
+
+  class View
+    def self.draw w, b
+      x, y, a, m = b.x, b.y, b.a, b.m
+
+      w.circle x, y, @@max_distance, :gray if w.visual_debug?
+      w.blit w.body_img, x, y # the blit looks HORRIBLE when rotated... dunno why
+      w.angle x, y, a, 3 * m, :red
+    end
+  end
 end
 
 class Boids < Graphics::Simulation
@@ -255,6 +260,7 @@ class Boids < Graphics::Simulation
     self.visual_debug = false
 
     self.boids = populate Boid
+    register_bodies boids
 
     self.body_img = sprite 20, 20 do
       circle 10, 10, 5, :white, :filled
@@ -269,15 +275,8 @@ class Boids < Graphics::Simulation
     add_key_handler(:S) { Boid.max_distance -= 5 }
   end
 
-  def update n
-    boids.each(&:update)
-    self.boids.each(&:wrap)
-  end
-
   def draw n
-    clear
-
-    boids.each(&:draw)
+    super
 
     debug "r = #{Boid.max_distance}" if visual_debug?
     fps n

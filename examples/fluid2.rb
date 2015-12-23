@@ -22,14 +22,17 @@ class Particle < Graphics::Body
     clear
   end
 
-  def draw
-    x = self.x * s
-    y = self.y * s
+  class View
+    def self.draw w, b
+      s, a, m, d = b.s, b.a, b.m, b.density
+      x = b.x * s
+      y = b.y * s
 
-    w.circle(x, y, density, :gray)
-    w.circle(x, y, 5, :white)
+      w.circle(x, y, d, :gray)
+      w.circle(x, y, 5, :white)
 
-    w.angle x, y, a, m * s, :red
+      w.angle x, y, a, m * s, :red
+    end
   end
 
   def clear
@@ -180,11 +183,13 @@ class FluidDynamics < Graphics::Simulation
         particles << Particle.new(self, x + 1 + jitter, y + 5, S)
       end
     end
+
+    register_bodies particles
   end
 
   def draw n
-    clear
-    particles.each(&:draw)
+    super
+
     fps n
   end
 

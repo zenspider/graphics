@@ -103,8 +103,10 @@ class Bouncer < Graphics::Body
     V[x0, y0]
   end
 
-  def draw
-    trail.draw
+  class View
+    def self.draw w, b
+      b.trail.draw # TODO: remove w stored everywhere
+    end
   end
 
   def update
@@ -131,18 +133,14 @@ class PiPolygon < Graphics::Simulation
     super @r * 2, @r * 2
     @poly = Polygnome.new @r, @r, self
     @balls = []
+    register_bodies @balls
     BALLS.times { @balls << Bouncer.new(self, MAGND) }
   end
 
   def draw n
-    clear
+    super
     circle @r, @r, @r, :green
-    @balls.each &:draw
     @poly.draw
-  end
-
-  def update n
-    @balls.each &:update
   end
 end
 

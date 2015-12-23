@@ -69,6 +69,17 @@ class Tank
 
   def accelerate; self.speed += ACCELERATE; end
   def decelerate; self.speed -= DECELERATE; end
+
+  class View
+    def self.draw w, b
+      x, y, a, t = b.x, b.y, b.angle, b.turret
+
+      w.blit w.body_img, x, y, a
+      w.blit w.turret_img, x, y, t
+
+      w.debug "%3d @ %.2f @ %d", a, b.speed, b.energy
+    end
+  end
 end
 
 class Bullet
@@ -87,6 +98,12 @@ class Bullet
     self.x += Math.cos(rad) * v
     self.y += Math.sin(rad) * v
   end
+
+  class View
+    def self.draw w, b
+      w.rect b.x, b.y, 2, 2, :white
+    end
+  end
 end
 
 class TargetSimulation < Graphics::Simulation
@@ -99,6 +116,9 @@ class TargetSimulation < Graphics::Simulation
 
     self.tank = Tank.new w/2, h/2
     self.bullets = []
+
+    register_body tank
+    register_bodies bullets
 
     self.body_img = sprite 40, 30 do
       rect 0,  0, 39, 29, :white
@@ -119,6 +139,8 @@ class TargetSimulation < Graphics::Simulation
   def initialize_keys
     super
 
+    keydown_handler.delete "q"  # HACK
+
     add_key_handler(:RIGHT)     { tank.turn_right }
     add_key_handler(:LEFT)      { tank.turn_left }
     add_key_handler(:UP)        { tank.accelerate }
@@ -134,34 +156,16 @@ class TargetSimulation < Graphics::Simulation
   end
 
   def update n
-    tank.update
-
-    bullets.each(&:update)
+    super
 
     if tank.x < 0 then tank.x = 0 elsif tank.x > w then tank.x = w end
     if tank.y < 0 then tank.y = 0 elsif tank.y > h then tank.y = h end
   end
 
   def draw n
-    clear
-    draw_tank
-    draw_bullets
+    super
+
     fps n
-  end
-
-  def draw_tank
-    x, y, a, t = tank.x, tank.y, tank.angle, tank.turret
-
-    blit body_img, x, y, a
-    blit turret_img, x, y, t
-
-    debug "%3d @ %.2f @ %d", tank.angle, tank.speed, tank.energy
-  end
-
-  def draw_bullets
-    bullets.each do |b|
-      rect b.x, b.y, 2, 2, :white
-    end
   end
 end
 

@@ -17,11 +17,6 @@ class Ball < Graphics::Body
     self.g = G
   end
 
-  def draw
-    w.angle x, y, a, 10+3*m, :red
-    w.circle x, y, 5, :white, :filled
-  end
-
   def update
     fall
     move
@@ -30,6 +25,13 @@ class Ball < Graphics::Body
 
   def fall
     self.velocity += g
+  end
+
+  class View
+    def self.draw w, b
+      w.angle b.x, b.y, b.a, 10+3*b.m, :red
+      w.circle b.x, b.y, 5, :white, :filled
+    end
   end
 end
 
@@ -40,6 +42,7 @@ class BounceSimulation < Graphics::Simulation
     super 640, 640, 16, "Bounce"
 
     self.bs = populate Ball
+    register_bodies bs
   end
 
   def initialize_keys
@@ -48,13 +51,8 @@ class BounceSimulation < Graphics::Simulation
     add_keydown_handler "r", &:reverse
   end
 
-  def update n
-    bs.each(&:update)
-  end
-
   def draw n
-    clear
-    bs.each(&:draw)
+    super
     fps n
   end
 

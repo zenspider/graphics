@@ -37,15 +37,6 @@ class Person < Graphics::Body
     self.m += D_M unless m >= M_M
   end
 
-  def draw
-    trail.draw
-
-    w.angle x, y, ga,   60, :red
-
-    # the blit looks HORRIBLE when rotated... dunno why
-    w.blit w.body_img, x, y
-  end
-
   def turn_towards_goal
     turn a.relative_angle(ga, D_A)
   end
@@ -66,6 +57,17 @@ class Person < Graphics::Body
     self.a = (a + 180).degrees
     change_goal
   end
+
+  class View
+    def self.draw w, b
+      b.trail.draw
+
+      w.angle b.x, b.y, b.ga, 60, :red
+
+      # the blit looks HORRIBLE when rotated... dunno why
+      w.blit w.body_img, b.x, b.y
+    end
+  end
 end
 
 class WalkerSimulation < Graphics::Simulation
@@ -75,6 +77,7 @@ class WalkerSimulation < Graphics::Simulation
     super 850, 850, 16, "Walker"
 
     self.ps = populate Person
+    register_bodies ps
 
     self.body_img = sprite 20, 20 do
       circle 10, 10, 5, :white, :filled
@@ -84,14 +87,14 @@ class WalkerSimulation < Graphics::Simulation
   end
 
   def update n
-    ps.each(&:update)
+    super
+
     detect_collisions(ps).each(&:collide)
   end
 
   def draw n
-    clear
+    super
 
-    ps.each(&:draw)
     fps n
   end
 
