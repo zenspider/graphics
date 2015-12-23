@@ -15,7 +15,7 @@ class Person < Graphics::Body
   VISIBILITY_SQ      = VISIBILITY**2
   ATTACK_DISTANCE_SQ = ATTACK_DISTANCE**2
 
-  attr_accessor :attack, :debug
+  attr_accessor :attack, :debug, :ps, :cmap
   alias attack? attack
   alias debug? debug
 
@@ -24,6 +24,8 @@ class Person < Graphics::Body
 
     self.a  = random_angle
     self.ga = random_angle
+    self.ps = w.ps
+    self.cmap = w.cmap
     self.attack = false
     self.debug = false
   end
@@ -56,7 +58,7 @@ class Person < Graphics::Body
 
   def nearby
     @nearby ||= begin
-                  all_but_me = w.ps.reject(&:attack?)
+                  all_but_me = ps.reject(&:attack?)
                   nearby     = all_but_me.find_all { |p| self.near? p }
                   visible    = nearby.select { |p| self.visible? p }
                   visible.sort_by { |p| self.distance_to_squared(p) }
@@ -80,7 +82,7 @@ class Person < Graphics::Body
   end
 
   def kill
-    w.ps.delete self unless attack?
+    ps.delete self unless attack?
   end
 
   def accelerate
@@ -103,7 +105,7 @@ class Person < Graphics::Body
   end
 
   def collide_with? other
-    w.cmap.check(x, y, w.cmap, other.x, other.y) != nil
+    cmap.check(x, y, cmap, other.x, other.y) != nil
   end
 
   def collide b
@@ -143,7 +145,13 @@ class WalkerSimulation < Graphics::Simulation
   def initialize
     super 850, 850, 16, "Walker"
 
-    self.ps = populate Person, 2
+    self.body_img = sprite 20, 20 do
+      circle 10, 10, 5, :white, :filled
+    end
+
+    self.cmap = body_img.make_collision_map
+    self.ps = []
+    self.ps.replace populate(Person, 2)
     register_bodies ps
 
     # 5.times do |n|
@@ -162,12 +170,6 @@ class WalkerSimulation < Graphics::Simulation
     ps.last.y = h/2 + 50
     ps.last.a = 0
     ps.last.ga = 0
-
-    self.body_img = sprite 20, 20 do
-      circle 10, 10, 5, :white, :filled
-    end
-
-    self.cmap = body_img.make_collision_map
   end
 
   def update n

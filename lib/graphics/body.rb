@@ -52,18 +52,15 @@ class Graphics::Body
 
   attr_accessor :m
 
-  ##
-  # Body's window.
-
-  attr_accessor :w
+  attr_accessor :max_w
+  attr_accessor :max_h
 
   ##
   # Create a new body in windowing system +w+ with a random x/y and
   # everything else zero'd out.
 
   def initialize w
-    self.w = w
-
+    self.max_w, self.max_h = w.w, w.h
     self.x, self.y = rand(w.w), rand(w.h)
     self.a = 0.0
     self.ga = 0.0
@@ -164,6 +161,7 @@ class Graphics::Body
     rad = a * D2R
     self.x += Math.cos(rad) * m
     self.y += Math.sin(rad) * m
+    self
   end
 
   ##
@@ -174,8 +172,6 @@ class Graphics::Body
   # See also: NORMALS
 
   def clip
-    max_h, max_w = w.h, w.w
-
     if x < 0 then
       self.x = 0
       return :west
@@ -227,7 +223,6 @@ class Graphics::Body
 
   def bounce
     # TODO: rewrite this using clip + NORMAL to clean it up
-    max_h, max_w = w.h, w.w
     normal = nil
 
     if x < 0 then
@@ -252,8 +247,6 @@ class Graphics::Body
   # Wrap the body if it hits an edge.
 
   def wrap
-    max_h, max_w = w.h, w.w
-
     self.x = max_w if x < 0
     self.y = max_h if y < 0
 

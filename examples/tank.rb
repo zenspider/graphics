@@ -26,7 +26,7 @@ class Tank < Graphics::Body
     self.y = w.h / 2
     self.e = 0
 
-    self.t = Turret.new self
+    self.t = Turret.new w, self
   end
 
   def update
@@ -73,17 +73,20 @@ class Tank < Graphics::Body
 end
 
 class Turret < Graphics::Body
-  def initialize tank
-    self.w = tank.w
+  attr_accessor :bs
+
+  def initialize w, tank
+    super w
+
     self.x = tank.x
     self.y = tank.y
     self.a = tank.a
     self.m = tank.m
+    self.bs = w.bullets
   end
 
   def fire
-    b = Bullet.new w, x, y, a, m
-    b.move_by a, 15
+    Bullet.new(x, y, a, m, bs, max_w, max_h).move_by a, 15
   end
 
   def update x, y
@@ -99,18 +102,23 @@ class Turret < Graphics::Body
 end
 
 class Bullet < Graphics::Body
-  def initialize w, x, y, a, m
-    self.w = w
+  attr_accessor :bs
+
+  def initialize x, y, a, m, bs, max_w, max_h
     self.x = x
     self.y = y
     self.a = a
     self.m = m + 5
-    w.bullets << self
+    self.max_w = max_w
+    self.max_h = max_h
+    self.bs = bs
+
+    raise "Nil bs" unless bs
   end
 
   def update
     move
-    w.bullets.delete self if clip
+    bs.delete self if clip
   end
 
   class View
@@ -129,8 +137,8 @@ class TargetSimulation < Graphics::Simulation
   def initialize
     super 640, 640, 16, "Target Practice"
 
-    self.tank = Tank.new self
     self.bullets = []
+    self.tank = Tank.new self
 
     register_body tank
     register_bodies bullets
@@ -142,13 +150,15 @@ class TargetSimulation < Graphics::Simulation
   def initialize_keys
     super
 
+    keydown_handler.delete "q"  # HACK
+
     add_key_handler(:RIGHT)     { tank.turn_right }
     add_key_handler(:LEFT)      { tank.turn_left }
     add_key_handler(:UP)        { tank.accelerate }
     add_key_handler(:DOWN)      { tank.decelerate }
     add_key_handler(:SEMICOLON) { tank.aim_left }
     add_key_handler(:Q, :remove){ tank.aim_right }
-    add_key_handler(:SPACE)     { tank.fire }
+    add_key_handler(:SPACE)     { b = tank.fire; bullets << b if b }
   end
 
   def draw n

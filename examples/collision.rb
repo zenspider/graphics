@@ -5,13 +5,14 @@ require "graphics"
 class Sprite < Graphics::Body
   COUNT = 8
 
-  attr_accessor :image
+  attr_accessor :image, :cmap
 
   def initialize w
-    super w
+    super
 
     self.a = random_angle
     self.m = 5
+    self.cmap = w.cmap
   end
 
   def update
@@ -24,7 +25,7 @@ class Sprite < Graphics::Body
   end
 
   def collide_with? other
-    w.cmap.check(x, y, w.cmap, other.x, other.y)
+    cmap.check(x, y, cmap, other.x, other.y)
   end
 
   class View

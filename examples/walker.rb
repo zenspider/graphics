@@ -10,7 +10,7 @@ class Person < Graphics::Body
   D_M = 0.25
   M_M = 5.0
 
-  attr_accessor :trail
+  attr_accessor :trail, :cmap
 
   def initialize w
     super
@@ -19,6 +19,7 @@ class Person < Graphics::Body
 
     self.a  = random_angle
     self.ga = random_angle
+    self.cmap = w.cmap
   end
 
   def update
@@ -50,7 +51,7 @@ class Person < Graphics::Body
   end
 
   def collide_with? other
-    w.cmap.check(x, y, w.cmap, other.x, other.y) != nil
+    cmap.check(x, y, cmap, other.x, other.y) != nil
   end
 
   def collide
@@ -76,14 +77,15 @@ class WalkerSimulation < Graphics::Simulation
   def initialize
     super 850, 850, 16, "Walker"
 
-    self.ps = populate Person
-    register_bodies ps
-
     self.body_img = sprite 20, 20 do
       circle 10, 10, 5, :white, :filled
     end
 
     self.cmap = body_img.make_collision_map
+
+    self.ps = []
+    ps.replace populate Person
+    register_bodies ps
   end
 
   def update n

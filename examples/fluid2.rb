@@ -11,6 +11,7 @@ class Particle < Graphics::Body
 
   attr_accessor :density, :pressure_force, :viscosity_force, :s
   attr_writer :nearby
+  attr_accessor :particles
 
   def initialize w, x, y, s
     super w
@@ -18,6 +19,7 @@ class Particle < Graphics::Body
     self.y = y
     self.s = s
     self.nearby = nil
+    self.particles = w.particles
 
     clear
   end
@@ -45,7 +47,7 @@ class Particle < Graphics::Body
   def nearby
     @nearby ||= begin
                   p = self.position
-                  w.particles.find_all { |neighbor|
+                  particles.find_all { |neighbor|
                     (p - neighbor.position).magnitude < H
                   }
                 end
