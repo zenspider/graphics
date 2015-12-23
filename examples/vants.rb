@@ -1,8 +1,6 @@
 #!/usr/local/bin/ruby -w
 # -*- coding: utf-8 -*-
 
-srand 42
-
 require "graphics"
 
 ##

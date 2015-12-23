@@ -6,8 +6,6 @@ require "graphics/trail"
 # hit the perimeter of the circle. As the number of vertices tends to infinite
 # the polygon will converge to the circle and the ratio to pi.
 
-srand 42
-
 class Polygnome < Array
   attr_reader :origin, :r, :s
 
