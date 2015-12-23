@@ -5,10 +5,9 @@ require "sdl/sdl"
 module SDL; end # :nodoc: -- stupid rdoc :(
 
 ##
-# A simulation. This ties everything together and provides a bunch of
-# convenience methods to make life easier.
+# An abstract simulation. See Graphics::Simulation and Graphics::Drawing.
 
-class Graphics::Simulation
+class Graphics::AbstractSimulation
 
   # The default color to clear the screen.
   CLEAR_COLOR = :black
@@ -73,7 +72,7 @@ class Graphics::Simulation
 
     SDL::WM.set_caption name, name
 
-    self.screen = SDL::Screen.open w, h, bpp, SDL::HWSURFACE|SDL::DOUBLEBUF|full
+    self.screen = SDL::Screen.open w, h, bpp, self.class::SCREEN_FLAGS|full
     self.w, self.h = screen.w, screen.h
 
     self.color = {}
@@ -520,6 +519,49 @@ class Graphics::Simulation
   ensure
     self.screen = old_screen
     self.w, self.h = old_w, old_h
+  end
+end
+
+##
+# A simulation. This ties everything together and provides a bunch of
+# convenience methods to make life easier.
+#
+# In the Model View Controller (MVC) pattern, the simulation is the
+# Controller and controls both the window and all bodies involved in
+# the simulation. The bodies are the Model and each body class is
+# expected to have an inner View class w/ a #draw class method for the
+# View.
+#
+# For example, in examples/bounce.rb:
+#
+# + BounceSimulation subclasses Graphics::Simulation
+# + BounceSimulation has many Balls
+# + Ball#update maintains all ball movement.
+# + BounceSimulation#draw automatically calls Ball::View.draw on all balls.
+# + Ball::View.draw takes a window and a ball and draws it.
+
+class Graphics::Simulation < Graphics::AbstractSimulation
+  SCREEN_FLAGS = SDL::HWSURFACE|SDL::DOUBLEBUF
+end
+
+##
+# A drawing. Like a Simulation, but on a canvas that doesn't have
+# double buffering or clearing on each tick.
+#
+# See AbstractSimulation for most methods.
+
+class Graphics::Drawing < Graphics::AbstractSimulation
+  SCREEN_FLAGS = SDL::HWSURFACE
+
+  def initialize(*a)
+    super
+
+    clear
+  end
+
+  def draw_and_flip n
+    screen.update 0, 0, 0, 0
+    # no flip
   end
 end
 
