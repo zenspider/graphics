@@ -1,16 +1,7 @@
 #!/usr/bin/ruby -w
 
 require "graphics"
-
-class Array
-  def sorted_include? o
-    a, b = o
-    !!bsearch { |(x, y)|
-      c = a - x
-      c.zero? ? b - y : c
-    }
-  end
-end
+require "set"
 
 class ZenspiderGol
   delta   = [-1, 0, 1]
@@ -25,30 +16,30 @@ class ZenspiderGol
   attr_accessor :cache
 
   def initialize
-    self.cells = []
+    self.cells = Set.new
   end
 
   def randomize n, pct
     m = ((n*n) * pct).to_i
     dimensions = n.times.to_a
-    cells.replace dimensions.product(dimensions).sample(m).sort
+    self.cells = dimensions.product(dimensions).sample(m).sort.to_set
   end
 
   def update
-    cells.replace considered.select { |(x, y)| alive? x, y }.sort
+    self.cells.replace considered.keep_if { |c| alive? c }
   end
 
   def considered
-    cells.map { |(x, y)| neighbors_for(x, y) }.flatten(1).uniq
+    cells.to_a.map { |c| neighbors_for c }.flatten(1).uniq
   end
 
-  def alive? x, y
-    count = (neighbors_for(x, y) & cells).size
-    min   = MIN[cells.sorted_include? [x, y]]
-    count.between? min, 3
+  def alive? c
+    neighbors_for(c).count { |o| cells.include? o }
+                    .between? MIN[cells.include? c], 3
   end
 
-  def neighbors_for x, y
+  def neighbors_for c
+    x, y = c
     @@neighbors[x][y] ||=
       DELTAS.map { |(dx, dy)| [x+dx, y+dy] }.reject { |(m, n)| m < 0 || n < 0 }
   end
@@ -69,7 +60,8 @@ class ZenspiderGolSimulation < Graphics::Simulation
   def draw n
     clear
 
-    gol.cells.each do |(x, y)|
+    gol.cells.each do |c|
+      x, y = c
       ellipse x*SIZE, y*SIZE, (SIZE-1)/2, (SIZE-1)/2, :white, :filled
     end
 
