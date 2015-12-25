@@ -7,7 +7,7 @@ class ZenspiderGol
   delta   = [-1, 0, 1]
   same    = [0, 0]
 
-  DELTAS  = (delta.product(delta) - [same]).sort
+  DELTAS  = (delta.product(delta) - [same])
   MIN     = { true => 2, false => 3 }
 
   @@neighbors = Hash.new { |h, k| h[k] = {} }
@@ -22,11 +22,11 @@ class ZenspiderGol
   def randomize n, pct
     m = ((n*n) * pct).to_i
     dimensions = n.times.to_a
-    self.cells = dimensions.product(dimensions).sample(m).sort.to_set
+    self.cells = dimensions.product(dimensions).sample(m).to_set
   end
 
   def update
-    self.cells.replace considered.keep_if { |c| alive? c }
+    cells.replace considered.keep_if { |c| alive? c }
   end
 
   def considered
