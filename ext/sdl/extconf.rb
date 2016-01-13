@@ -5,9 +5,10 @@ $INCFLAGS << " -I$(srcdir)/sge"
 
 $srcs = Dir.glob("#{$srcdir}/{,sge/}*.c{,pp}")
 
-sdl_config = with_config "sdl-config", "sdl-config"
-$CPPFLAGS   += " " + `#{sdl_config} --cflags`.chomp
-$LOCAL_LIBS += " " + `#{sdl_config} --libs`.chomp
+pkg_config("sdl")
+pkg_config("SDL_mixer")
+pkg_config("SDL_ttf")
+pkg_config("SDL_image")
 
 have_library("SDL_mixer", "Mix_OpenAudio") or abort "Need sdl_mixer"
 have_library("SDL_image", "IMG_Load") or abort "Need sdl_image"

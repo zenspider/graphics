@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-for pkg in sdl sdl_image sdl_ttf sdl_mixer sdl_gfx smpeg freetype libogg libvorbis libsmpeg libpng libtiff; do
+for pkg in pkg-config sdl sdl_image sdl_ttf sdl_mixer sdl_gfx smpeg freetype libogg libvorbis libsmpeg libpng libtiff; do
     brew uninstall $pkg || true
 done
 
@@ -11,10 +11,11 @@ done
 
 # brew update
 
-brew install sdl       --universal
-brew install sdl_mixer --universal --with-smpeg
-brew install sdl_ttf   --universal
-brew install sdl_image --universal --without-webp
+brew install pkg-config  --universal
+brew install sdl         --universal
+brew install sdl_mixer   --universal --with-smpeg
+brew install sdl_ttf     --universal
+brew install sdl_image   --universal --without-webp
 
 if [ -f $0 ]; then
     rake clean package
