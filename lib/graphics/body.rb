@@ -229,6 +229,7 @@ class Graphics::Body
     if wall = clip then
       self.a = (2 * NORMAL[wall] - 180 - a).degrees
       self.m *= (1.0 - friction)
+      true
     end
   end
 
