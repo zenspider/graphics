@@ -54,6 +54,9 @@ class Graphics::AbstractSimulation
   # Procs registered to handle keydown events.
   attr_accessor :keydown_handler
 
+  # Is the application done?
+  attr_accessor :done
+
   ##
   # Create a new simulation of a certain width and height. Optionally,
   # you can set the bits per pixel (0 for current screen settings),
@@ -92,8 +95,8 @@ class Graphics::AbstractSimulation
   # Register default key events. Handles ESC & Q (quit) and P (pause).
 
   def initialize_keys
-    add_keydown_handler("\e") { exit }
-    add_keydown_handler("q")  { exit }
+    add_keydown_handler("\e") { self.done = true }
+    add_keydown_handler("q")  { self.done = true }
     add_keydown_handler("p")  { self.paused = !paused }
     add_keydown_handler("/")  { self.iter_per_tick += 1 }
     add_keydown_handler("-")  { self.iter_per_tick -= 1; self.iter_per_tick = 1  if iter_per_tick < 1 }
@@ -226,6 +229,7 @@ class Graphics::AbstractSimulation
     self.start_time = Time.now
     n = 0
     event = nil
+    self.done = false
 
     logger = respond_to? :log
     log_interval = self.class::LOG_INTERVAL
@@ -240,6 +244,8 @@ class Graphics::AbstractSimulation
       draw_and_flip n
 
       log if logger and n % log_interval == 0
+
+      break if done
     end
   end
 
