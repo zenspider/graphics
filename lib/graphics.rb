@@ -7,3 +7,4 @@ end
 
 require "graphics/simulation"
 require "graphics/body"
+require "graphics/decorators"
