@@ -228,7 +228,7 @@ class Graphics::Body
   def bounce friction = 0.2
     if wall = clip then
       self.a = (2 * NORMAL[wall] - 180 - a).degrees
-      self.m *= (1.0 - friction)
+      self.m *= (1.0 - friction) if friction and friction > 0
       true
     end
   end
