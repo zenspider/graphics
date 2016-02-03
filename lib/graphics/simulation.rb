@@ -527,6 +527,13 @@ class Graphics::AbstractSimulation
   end
 
   ##
+  # Save the current screen to a bmp
+
+  def save path
+    screen.save path
+  end
+
+  ##
   # Create a new sprite with a given width and height and yield to a
   # block with the new sprite as the current screen. All drawing
   # primitives will work and the resulting surface is returned.
