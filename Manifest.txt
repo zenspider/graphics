@@ -59,7 +59,9 @@ ext/sdl/sge/sge_tt_text.h
 graphics_setup.sh
 lib/graphics.rb
 lib/graphics/body.rb
+lib/graphics/decorators.rb
 lib/graphics/extensions.rb
+lib/graphics/rainbows.rb
 lib/graphics/simulation.rb
 lib/graphics/trail.rb
 lib/graphics/v.rb
