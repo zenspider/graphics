@@ -1,10 +1,6 @@
 # -*- coding: utf-8 -*-
 
 require "minitest/autorun"
-
-$: << File.expand_path("~/Work/p4/zss/src/minitest-focus/dev/lib")
-require "minitest/focus"
-
 require "graphics"
 
 class TestBody < Minitest::Test
