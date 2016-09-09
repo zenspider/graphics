@@ -105,10 +105,12 @@ class Graphics::AbstractSimulation
   def initialize_colors # :nodoc:
     register_color :black,     0,   0,   0
     register_color :white,     255, 255, 255
+    register_color :gray,      127, 127, 127
     register_color :red,       255, 0,   0
     register_color :green,     0,   255, 0
     register_color :blue,      0,   0,   255
-    register_color :gray,      127, 127, 127
+    register_color :cyan,      0, 255, 255
+    register_color :magenta,   255, 0, 255
     register_color :yellow,    255, 255, 0
     register_color :alpha,     0, 0, 0, 0
 
