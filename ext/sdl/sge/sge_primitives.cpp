@@ -2514,3 +2514,14 @@ void sge_AABezier(SDL_Surface *surface, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 
 	sge_AABezierAlpha(surface,x1,y1,x2,y2,x3,y3,x4,y4,level, SDL_MapRGB(surface->format,R,G,B),255);
 }
 
+//==================================================================================
+// Added by zenspider:
+//==================================================================================
+
+void sge_FastFilledRect(SDL_Surface *Surface, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2, Uint32 color) {
+  for (Sint16 y = y1; y <= y2; y++) {
+    _HLine(Surface, x1, x2, y, color);
+  }
+
+  sge_UpdateRect(Surface, x1, y1, x2, y2);
+}
