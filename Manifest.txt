@@ -16,7 +16,9 @@ examples/gol2.rb
 examples/logo.rb
 examples/math.rb
 examples/maze.rb
+examples/pi_polygon.rb
 examples/radar.rb
+examples/rainbow_fluid.rb
 examples/tank.rb
 examples/tank2.rb
 examples/targeting.rb
@@ -59,11 +61,15 @@ ext/sdl/sge/sge_tt_text.h
 graphics_setup.sh
 lib/graphics.rb
 lib/graphics/body.rb
+lib/graphics/decorators.rb
 lib/graphics/extensions.rb
+lib/graphics/rainbows.rb
 lib/graphics/simulation.rb
 lib/graphics/trail.rb
 lib/graphics/v.rb
 resources/images/body.png
 resources/images/turret.png
+settings.sh
 test/test_graphics.rb
+test/test_rainbows.rb
 test/test_sdl.rb
