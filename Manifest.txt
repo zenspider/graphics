@@ -69,7 +69,6 @@ lib/graphics/trail.rb
 lib/graphics/v.rb
 resources/images/body.png
 resources/images/turret.png
-settings.sh
 test/test_graphics.rb
 test/test_rainbows.rb
 test/test_sdl.rb
