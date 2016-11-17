@@ -1,3 +1,41 @@
+=== 1.0.0b6 / 2016-11-17
+
+I'm still not happy with the color system. I'd love some help to make it more usable.
+
+* 1 major enhancement:
+
+  * Added Graphics::Drawing: a simulation that doesn't double buffer or clear each tick.
+
+* 20 minor enhancements:
+
+  * Added DrawGrid decorator.
+  * Added Graphics::Simulation#draw_collection
+  * Added Graphics::Simulation#register_bodies
+  * Added Graphics::Simulation#register_body
+  * Added Screen#save.
+  * Added ShowFPS decorator module
+  * Added Simulation#done that causes soft exit to allow profiling of apps.
+  * Added WhiteBackground decorator.
+  * Added cyan and magenta to color dictionary.
+  * Added sge_FastFilledRect to sge_primitives.
+  * Body#bounce returns true if it did bounce.
+  * Defined Graphics::Simulation::CLEAR_COLOR.
+  * Graphics::Simulation now stores a collection of collections of bodies. Those bodies are updated and drawn automatically each tick.
+  * Graphics::Simulation.clear defaults to CLEAR_COLOR.
+  * Improved MVC pattern in Simulation.
+  * Pushed Simulation up to AbstractSimulation.
+  * Registered more default colors. Should also make arrays of names.
+  * Reimplement Body#bounce to use clip & NORMAL. Much cleaner.
+  * Split Simulation#draw into pre_draw and post_draw to give overrides more flexibility.
+  * Split up Simulation for Drawings.
+
+* 4 bug fixes:
+
+  * Fixed a bug in boid refactoring.
+  * Fixed bounce math to try to place the body to where it would bounce. (sotoseattle)
+  * No more srand in examples.
+  * Only apply friction on #bounce if greater than 0.
+
 === 1.0.0b5 / 2015-10-31
 
 * 10 minor enhancements:
