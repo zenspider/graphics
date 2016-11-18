@@ -968,6 +968,7 @@ void Init_sdl() {
 
   #define DC(n) rb_define_const(mSDL, #n, UINT2NUM(SDL_##n))
   DC(DOUBLEBUF);
+  DC(FULLSCREEN);
   DC(HWSURFACE);
   DC(INIT_EVERYTHING);
   DC(INIT_VIDEO);
@@ -978,7 +979,6 @@ void Init_sdl() {
 
   // DC("ANYFORMAT");
   // DC("ASYNCBLIT");
-  // DC("FULLSCREEN");
   // DC("HWACCEL");
   // DC("HWPALETTE");
   // DC("NOFRAME");
