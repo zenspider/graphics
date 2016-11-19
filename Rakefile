@@ -20,6 +20,8 @@ Hoe.spec "graphics" do
 
   dependency "rsdl", "~> 0.1"
 
+  extra_dev_deps << ['minitest-focus']
+
   base = "/data/www/docs.seattlerb.org"
   rdoc_locations << "docs-push.seattlerb.org:#{base}/#{remote_rdoc_dir}"
 end
