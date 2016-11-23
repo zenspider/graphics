@@ -26,6 +26,9 @@ class Demo < Graphics::Simulation
   def update n
   end
 
+  L = Math.sqrt(200*200 + 100*100)
+  A = R2D*Math.atan2(200, 100)
+
   def draw n
     clear :white
 
@@ -42,8 +45,11 @@ class Demo < Graphics::Simulation
     circle 200, 200, 100, :blue
     text "circle 200, 200, 100, :blue", 100, 200, :black
 
-    bezier 400, 400, 450, 700, 550, 350, 600, 600, :blue
-    text "bezier 400, 400, 450, 700, 550, 350, 600, 600, :blue", 200, 400, :black
+    bezier 400, 400, 450, 700, 550, 300, 600, 600, :blue
+    text "bezier 400, 400, 450, 700, 550, 300, 600, 600, :blue", 200, 400, :black
+
+    angle 200, 500, A, L, :black
+    text "angle 200, 500, %.2f, %.2f, :black" % [A, L], 100, 500, :black
   end
 end
 
