@@ -1,3 +1,33 @@
+=== 1.0.0b2 / 2015-09-12
+
+* 1 major enhancement:
+
+  * MAJOR rewrite. Replaced rubysdl with my own C extension.
+    * This unencumbers me from rubysdl, which was incomplete, LGPL, and hasn't had a commit in over a year.
+
+* 11 minor enhancements:
+
+  * Added Body#angle_to
+  * Added Body#distance_to_squared
+  * Added Simulation#iter_per_tick and changed update to run that number of
+  * Added examples/canvas.rb to show drawing coordinate system.
+  * Added maze example from Jamis Buck's Mazes for Programmers.
+  * All blits are antialiased and default to 0deg rotation.
+  * Removed TTF.init
+  * Shift drawing of nearly all things by 1px in y. Makes drawing hline at 0 visible.
+  * Text now uses draw_blended_utf8 for smoother text rendering
+  * Updated rubysdl_setup.sh to be more correct. Not quite complete yet.
+  * Better math. powered by scotch™
+
+* 6 bug fixes:
+
+  * Documented basic attribs of Body.
+  * Fixed drawing at y=0. Off by one, yo.
+  * Fixed fill_rect for y=0
+  * Fixed north/south reporting in clip now that we're in proper q1
+  * Fixed polygon refactor
+  * Fixed project url and got rdoc upload url set up correctly.
+
 === 1.0.0b1 / 2015-08-04
 
 * 1 major enhancement

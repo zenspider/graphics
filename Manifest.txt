@@ -5,6 +5,7 @@ README.rdoc
 Rakefile
 examples/boid.rb
 examples/bounce.rb
+examples/canvas.rb
 examples/collision.rb
 examples/demo.rb
 examples/editor.rb
@@ -21,6 +22,7 @@ examples/tank2.rb
 examples/targeting.rb
 examples/vants.rb
 examples/walker.rb
+examples/walker2.rb
 examples/zombies.rb
 ext/sdl/extconf.rb
 ext/sdl/sdl.c
