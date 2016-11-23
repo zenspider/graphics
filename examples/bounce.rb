@@ -12,9 +12,14 @@ class Ball < Graphics::Body
   def initialize w
     super
 
-    self.a = rand 180
-    self.m = rand 100
+    self.a = random_angle / 2
+    self.m = rand 25
     self.g = G
+  end
+
+  def draw
+    w.angle x, y, a, 10+3*m, :red
+    w.circle x, y, 5, :white, :filled
   end
 
   def update
@@ -25,18 +30,6 @@ class Ball < Graphics::Body
 
   def fall
     self.velocity += g
-  end
-
-  def label
-    l = "%.1f %.1f" % dx_dy
-    w.text l, x-10, y-40, :white
-  end
-
-  def draw
-    # w.angle x, y, a, 3*m, :red
-    w.angle x, y, a, 50, :red
-    w.circle x, y, 5, :white, :filled
-    # label
   end
 end
 
@@ -49,6 +42,12 @@ class BounceSimulation < Graphics::Simulation
     self.bs = populate Ball
   end
 
+  def initialize_keys
+    super
+    add_key_handler :SPACE, &:randomize
+    add_key_handler :R,     &:reverse
+  end
+
   def update n
     bs.each(&:update)
   end
@@ -56,20 +55,13 @@ class BounceSimulation < Graphics::Simulation
   def draw n
     clear
     bs.each(&:draw)
-    bs.first.label
     fps n
-  end
-
-  def handle_keys
-    super
-    randomize if SDL::Key.press? SDL::Key::SPACE
-    reverse if SDL::Key.press? SDL::Key::R
   end
 
   def randomize
     bs.each do |b|
-      b.m = rand(100)
-      b.a = rand(180)
+      b.m = rand(25)
+      b.a = b.random_angle / 2
     end
   end
 

@@ -123,8 +123,6 @@ class TargetSimulation < Graphics::Simulation
   def initialize
     super 640, 640, 16, "Target Practice"
 
-    SDL::Key.enable_key_repeat 50, 10
-
     self.tank = Tank.new self
     self.bullets = []
 
@@ -132,15 +130,16 @@ class TargetSimulation < Graphics::Simulation
     self.turret_img = image "resources/images/turret.png"
   end
 
-  def handle_keys
-    exit            if SDL::Key.press? SDL::Key::ESCAPE
-    tank.turn_right if SDL::Key.press? SDL::Key::RIGHT
-    tank.turn_left  if SDL::Key.press? SDL::Key::LEFT
-    tank.accelerate if SDL::Key.press? SDL::Key::UP
-    tank.decelerate if SDL::Key.press? SDL::Key::DOWN
-    tank.aim_left   if SDL::Key.press? SDL::Key::SEMICOLON
-    tank.aim_right  if SDL::Key.press? SDL::Key::Q
-    tank.fire       if SDL::Key.press? SDL::Key::SPACE
+  def initialize_keys
+    super
+
+    add_key_handler(:RIGHT)     { tank.turn_right }
+    add_key_handler(:LEFT)      { tank.turn_left }
+    add_key_handler(:UP)        { tank.accelerate }
+    add_key_handler(:DOWN)      { tank.decelerate }
+    add_key_handler(:SEMICOLON) { tank.aim_left }
+    add_key_handler(:Q, :remove){ tank.aim_right }
+    add_key_handler(:SPACE)     { tank.fire }
   end
 
   def update n

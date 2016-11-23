@@ -34,8 +34,6 @@ class Demo < Graphics::Simulation
     super 800, 800, 16, "Boid"
     self.ball = Ball.new self
 
-    r = color[:red]
-
     self.img = sprite 10, 10 do
       circle 5, 5, 5, :white, :filled
     end

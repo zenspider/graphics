@@ -261,22 +261,17 @@ class Boids < Graphics::Simulation
     end
   end
 
+  def initialize_keys
+    super
+
+    add_key_handler(:D) { self.visual_debug = ! visual_debug }
+    add_key_handler(:B) { Boid.max_distance += 5 }
+    add_key_handler(:S) { Boid.max_distance -= 5 }
+  end
+
   def update n
     boids.each(&:update)
     self.boids.each(&:wrap)
-    # sleep 0.1
-  end
-
-  def handle_event e, n
-    case e
-    when SDL::Event::KeyDown then
-      self.visual_debug = ! visual_debug if SDL::Key.press? SDL::Key::D
-
-      Boid.max_distance += 5 if SDL::Key.press? SDL::Key::B
-      Boid.max_distance -= 5 if SDL::Key.press? SDL::Key::S
-    else
-      super
-    end
   end
 
   def draw n

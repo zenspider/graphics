@@ -28,21 +28,21 @@ class Sprite < Graphics::Body
   end
 
   def collide_with? other
-    w.cmap.collision_check(x, y, w.cmap, other.x, other.y) != nil
+    w.cmap.check(x, y, w.cmap, other.x, other.y)
   end
 end
 
 class Collision < Graphics::Simulation
-  attr_accessor :sprites, :cmap, :image
+  attr_accessor :sprites, :cmap, :tank_img
 
   def initialize
     super 850, 850, 16, "Collision"
 
-    self.image = SDL::Surface.load "resources/images/body.png"
-    self.cmap = image.make_collision_map
+    self.tank_img = image "resources/images/body.png"
+    self.cmap = tank_img.make_collision_map
 
     self.sprites = populate Sprite do |s|
-      s.image = image
+      s.image = tank_img
     end
   end
 

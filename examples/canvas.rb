@@ -4,23 +4,20 @@
 require "graphics"
 
 class Demo < Graphics::Simulation
+  attr_accessor :woot, :menlo32
+  attr_accessor :rct
+
   def initialize
     super 801, 801
 
     self.font = find_font("Menlo", 16)
-  end
+    self.menlo32 = find_font("Menlo", 32)
 
-  sys_font  = "/System/Library/Fonts"
-  lib_font  = "/Library/Fonts"
-  user_font = File.expand_path "~/Library/Fonts/"
-  FONT_GLOB = "{#{sys_font},#{lib_font},#{user_font}}"
+    self.woot = render_text "woot", :black, menlo32
 
-  def find_font name, size = 16
-    font = Dir["#{FONT_GLOB}/#{name}.{ttc,ttf}"].first
-
-    raise ArgumentError, "Can't find font named '#{name}'" unless font
-
-    SDL::TTF.open(font, size)
+    self.rct = sprite 50, 25 do
+      rect 0, 0, 49, 24, :blue # TODO: can't be black?!?
+    end
   end
 
   def update n
@@ -31,6 +28,20 @@ class Demo < Graphics::Simulation
 
   def draw n
     clear :white
+
+    (0..90).step(30) do |deg|
+      shift = (woot.h*Math.sin(D2R*deg))
+      put woot, 400-shift, 300, deg
+    end
+    text "woot", 400, 300, :red, menlo32
+
+    rect 550, 100, 50, 50, :blue, :filled
+    rect 575, 125, 50, 50, :blue
+
+    ellipse 550, 200, 50, 25, :red
+    ellipse 550, 250, 50, 25, :red, :filled
+
+    angle 50, 50, 90, 25, :blue
 
     (0..w).step(100) do |x|
       vline x, :red
@@ -50,6 +61,14 @@ class Demo < Graphics::Simulation
 
     angle 200, 500, A, L, :black
     text "angle 200, 500, %.2f, %.2f, :black" % [A, L], 100, 500, :black
+
+    (0..90).step(30).each do |deg|
+      put rct, 500-(rct.h*Math.sin(D2R*deg)), 600, deg
+      angle 500, 600, deg, 50, :red
+
+      blit rct, 600, 600, deg
+      angle 600, 600, deg, 50, :red
+    end
   end
 end
 
