@@ -247,7 +247,7 @@ class Thingy
   # Draw a bitmap at x/y with an angle and optional x/y scale.
 
   def blit o, x, y, a°, xs=1, ys=1, opt=0
-    SDL::Surface.transform_blit o, screen, a°, 1, 1, o.w/2, o.h/2, x, y, opt
+    SDL::Surface.transform_blit o, screen, -a°, 1, 1, o.w/2, o.h/2, x, y, opt
   end
 
   ##
