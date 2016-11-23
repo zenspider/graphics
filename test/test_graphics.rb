@@ -212,154 +212,175 @@ class TestNumeric < Minitest::Test
   end
 end
 
-# class TestThingy < Minitest::Test
-#   class FakeThingy < Thingy
-#     def initialize
-#       super 100, 100, 16, "blah"
-#
-#       s = []
-#
-#       def s.method_missing(*a)
-#         @data ||= []
-#         @data << a
-#       end
-#
-#       def s.data
-#         @data
-#       end
-#
-#       self.screen = s
-#     end
-#   end
-#
-#   attr_accessor :t
-#
-#   def setup
-#     self.t = FakeThingy.new
-#   end
-#
-#   def test_angle
-#     raise NotImplementedError, 'Need to write test_angle'
-#   end
-#
-#   def test_bezier
-#     raise NotImplementedError, 'Need to write test_bezier'
-#   end
-#
-#   def test_blit
-#     raise NotImplementedError, 'Need to write test_blit'
-#   end
-#
-#   def test_circle
-#     raise NotImplementedError, 'Need to write test_circle'
-#   end
-#
-#   def test_clear
-#     raise NotImplementedError, 'Need to write test_clear'
-#   end
-#
-#   def test_debug
-#     raise NotImplementedError, 'Need to write test_debug'
-#   end
-#
-#   def test_draw
-#     raise NotImplementedError, 'Need to write test_draw'
-#   end
-#
-#   def test_draw_and_flip
-#     raise NotImplementedError, 'Need to write test_draw_and_flip'
-#   end
-#
-#   def test_ellipse
-#     t.ellipse 0, 0, 25, 25, :white
-#
-#     exp = [[:draw_ellipse, 0, 0, 25, 25, t.color[:white], false, :antialiased]]
-#     assert_equal exp, t.screen.data
-#   end
-#
-#   def test_fast_rect
-#     raise NotImplementedError, 'Need to write test_fast_rect'
-#   end
-#
-#   def test_fps
-#     raise NotImplementedError, 'Need to write test_fps'
-#   end
-#
-#   def test_handle_event
-#     raise NotImplementedError, 'Need to write test_handle_event'
-#   end
-#
-#   def test_handle_keys
-#     raise NotImplementedError, 'Need to write test_handle_keys'
-#   end
-#
-#   def test_hline
-#     t.hline 42, :white
-#
-#     exp = [[:draw_line, 0, 42, 100, 42, t.color[:white], :antialiased]]
-#     assert_equal exp, t.screen.data
-#   end
-#
-#   def test_image
-#     raise NotImplementedError, 'Need to write test_image'
-#   end
-#
-#   def test_line
-#     t.line 0, 0, 25, 25, :white
-#
-#     exp = [[:draw_line, 0, 0, 25, 25, t.color[:white], :antialiased]]
-#     assert_equal exp, t.screen.data
-#   end
-#
-#   def test_point
-#     t.point 2, 10, :white
-#
-#     exp = [nil, nil, t.color[:white]]
-#     assert_equal exp, t.screen
-#
-#     skip "This test isn't sufficient"
-#   end
-#
-#   def test_populate
-#     raise NotImplementedError, 'Need to write test_populate'
-#   end
-#
-#   def test_rect
-#     raise NotImplementedError, 'Need to write test_rect'
-#   end
-#
-#   def test_register_color
-#     raise NotImplementedError, 'Need to write test_register_color'
-#   end
-#
-#   def test_render_text
-#     raise NotImplementedError, 'Need to write test_render_text'
-#   end
-#
-#   def test_run
-#     raise NotImplementedError, 'Need to write test_run'
-#   end
-#
-#   def test_sprite
-#     raise NotImplementedError, 'Need to write test_sprite'
-#   end
-#
-#   def test_text
-#     raise NotImplementedError, 'Need to write test_text'
-#   end
-#
-#   def test_text_size
-#     raise NotImplementedError, 'Need to write test_text_size'
-#   end
-#
-#   def test_update
-#     raise NotImplementedError, 'Need to write test_update'
-#   end
-#
-#   def test_vline
-#     raise NotImplementedError, 'Need to write test_vline'
-#   end
-# end
+class TestThingy < Minitest::Test
+  # make_my_diffs_pretty!
+
+  class FakeThingy < Thingy
+    def initialize
+      super 100, 100, 16, "blah"
+
+      s = []
+
+      def s.method_missing(*a)
+        @data ||= []
+        @data << a
+      end
+
+      def s.data
+        @data
+      end
+
+      self.screen = s
+
+    end
+  end
+
+  attr_accessor :t, :white, :exp
+
+  def setup
+    self.t = FakeThingy.new
+    self.white = t.color[:white]
+    self.exp = []
+  end
+
+  def test_angle
+    t.angle 50, 50, 0, 10, :white
+    exp << [:draw_line, 50, 50, 60.0, 50.0, white, :antialiased]
+
+    t.angle 50, 50, 90, 10, :white
+    exp << [:draw_line, 50, 50, 50.0, 40.0, white, :antialiased]
+
+    t.angle 50, 50, 180, 10, :white
+    exp << [:draw_line, 50, 50, 40.0, 50.0, white, :antialiased]
+
+    t.angle 50, 50, 270, 10, :white
+    exp << [:draw_line, 50, 50, 50.0, 60.0, white, :antialiased]
+
+    t.angle 50, 50, 45, 10, :white
+    d45 = 10 * Math.sqrt(2) / 2
+    exp << [:draw_line, 50, 50, 50+d45, 50-d45, white, :antialiased]
+
+    assert_equal exp, t.screen.data
+  end
+
+  # def test_bezier
+  #   raise NotImplementedError, 'Need to write test_bezier'
+  # end
+  #
+  # def test_blit
+  #   raise NotImplementedError, 'Need to write test_blit'
+  # end
+  #
+  # def test_circle
+  #   raise NotImplementedError, 'Need to write test_circle'
+  # end
+  #
+  # def test_clear
+  #   raise NotImplementedError, 'Need to write test_clear'
+  # end
+  #
+  # def test_debug
+  #   raise NotImplementedError, 'Need to write test_debug'
+  # end
+  #
+  # def test_draw
+  #   raise NotImplementedError, 'Need to write test_draw'
+  # end
+  #
+  # def test_draw_and_flip
+  #   raise NotImplementedError, 'Need to write test_draw_and_flip'
+  # end
+
+  def test_ellipse
+    t.ellipse 0, 0, 25, 25, :white
+    exp << [:draw_ellipse, 0, 0, 25, 25, t.color[:white], false, :antialiased]
+
+    assert_equal exp, t.screen.data
+  end
+
+  # def test_fast_rect
+  #   raise NotImplementedError, 'Need to write test_fast_rect'
+  # end
+  #
+  # def test_fps
+  #   raise NotImplementedError, 'Need to write test_fps'
+  # end
+  #
+  # def test_handle_event
+  #   raise NotImplementedError, 'Need to write test_handle_event'
+  # end
+  #
+  # def test_handle_keys
+  #   raise NotImplementedError, 'Need to write test_handle_keys'
+  # end
+
+  def test_hline
+    t.hline 42, :white
+    exp << [:draw_line, 0, 42, 100, 42, t.color[:white], :antialiased]
+
+    assert_equal exp, t.screen.data
+  end
+
+  # def test_image
+  #   raise NotImplementedError, 'Need to write test_image'
+  # end
+
+  def test_line
+    t.line 0, 0, 25, 25, :white
+    exp << [:draw_line, 0, 0, 25, 25, t.color[:white], :antialiased]
+
+    assert_equal exp, t.screen.data
+  end
+
+  def test_point
+    t.point 2, 10, :white
+
+    exp = [nil, nil, t.color[:white]]
+    assert_equal exp, t.screen
+
+    skip "This test isn't sufficient"
+  end
+
+  # def test_populate
+  #   raise NotImplementedError, 'Need to write test_populate'
+  # end
+  #
+  # def test_rect
+  #   raise NotImplementedError, 'Need to write test_rect'
+  # end
+  #
+  # def test_register_color
+  #   raise NotImplementedError, 'Need to write test_register_color'
+  # end
+  #
+  # def test_render_text
+  #   raise NotImplementedError, 'Need to write test_render_text'
+  # end
+  #
+  # def test_run
+  #   raise NotImplementedError, 'Need to write test_run'
+  # end
+  #
+  # def test_sprite
+  #   raise NotImplementedError, 'Need to write test_sprite'
+  # end
+  #
+  # def test_text
+  #   raise NotImplementedError, 'Need to write test_text'
+  # end
+  #
+  # def test_text_size
+  #   raise NotImplementedError, 'Need to write test_text_size'
+  # end
+  #
+  # def test_update
+  #   raise NotImplementedError, 'Need to write test_update'
+  # end
+  #
+  # def test_vline
+  #   raise NotImplementedError, 'Need to write test_vline'
+  # end
+end
 
 # class TestTrail < Minitest::Test
 #   def test_draw
@@ -370,5 +391,3 @@ end
 #     raise NotImplementedError, 'Need to write test_lt2'
 #   end
 # end
-
-# Number of errors detected: 145
