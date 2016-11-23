@@ -361,8 +361,8 @@ class Graphics::Simulation
   ##
   # Draw a bitmap at x/y with an angle and optional x/y scale.
 
-  def blit o, x, y, a°, xs = 1, ys = 1, opt = 0
-    SDL::Surface.transform_blit o, screen, -a°, 1, 1, o.w/2, o.h/2, x, h-y-1, opt
+  def blit o, x, y, a° = 0, xs = 1, ys = 1, opt = 0
+    SDL::Surface.transform_blit o, screen, -a°, xs, ys, o.w/2, o.h/2, x, h-y, opt
   end
 
   ##
