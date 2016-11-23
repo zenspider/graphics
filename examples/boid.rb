@@ -19,15 +19,9 @@ class Boid < Body
   end
 
   def draw
-    cm = center_mass
-    w.line(x, y, cm.x, cm.y, :gray40)
-    w.circle(cm.x, cm.y, 3, :gray40)
-
     # the blit looks HORRIBLE when rotated... dunno why
     w.blit w.body_img, x, y, 0, AA
-    # w.circle x, y, 3, :white, :filled
     w.angle x, y, a, 3 * m, :red
-    # label
   end
 
   def label
@@ -43,12 +37,18 @@ class Boid < Body
     self.velocity += v1 + v2 + v3
     limit_velocity
     self.position += self.velocity
+
+    @nearby = nil
   end
 
-  MAX_VELOCITY = 10
+  MAX_VELOCITY = 5
+  MAX_DISTANCE = 100
 
   def nearby
-    w.boids
+    @nearby ||= begin
+                  p = self.position
+                  w.boids.find_all { |b| (b.position - p).magnitude.abs < MAX_DISTANCE }
+                end
   end
 
   def limit_velocity
@@ -65,7 +65,12 @@ class Boid < Body
       pos += b.position
     end
 
-    pos /= (nearby.size - 1)
+    size = nearby.size - 1
+
+    return self.position if size == 0
+
+    pos /= size
+
     pos
   end
 
@@ -222,7 +227,8 @@ class Boid < Body
       v += b.velocity
     end
 
-    v /= nearby.size - 1
+    size = nearby.size - 1
+    v /= size unless size == 0
 
     (v - self.velocity) / 4
   end
@@ -243,7 +249,7 @@ class Boids < Thingy
 
   def update n
     boids.each(&:update)
-    self.boids.each(&:bounce)
+    self.boids.each(&:wrap)
     # sleep 0.1
   end
 
@@ -251,7 +257,6 @@ class Boids < Thingy
     clear
 
     boids.each(&:draw)
-    self.boids.first.label
 
     fps n
   end
