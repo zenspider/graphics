@@ -79,7 +79,7 @@ class LitoGol
   end
 end
 
-class LitoGolSimulation < Simulation
+class LitoGolSimulation < Graphics::Simulation
   attr_accessor :gol
 
   SIZE, WIDTH = 10, 64

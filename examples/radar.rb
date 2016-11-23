@@ -2,7 +2,7 @@
 
 require "graphics"
 
-class TargetSimulation < Simulation
+class TargetSimulation < Graphics::Simulation
   def initialize
     super 640, 640, 16, "Target Practice"
 

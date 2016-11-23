@@ -204,7 +204,7 @@ class SPH
   end
 end
 
-class SimulationWindow < Simulation
+class SimulationWindow < Graphics::Simulation
   WINSIZE = 500
 
   attr_reader :simulation, :s

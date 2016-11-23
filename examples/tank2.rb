@@ -89,7 +89,7 @@ class Bullet
   end
 end
 
-class TargetSimulation < Simulation
+class TargetSimulation < Graphics::Simulation
   attr_accessor :tank, :bullets
   attr_accessor :body_img
   attr_accessor :turret_img

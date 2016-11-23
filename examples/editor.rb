@@ -3,7 +3,7 @@
 
 require "graphics"
 
-class Editor < Simulation
+class Editor < Graphics::Simulation
   attr_accessor :overlay, :s, :lines
 
   alias :overlay? :overlay

@@ -22,7 +22,7 @@ class TestBody < Minitest::Test
 
   def setup
     self.w = FakeSimulation.new(100, 100)
-    self.b = Body.new w
+    self.b = Graphics::Body.new w
 
     b.x = 50
     b.y = 50
@@ -228,7 +228,7 @@ end
 class TestSimulation < Minitest::Test
   # make_my_diffs_pretty!
 
-  class FakeSimulation < Simulation
+  class FakeSimulation < Graphics::Simulation
     def initialize
       super 100, 100, 16, "blah"
 

@@ -8,7 +8,7 @@ require "graphics"
 ##
 # Virtual Ants -- inspired by a model in NetLogo.
 
-class Vant < Body
+class Vant < Graphics::Body
   COUNT = 100
   M = 1
 
@@ -39,7 +39,7 @@ class Vant < Body
   end
 end
 
-class Vants < Simulation
+class Vants < Graphics::Simulation
   attr_accessor :vs
 
   def initialize

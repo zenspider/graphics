@@ -1,8 +1,9 @@
 #!/usr/local/bin/ruby -w
 
 require "graphics"
+require "graphics/trail"
 
-class Person < Body
+class Person < Graphics::Body
   COUNT = 40
 
   D_A = 5.0
@@ -16,7 +17,7 @@ class Person < Body
   def initialize w
     super
 
-    self.trail = Trail.new w, 100, :green
+    self.trail = Graphics::Trail.new w, 100, :green
 
     self.a  = random_angle
     self.ga = random_angle
@@ -76,7 +77,7 @@ class Person < Body
   end
 end
 
-class WalkerSimulation < Simulation
+class WalkerSimulation < Graphics::Simulation
   attr_accessor :ps, :body_img, :cmap
 
   def initialize

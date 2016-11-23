@@ -57,7 +57,7 @@ class ZenspiderGol
   end
 end
 
-class ZenspiderGolSimulation < Simulation
+class ZenspiderGolSimulation < Graphics::Simulation
   attr_accessor :gol
 
   SIZE, WIDTH = 10, 64
