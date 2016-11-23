@@ -727,6 +727,12 @@ static VALUE Surface_transform(VALUE self, VALUE bgcolor, VALUE angle,
   return TypedData_Wrap_Struct(cSurface, &_Surface_type, result);
 }
 
+static VALUE Surface_save(VALUE self, VALUE path) {
+  DEFINE_SELF(Surface, surface, self);
+
+  return INT2NUM(SDL_SaveBMP(surface, RSTRING_PTR(path)));
+}
+
 //// SDL::TTFFont methods:
 
 static void _TTFFont_free(void* font) {
@@ -910,6 +916,7 @@ void Init_sdl() {
   rb_define_method(cSurface, "[]",           Surface_index,        2);
   rb_define_method(cSurface, "[]=",          Surface_index_equals, 3);
   rb_define_method(cSurface, "transform",    Surface_transform,    5);
+  rb_define_method(cSurface, "save",         Surface_save,         1);
   rb_define_method(cSurface, "flags",        Surface_flags,        0);
   rb_define_method(cSurface, "set_alpha",    Surface_set_alpha,    2);
 
