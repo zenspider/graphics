@@ -66,12 +66,9 @@ class BounceSimulation < Graphics::Simulation
   end
 
   def reverse
-    return if @guard
-    @guard = true
     bs.each do |b|
       b.g *= -1
     end
-    @guard = false
   end
 end
 
