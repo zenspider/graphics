@@ -56,6 +56,7 @@ ext/sdl/sge/sge_textpp.cpp
 ext/sdl/sge/sge_textpp.h
 ext/sdl/sge/sge_tt_text.cpp
 ext/sdl/sge/sge_tt_text.h
+graphics_setup.sh
 lib/graphics.rb
 lib/graphics/body.rb
 lib/graphics/extensions.rb
@@ -64,6 +65,5 @@ lib/graphics/trail.rb
 lib/graphics/v.rb
 resources/images/body.png
 resources/images/turret.png
-rubysdl_setup.sh
 test/test_graphics.rb
 test/test_sdl.rb
