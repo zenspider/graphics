@@ -4,8 +4,7 @@ require "rubygems"
 require "hoe"
 
 Hoe.plugin :isolate
-Hoe.plugin :seattlerb
-Hoe.plugins.delete :perforce
+Hoe.plugin :minitest, :history, :email # Hoe.plugin :seattlerb - :perforce
 Hoe.plugin :rdoc
 Hoe.plugin :git
 
