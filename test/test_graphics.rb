@@ -30,67 +30,80 @@ class TestBody < Minitest::Test
     b.a = 0
   end
 
-  def test_conversion_sanity
+  def test_conversions_readers
     assert_equal V[50, 50], b.position
     assert_equal V[10, 0], b.velocity
+  end
 
+  def test_conversions_pos
     b.position = V[50, 40]
     assert_in_delta 50, b.x
     assert_in_delta 40, b.y
+  end
 
+  def test_conversions_vel_0
     b.velocity = V[10, 0]
     assert_in_delta 10, b.m, 0.001, "magnitude"
     assert_in_delta 0, b.a, 0.001, "angle"
+    assert_equal V[10, 0], b.velocity
+  end
 
+  def test_conversions_vel_90
     b.velocity = V[0, 10]
     assert_in_delta 10, b.m, 0.001, "magnitude"
     assert_in_delta 90, b.a, 0.001, "angle"
+  end
 
+  def test_conversions_vel_180
     b.velocity = V[-10, 0]
     assert_in_delta 10, b.m, 0.001, "magnitude"
     assert_in_delta 180, b.a, 0.001, "angle"
+  end
 
+  def test_conversions_vel_270
     b.velocity = V[0, -10]
     assert_in_delta 10, b.m, 0.001, "magnitude"
     assert_in_delta(-90, b.a, 0.001, "angle")
+  end
 
+  def test_conversions_vel_45
     b.velocity = V[10, 10]
+    assert_in_delta 10, b.velocity[0]
+    assert_in_delta 10, b.velocity[1]
+
     assert_in_delta 14.142, b.m, 0.001, "magnitude"
     assert_in_delta 45, b.a, 0.001, "angle"
   end
 
-  def test_conversions
-    assert_equal V[50, 50], b.position
-    assert_equal V[10, 0], b.velocity
+  def test_dx_dy
+    exp = 14.142
 
-    assert_equal [10, 0], b.m_a
-    assert_equal [10, 0], b.dx_dy
+    b.velocity = V[10, 10]
 
-    b.position += V[10, 10]
+    assert_in_delta 45, b.a
+    assert_in_delta exp, b.m
 
-    assert_equal V[60, 60], b.position
-    assert_equal V[10, 0], b.velocity
+    assert_in_delta 10, b.dx_dy[0]
+    assert_in_delta 10, b.dx_dy[1]
 
-    b.velocity += V[-10, 10]
+    b.a = 45
+    b.m = 10
 
-    assert_equal [10, 90], b.m_a
-    p = b.dx_dy
-    assert_in_delta 0, p[0]
-    assert_in_delta 10, p[1]
+    dx, dy = b.dx_dy
 
-    assert_in_delta 90, b.a
-    v = b.velocity.to_a
-    assert_in_delta 0, v[0]
-    assert_in_delta 10, v[1]
+    assert_in_delta exp/2, dx
+    assert_in_delta exp/2, dy
   end
 
-  # def test_dx_dy
-  #   flunk
-  # end
+  def test_m_a
+    b.velocity = V[10, 10]
 
-  # def test_m_a
-  #   flunk
-  # end
+    assert_in_delta 14.142, b.m
+    assert_in_delta 45, b.a
+
+    assert_in_delta 14.142, b.m_a[0]
+    assert_in_delta 45, b.m_a[1]
+  end
 
   def test_bounce
     b.x = 99
@@ -101,7 +114,7 @@ class TestBody < Minitest::Test
     b.move
     b.bounce
 
-    assert_body  100, 42.929,  8, 135, 0, b
+    assert_body  100, w.h-42.929,  8, 135, 0, b
   end
 
   def test_clip
@@ -293,7 +306,7 @@ class TestThingy < Minitest::Test
 
   def test_ellipse
     t.ellipse 0, 0, 25, 25, :white
-    exp << [:draw_ellipse, 0, 0, 25, 25, t.color[:white], false, :antialiased]
+    exp << [:draw_ellipse, 0, t.h-0, 25, 25, t.color[:white], false, :antialiased]
 
     assert_equal exp, t.screen.data
   end
@@ -316,7 +329,8 @@ class TestThingy < Minitest::Test
 
   def test_hline
     t.hline 42, :white
-    exp << [:draw_line, 0, 42, 100, 42, t.color[:white], :antialiased]
+    h = t.h
+    exp << [:draw_line, 0, h-42, 100, h-42, t.color[:white], :antialiased]
 
     assert_equal exp, t.screen.data
   end
@@ -327,7 +341,8 @@ class TestThingy < Minitest::Test
 
   def test_line
     t.line 0, 0, 25, 25, :white
-    exp << [:draw_line, 0, 0, 25, 25, t.color[:white], :antialiased]
+    h = t.h
+    exp << [:draw_line, 0, h-0, 25, h-25, t.color[:white], :antialiased]
 
     assert_equal exp, t.screen.data
   end

@@ -17,22 +17,22 @@ class MathThingy < Thingy
       next if y < 0
       next if y > h
 
-      rect x, h-y, 3, 3, :red, :filled
+      rect x, y, 3, 3, :red, :filled
     end
 
-    text "2x^2 +2x -12", 10, 10, :black
+    text "2x^2 +2x -12", 10, h-font.height, :black
   end
 
   def graph_paper
     clear :white
 
-    hline h-1, :black
-    vline 0,   :black
+    hline 1, :black
+    vline 0, :black
 
     (0..w).step(25).each do |x|
       (0..h).step(25).each do |y|
-        line 0, h-y, 5, h-y, :black if x == 0
-        line x, h-5, x, h,   :black if y == 0
+        line 0, y, 5, y, :black if x == 0
+        line x, 1, x, 6, :black if y == 0
         point x, h-y, :black
       end
     end

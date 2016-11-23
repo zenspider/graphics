@@ -20,7 +20,7 @@ class TargetThingy < Thingy
       circle 320, 320, r, :dark_green unless r > 320
     end
 
-    x, y, * = SDL::Mouse.state
+    x, y, * = mouse
     line x, 0, x, 640, :white
     line 0, y, 640, y, :white
 

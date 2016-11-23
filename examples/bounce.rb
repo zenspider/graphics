@@ -3,9 +3,9 @@
 require "thingy"
 
 class Ball < Body
-  TURN_STEP = 2
-  G = 18 / 60.0
-  R2D = 180.0 / Math::PI
+  COUNT = 50
+
+  G = V[0, -18 / 60.0]
 
   attr_accessor :g
 
@@ -17,62 +17,47 @@ class Ball < Body
     self.g = G
   end
 
-  def update n
+  def update
     fall
     move
     bounce
   end
 
-  def dx_dy
-    rad = a * D2R
-    dx = Math.cos(rad) * m
-    dy =-Math.sin(rad) * m
-    return dx, dy
-  end
-
-  def set_dx_dy dx, dy
-    self.a = (Math.atan2(-dy, dx) * R2D) % 360.0
-    self.m = Math.sqrt(dx*dx + dy*dy)
-  end
-
   def fall
-    dx, dy = dx_dy
-
-    dy += g # gravity is a constant downward force of 18
-
-    set_dx_dy dx, dy
+    self.velocity += g
   end
 
-  def draw n
-    w.angle x, y, a, 60, :red
+  def label
+    l = "%.1f %.1f" % dx_dy
+    w.text l, x-10, y-40, :white
+  end
+
+  def draw
+    # w.angle x, y, a, 3*m, :red
+    w.angle x, y, a, 50, :red
     w.circle x, y, 5, :white, :filled
+    # label
   end
 end
 
 class BounceThingy < Thingy
-  N = 25
-
   attr_accessor :bs
 
   def initialize
     super 640, 640, 16, "Bounce"
 
-    self.bs = Array.new(N) { Ball.new self }
+    self.bs = populate Ball
   end
 
   def update n
-    bs.each do |b|
-      b.update n
-    end
+    bs.each(&:update)
+    sleep 0.05
   end
 
   def draw n
-    clear :black
-
-    bs.each do |b|
-      b.draw n
-    end
-
+    clear
+    bs.each(&:draw)
+    bs.first.label
     fps n
   end
 
