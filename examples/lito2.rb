@@ -96,9 +96,10 @@ class LitoGolThingy < Thingy
     gol.each do |c, x, y|
       if c == 1 then
         ellipse x*SIZE, y*SIZE, (SIZE-1)/2, (SIZE-1)/2, :white
-        text n.to_s, 10, 10, :green
       end
     end
+
+    fps n
   end
 
   def update n
