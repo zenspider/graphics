@@ -271,9 +271,21 @@ class Thingy
   end
 end
 
+require "matrix"
+
+class V < ::Vector
+  def inspect
+    a = self.to_a
+    f = Array.new(a.size, "%.2f").join ", "
+    "V[#{f}]" % a
+  end
+end
+
 class Body
   D2R = Thingy::D2R
   R2D = Thingy::R2D
+
+  V_ZERO = V[0, 0]
 
   NORMAL = {
            :north => 270,
@@ -291,6 +303,42 @@ class Body
     self.a = 0.0
     self.ga = 0.0
     self.m = 0.0
+  end
+
+  def inspect
+    "%s(%.2fx%.2f @ %.2f°x%.2f == %p @ %p)" %
+      [self.class, x, y, a, m, position, velocity]
+  end
+
+  def velocity
+    V.elements dx_dy
+  end
+
+  def velocity= o
+    dx, dy = o.to_a
+    self.m = Math.sqrt(dx*dx + dy*dy)
+    self.a = Math.atan2(dy, dx) * R2D
+  end
+
+  def position
+    V[x, y]
+  end
+
+  def position= o
+    x, y = o.to_a
+    self.x = x
+    self.y = y
+  end
+
+  def dx_dy
+    rad = a * D2R
+    dx = Math.cos(rad) * m
+    dy = Math.sin(rad) * m
+    [dx, dy]
+  end
+
+  def m_a
+    [m, a]
   end
 
   def turn dir

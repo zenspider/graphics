@@ -30,6 +30,68 @@ class TestBody < Minitest::Test
     b.a = 0
   end
 
+  def test_conversion_sanity
+    assert_equal V[50, 50], b.position
+    assert_equal V[10, 0], b.velocity
+
+    b.position = V[50, 40]
+    assert_in_delta 50, b.x
+    assert_in_delta 40, b.y
+
+    b.velocity = V[10, 0]
+    assert_in_delta 10, b.m, 0.001, "magnitude"
+    assert_in_delta 0, b.a, 0.001, "angle"
+
+    b.velocity = V[0, 10]
+    assert_in_delta 10, b.m, 0.001, "magnitude"
+    assert_in_delta 90, b.a, 0.001, "angle"
+
+    b.velocity = V[-10, 0]
+    assert_in_delta 10, b.m, 0.001, "magnitude"
+    assert_in_delta 180, b.a, 0.001, "angle"
+
+    b.velocity = V[0, -10]
+    assert_in_delta 10, b.m, 0.001, "magnitude"
+    assert_in_delta(-90, b.a, 0.001, "angle")
+
+    b.velocity = V[10, 10]
+    assert_in_delta 14.142, b.m, 0.001, "magnitude"
+    assert_in_delta 45, b.a, 0.001, "angle"
+  end
+
+  def test_conversions
+    assert_equal V[50, 50], b.position
+    assert_equal V[10, 0], b.velocity
+
+    assert_equal [10, 0], b.m_a
+    assert_equal [10, 0], b.dx_dy
+
+    b.position += V[10, 10]
+
+    assert_equal V[60, 60], b.position
+    assert_equal V[10, 0], b.velocity
+
+    b.velocity += V[-10, 10]
+
+    assert_equal [10, 90], b.m_a
+    p = b.dx_dy
+    assert_in_delta 0, p[0]
+    assert_in_delta 10, p[1]
+
+    assert_in_delta 90, b.a
+    v = b.velocity.to_a
+    assert_in_delta 0, v[0]
+    assert_in_delta 10, v[1]
+  end
+
+  # def test_dx_dy
+  #   flunk
+  # end
+
+  # def test_m_a
+  #   flunk
+  # end
+
   def test_bounce
     b.x = 99
     b.a = 45
