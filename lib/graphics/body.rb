@@ -92,6 +92,13 @@ class Graphics::Body
     [dx, dy]
   end
 
+  def angle_to body
+    dx = body.x - self.x
+    dy = body.y - self.y
+
+    (R2D * Math.atan2(dy, dx)).degrees
+  end
+
   def m_a # :nodoc:
     [m, a]
   end
