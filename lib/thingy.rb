@@ -48,6 +48,7 @@ class Thingy
   end
 
   def run
+    self.start_time = Time.now
     n = 0
     event = nil
     loop do
@@ -165,6 +166,19 @@ class Thingy
 
   def text s, x, y, c, f = font
     f.draw_solid_utf8 screen, s, x, y, *rgb[c]
+  end
+
+  def debug fmt, *args
+    s = fmt % args
+    text s, 10, 50, :white
+  end
+
+  attr_accessor :start_time
+
+  def fps n
+    secs = Time.now - start_time
+    fps = "%5.1f fps" % [n / secs]
+    text fps, 10, 10, :green
   end
 
   ### Blitting Methods:
