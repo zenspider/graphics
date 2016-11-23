@@ -4,7 +4,7 @@ require "sdl"
 
 class Thingy
   attr_accessor :screen, :w, :h
-  attr_accessor :step, :paused
+  attr_accessor :paused
   attr_accessor :font
   attr_accessor :color, :rgb
 
@@ -30,7 +30,7 @@ class Thingy
     register_color :gray,      127, 127, 127
     register_color :yellow,    255, 255, 0
 
-    self.paused = self.step = false
+    self.paused = false
   end
 
   def register_color name, r, g, b
@@ -38,44 +38,36 @@ class Thingy
   end
 
   def handle_event event, n
-    case event
-    when SDL::Event::KeyDown then
-      key = event.sym.chr rescue event.sym
-      case key
-      when "q", "Q", "\e" then
-        exit
-      when " " then
-        self.step = true
-        self.paused = false
-      when "p", "P" then
-        self.paused = ! paused
+    exit if SDL::Event::Quit === event
+  end
+
+  def handle_keys
+    exit                  if SDL::Key.press? SDL::Key::ESCAPE
+    exit                  if SDL::Key.press? SDL::Key::Q
+    self.paused = !paused if SDL::Key.press? SDL::Key::P
+  end
+
+  def run
+    n = 0
+    event = nil
+    loop do
+      handle_event event, n while event = SDL::Event.poll
+      SDL::Key.scan
+      handle_keys
+
+      unless paused then
+        update n unless paused
+
+        draw_and_flip n
+
+        n += 1 unless paused
       end
-    when SDL::Event::Quit then
-      exit
     end
   end
 
-  def run max = nil
-    n = 0
-    loop do
-      self.draw n
-
-      screen.flip
-
-      while event = SDL::Event.poll
-        handle_event event, n
-      end
-
-      update n unless paused
-      n += 1 unless paused
-
-      if step then
-        self.paused = true
-        self.step = false
-      end
-
-      exit if max && n >= max
-    end
+  def draw_and_flip n
+    self.draw n
+    screen.flip
   end
 
   def draw n
