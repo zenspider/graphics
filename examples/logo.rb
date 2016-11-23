@@ -47,9 +47,11 @@ class Turtle < Graphics::Body
   end
 
   def draw_turtle
-    w.angle x, y, a, 15, :white
-    w.angle x, y, a+90, 5, :white
-    w.angle x, y, a-90, 5, :white
+    p1 = w.project(x, y, a, 15)
+    p2 = w.project(x, y, a+90, 5)
+    p3 = w.project(x, y, a-90, 5)
+
+    polygon p1, p2, p3, :green
   end
 end
 

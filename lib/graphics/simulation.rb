@@ -197,6 +197,17 @@ class Graphics::Simulation
   end
 
   ##
+  # Draw a closed form polygon from an array of points in a particular
+  # color.
+
+  def polygon *points, color
+    points << points.first
+    points.each_cons(2) do |p1, p2|
+      w.line(*p1, *p2, color)
+    end
+  end
+
+  ##
   # Draw a line from x1/y1 to a particular magnitude and angle in color c.
 
   def angle x1, y1, a, m, c
