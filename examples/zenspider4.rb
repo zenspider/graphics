@@ -2,7 +2,7 @@
 
 srand 42
 
-require "./thingy"
+require "thingy"
 
 class Array
   def sorted_include? o

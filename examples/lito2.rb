@@ -1,5 +1,5 @@
 require "matrix"
-require "./thingy.rb"
+require "thingy"
 
 class Matrix
   def rotate x, y
