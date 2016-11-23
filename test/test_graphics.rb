@@ -105,16 +105,56 @@ class TestBody < Minitest::Test
     assert_in_delta 45, b.m_a[1]
   end
 
-  def test_bounce
+  def test_bounce_east
     b.x = 99
     b.a = 45
 
-    assert_body  99,  50,     10,  45, 0, b
+    assert_body  99,  50, 10, 45, 0, b
+
+    # dist_to_wall_x = w.w - b.x             :: 1
+    # m_over_xy = b.m / Math.sqrt(2)         :: 7.0710678
+    # bounce_x = m_over_xy - dist_to_wall_x  :: 6.0710678
 
     b.move
     b.bounce
 
-    assert_body  100, w.h-42.929,  8, 135, 0, b
+    assert_body w.w-6.07106, 57.07106, 8, 135, 0, b
+  end
+
+  def test_bounce_west
+    b.x = 1
+    b.a = 135
+
+    assert_body  1,  50, 10, 135, 0, b
+
+    b.move
+    b.bounce
+
+    assert_body 6.07106, w.h-42.929, 8, 45, 0, b
+  end
+
+  def test_bounce_north
+    b.y = 99
+    b.a = 45
+
+    assert_body  50,  99, 10, 45, 0, b
+
+    b.move
+    b.bounce
+
+    assert_body 57.071, w.h-6.071, 8, 315, 0, b
+  end
+
+  def test_bounce_south
+    b.y = 1
+    b.a = 315
+
+    assert_body  50, 1, 10, 315, 0, b
+
+    b.move
+    b.bounce
+
+    assert_body 57.071, 6.071, 8, 45, 0, b
   end
 
   def test_clip
@@ -125,7 +165,7 @@ class TestBody < Minitest::Test
     b.move
     b.clip
 
-    assert_body 100, 50, 10, 0, 0, b
+    assert_body 91, 50, 10, 0, 0, b
   end
 
   def test_clip_off_wall
@@ -137,7 +177,7 @@ class TestBody < Minitest::Test
     b.move
     b.clip_off_wall
 
-    assert_body 100, 50, 10, 0, 186, b
+    assert_body 91, 50, 10, 0, 186, b
   end
 
   def test_move
