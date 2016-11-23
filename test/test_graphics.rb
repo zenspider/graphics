@@ -292,21 +292,23 @@ class TestSimulation < Minitest::Test
   end
 
   def test_angle
+    h = t.h-1
+
     t.angle 50, 50, 0, 10, :white
-    exp << [:draw_line, 50, 50, 60.0, 50.0, white, :antialiased]
+    exp << [:draw_line, 50, h-50, 60.0, h-50.0, white, :antialiased]
 
     t.angle 50, 50, 90, 10, :white
-    exp << [:draw_line, 50, 50, 50.0, 40.0, white, :antialiased]
+    exp << [:draw_line, 50, 49, 50.0, h-60.0, white, :antialiased]
 
     t.angle 50, 50, 180, 10, :white
-    exp << [:draw_line, 50, 50, 40.0, 50.0, white, :antialiased]
+    exp << [:draw_line, 50, h-50, 40.0, h-50.0, white, :antialiased]
 
     t.angle 50, 50, 270, 10, :white
-    exp << [:draw_line, 50, 50, 50.0, 60.0, white, :antialiased]
+    exp << [:draw_line, 50, h-50, 50.0, h-40.0, white, :antialiased]
 
     t.angle 50, 50, 45, 10, :white
     d45 = 10 * Math.sqrt(2) / 2
-    exp << [:draw_line, 50, 50, 50+d45, 50-d45, white, :antialiased]
+    exp << [:draw_line, 50, h-50, 50+d45, h-50-d45, white, :antialiased]
 
     assert_equal exp, t.screen.data
   end
@@ -341,7 +343,9 @@ class TestSimulation < Minitest::Test
 
   def test_ellipse
     t.ellipse 0, 0, 25, 25, :white
-    exp << [:draw_ellipse, 0, t.h-0, 25, 25, t.color[:white], false, :antialiased]
+
+    h = t.h-1
+    exp << [:draw_ellipse, 0, h, 25, 25, t.color[:white], false, :antialiased]
 
     assert_equal exp, t.screen.data
   end
@@ -364,7 +368,7 @@ class TestSimulation < Minitest::Test
 
   def test_hline
     t.hline 42, :white
-    h = t.h
+    h = t.h - 1
     exp << [:draw_line, 0, h-42, 100, h-42, t.color[:white], :antialiased]
 
     assert_equal exp, t.screen.data
@@ -376,13 +380,14 @@ class TestSimulation < Minitest::Test
 
   def test_line
     t.line 0, 0, 25, 25, :white
-    h = t.h
-    exp << [:draw_line, 0, h-0, 25, h-25, t.color[:white], :antialiased]
+    h = t.h - 1
+    exp << [:draw_line, 0, h, 25, h-25, t.color[:white], :antialiased]
 
     assert_equal exp, t.screen.data
   end
 
   def test_point
+    skip "not yet"
     t.point 2, 10, :white
 
     exp = [nil, nil, t.color[:white]]
