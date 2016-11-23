@@ -38,7 +38,6 @@ class SPH
   K             = 20 # Temperature constant- higher means particle repel more strongly
   ETA           = 1  # Viscosity constant- higher for more viscous
 
-
   attr_reader :particles
 
   def initialize
@@ -99,14 +98,16 @@ class SPH
     end
   end
 
-  def step delta_time
+  def clear
     # Clear everything
     particles.each do |particle|
       particle.density = DENSITY
       particle.pressure_force = V::ZERO
       particle.viscosity_force = V::ZERO
     end
+  end
 
+  def calculate_density
     # Calculate fluid density around each particle
     particles.each do |particle|
       particles.each do |neighbor|
@@ -118,8 +119,11 @@ class SPH
           particle.density += MASS * weight(distance, H)
         end
       end
+      # p particle.density if particle.density > 2*H
     end
+  end
 
+  def calculate_forces
     # Calculate forces on each particle based on density
     particles.each do |particle|
       particles.each do |neighbor|
@@ -148,7 +152,9 @@ class SPH
         end
       end
     end
+  end
 
+  def apply_forces delta_time
     # Apply forces to particles- make them move!
     particles.each do |particle|
       total_force = particle.pressure_force + particle.viscosity_force
@@ -156,12 +162,19 @@ class SPH
       # 'Eulerian' style momentum:
 
       # Calculate acceleration from forces
-      acceleration = (total_force * (1.0/particle.density*delta_time)) + GRAVITY
+      acceleration = (total_force * (1.0 / particle.density * delta_time)) + GRAVITY
 
       # Update position and velocity
       particle.velocity += acceleration * delta_time
       particle.position += particle.velocity * delta_time
     end
+  end
+
+  def step delta_time
+    clear
+    calculate_density
+    calculate_forces
+    apply_forces delta_time
   end
 
   ##
@@ -189,29 +202,29 @@ class SPH
       end
     end
   end
-
 end
 
 class SimulationWindow < Thingy
   WINSIZE = 500
 
-  attr_reader :simulation
+  attr_reader :simulation, :s
+
+  DELTA_TIME = 0.1
 
   def initialize
     super WINSIZE, WINSIZE, 16, "Smoothed Particle Hydrodynamics"
     @simulation = SPH.new
     @scale = 15
-    @oldtime = 0.0
+    @s = WINSIZE.div @scale
   end
 
   def update time
-    simulation.step 0.1
+    simulation.step DELTA_TIME
     simulation.make_particles_stay_in_bounds @scale
   end
 
   def draw time
     clear
-    s = WINSIZE.div @scale
 
     simulation.particles.each do |particle|
       pos = particle.position * s
@@ -219,6 +232,7 @@ class SimulationWindow < Thingy
 
       # Particles
       circle(pos.x, pos.y, 5, :white)
+      circle(pos.x, pos.y, particle.density, :gray)
 
       # Velocity vectors
       p2 = pos + vel
