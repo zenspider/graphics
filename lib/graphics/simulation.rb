@@ -260,8 +260,15 @@ class Graphics::AbstractSimulation
   # add any extras at the end.
 
   def draw n
-    clear
+    pre_draw n
+    post_draw n
+  end
 
+  def pre_draw n
+    clear
+  end
+
+  def post_draw n
     _bodies.each do |ary|
       draw_collection ary
     end
