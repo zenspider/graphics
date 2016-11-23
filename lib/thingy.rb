@@ -10,15 +10,17 @@ class Thingy
   attr_accessor :font
   attr_accessor :color, :rgb
 
-  def initialize w, h, c, name
+  def initialize w, h, c, name, full = false
     SDL.init SDL::INIT_VIDEO
     SDL::TTF.init
+
+    full = full ? SDL::FULLSCREEN : 0
 
     self.font = SDL::TTF.open("/System/Library/Fonts/Menlo.ttc", 32, 0)
 
     SDL::WM.set_caption name, name
 
-    self.screen = SDL::Screen.open w, h, c, SDL::HWSURFACE|SDL::DOUBLEBUF
+    self.screen = SDL::Screen.open w, h, c, SDL::HWSURFACE|SDL::DOUBLEBUF|full
     self.w, self.h = screen.w, screen.h
 
     self.color = {}
