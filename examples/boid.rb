@@ -228,6 +228,9 @@ class Boid < Body
     end
 
     size = nearby.size - 1
+
+    return self.velocity if size == 0
+
     v /= size unless size == 0
 
     (v - self.velocity) / 4
