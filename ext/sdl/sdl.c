@@ -909,9 +909,9 @@ void Init_sdl() {
   rb_define_method(cSurface, "w",            Surface_w,            0);
   rb_define_method(cSurface, "[]",           Surface_index,        2);
   rb_define_method(cSurface, "[]=",          Surface_index_equals, 3);
-  rb_define_method(cSurface, "transform", Surface_transform, 5);
-  rb_define_method(cSurface, "flags", Surface_flags, 0);
-  rb_define_method(cSurface, "set_alpha", Surface_set_alpha, 2);
+  rb_define_method(cSurface, "transform",    Surface_transform,    5);
+  rb_define_method(cSurface, "flags",        Surface_flags,        0);
+  rb_define_method(cSurface, "set_alpha",    Surface_set_alpha,    2);
 
   //// SDL::TTFFont methods:
 
