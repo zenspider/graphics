@@ -3,6 +3,8 @@
 require "sdl"
 
 class Thingy
+  D2R = Math::PI / 180.0
+
   attr_accessor :screen, :w, :h
   attr_accessor :paused
   attr_accessor :font
@@ -30,11 +32,23 @@ class Thingy
     register_color :gray,      127, 127, 127
     register_color :yellow,    255, 255, 0
 
+    101.times do |n|
+      m = (255 * (n / 100.0)).to_i
+      register_color ("gray%02d"  % n).to_sym, m, m, m
+      register_color ("red%02d"   % n).to_sym, m, 0, 0
+      register_color ("green%02d" % n).to_sym, 0, m, 0
+      register_color ("blue%02d"  % n).to_sym, 0, 0, m
+    end
+
     self.paused = false
   end
 
   def register_color name, r, g, b, a = 255
     color[name] = screen.format.map_rgba r, g, b, a
+  end
+
+  def populate klass, n
+    n.times.map { klass.new self }
   end
 
   def handle_event event, n
@@ -107,6 +121,15 @@ class Thingy
 
   def vline x, c, y1 = 0, y2 = w
     line x, y1, x, y2, c
+  end
+
+  def angle x1, y1, a, m, c
+    rad = a * D2R
+
+    x2 = x1 + Math.cos(rad) * m
+    y2 = y1 - Math.sin(rad) * m
+
+    line x1, y1, x2, y2, c
   end
 
   ##
@@ -229,6 +252,168 @@ class Thingy
     new_screen
   ensure
     self.screen = old_screen
+  end
+end
+
+class Body
+  D2R = Math::PI / 180.0
+
+  NORMAL = {
+           :north => 270,
+           :south => 90,
+           :east  => 180,
+           :west  => 0,
+           }
+
+  attr_accessor :x, :y, :a, :ga, :m, :w
+
+  def initialize w
+    self.w = w
+
+    self.x, self.y = rand(w.w), rand(w.h)
+    self.a = 0.0
+    self.ga = 0.0
+    self.m = 0.0
+  end
+
+  def turn dir
+    self.a = (a + dir) % 360.0 if dir
+  end
+
+  def move
+    rad = a * D2R
+
+    self.x += Math.cos(rad) * m
+    self.y -= Math.sin(rad) * m
+  end
+
+  def clip
+    max_h, max_w = w.h, w.w
+
+    if x < 0 then
+      self.x = 0
+      return :west
+    elsif x > max_w then
+      self.x = max_w
+      return :east
+    end
+
+    if y < 0 then
+      self.y = 0
+      return :north
+    elsif y > max_h then
+      self.y = max_h
+      return :south
+    end
+
+    nil
+  end
+
+  def random_angle
+    360 * rand
+  end
+
+  def random_turn deg
+    rand(deg) - (deg/2)
+  end
+
+  def clip_off_wall
+    if wall = clip then
+      normal = NORMAL[wall]
+      self.ga = (normal + random_turn(90)).degrees unless (normal - ga).abs < 45
+    end
+  end
+
+  def bounce
+    max_h, max_w = w.h, w.w
+    normal = nil
+
+    if x < 0 then
+      self.x, normal = 0, 0
+    elsif x > max_w then
+      self.x, normal = max_w, 180
+    end
+
+    if y < 0 then
+      self.y, normal = 0, 90
+    elsif y > max_h then
+      self.y, normal = max_h, 270
+    end
+
+    if normal then
+      self.a = 2 * normal - 180 - a
+      self.m *= 0.8
+    end
+  end
+
+  def wrap
+    max_h, max_w = w.h, w.w
+
+    self.x = max_w if x < 0
+    self.y = max_h if y < 0
+
+    self.x = 0 if x > max_w
+    self.y = 0 if y > max_h
+  end
+end
+
+class Trail
+  @@c = {}
+
+  attr_accessor :a, :w, :max, :c
+  def initialize w, max, color = "green"
+    self.w = w
+    self.a = []
+    self.max = max
+    unless @@c[color] then
+      @@c[color] ||= max.times.map { |n| ("%s%02d" % [color, n]).to_sym }.reverse
+    end
+    self.c = @@c[color]
+  end
+
+  def draw
+    a.reverse.each_cons(2).with_index do |((x1, y1), (x2, y2)), i|
+      w.line x1, y1, x2, y2, c[i] || :black
+    end
+  end
+
+  def << body
+    a << [body.x, body.y]
+    a.shift if a.size > max
+    nil
+  end
+end
+
+class Integer
+  def =~ n # 1 =~ 50 :: 1 in 50 chance
+    rand(n) <= (self - 1)
+  end
+end
+
+class Numeric
+  def close_to? n, delta = 0.01
+    (self - n).abs < delta
+  end
+
+  def degrees
+    (self < 0 ? self + 360 : self) % 360
+  end
+
+  def relative_angle n, max
+    deltaCW = (self - n).degrees
+    deltaCC = (n - self).degrees
+
+    return if deltaCC < 0.1 || deltaCW < 0.1
+
+    if deltaCC.abs < max then
+      deltaCC
+    elsif deltaCW.close_to? 180 then
+      [-max, max].sample
+    elsif deltaCW < deltaCC then
+      -max
+    else
+      max
+    end
   end
 end
 
