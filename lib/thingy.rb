@@ -33,8 +33,9 @@ class Thingy
     register_color :blue,      0,   0,   255
     register_color :gray,      127, 127, 127
     register_color :yellow,    255, 255, 0
+    register_color :alpha,     0, 0, 0, 0
 
-    101.times do |n|
+    (0..99).each do |n|
       m = (255 * (n / 100.0)).to_i
       register_color ("gray%02d"  % n).to_sym, m, m, m
       register_color ("red%02d"   % n).to_sym, m, 0, 0
