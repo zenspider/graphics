@@ -15,3 +15,7 @@ module DrawGrid
     end
   end
 end
+
+module WhiteBackground
+  CLEAR_COLOR = :white
+end
