@@ -14,6 +14,9 @@ Hoe.spec "graphics" do
 
   dependency "rsdl", "~> 0.1"
   dependency "rubysdl", "~> 2.2"
+
+  base = "/data/www/docs.seattlerb.org"
+  rdoc_locations << "docs-push.seattlerb.org:#{base}/#{remote_rdoc_dir}"
 end
 
 task :demos do

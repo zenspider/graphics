@@ -1,6 +1,6 @@
 = graphics
 
-home :: https://github.com/seattlerb/graphics
+home :: https://github.com/zenspider/graphics
 rdoc :: http://docs.seattlerb.org/graphics
 
 == DESCRIPTION:
