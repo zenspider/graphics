@@ -1,6 +1,4 @@
-1#!/usr/local/bin/ruby -w
-
-# srand 42
+#!/usr/local/bin/ruby -w
 
 require "thingy"
 
@@ -46,12 +44,8 @@ class Ball < Body
   end
 
   def draw n
-    # w.angle x, y, a-45, 50, :yellow
     w.angle x, y, a, 60, :red
-    # w.angle x, y, a+45, 50, :yellow
-
     w.circle x, y, 5, :white, :filled
-    # w.debug "%3d, %3d @ %8.2f @ %8.2f" % [x, y, a, m]
   end
 end
 

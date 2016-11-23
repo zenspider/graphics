@@ -11,16 +11,6 @@ class Array
   end
 end
 
-# class Array
-#   def sorted_include? o
-#     a, b = o
-#     !!bsearch { |(x, y)|
-#       c = a - x
-#       c.zero? ? b - y : c
-#     }
-#   end
-# end
-
 class GameOfLife
   delta   = [-1, 0, 1]
   same    = [0, 0]

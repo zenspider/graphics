@@ -47,8 +47,7 @@ class GameOfLife
   @@neighbors = Hash.new { |h, k| h[k] = {} }
 
   def neighbors_for x, y
-    # @@neighbors[x][y] ||=
-      DELTAS.map { |(dx, dy)| [x+dx, y+dy] }.reject { |(m, n)| m < 0 || n < 0 }
+    DELTAS.map { |(dx, dy)| [x+dx, y+dy] }.reject { |(m, n)| m < 0 || n < 0 }
   end
 end
 
