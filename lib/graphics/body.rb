@@ -92,12 +92,18 @@ class Graphics::Body
     [dx, dy]
   end
 
+  ##
+  # Return the angle to another body in degrees.
+
   def angle_to body
     dx = body.x - self.x
     dy = body.y - self.y
 
     (R2D * Math.atan2(dy, dx)).degrees
   end
+
+  ##
+  # Return the distance to another body, squared.
 
   def distance_to_squared p
     dx = p.x - x
