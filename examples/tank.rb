@@ -106,6 +106,7 @@ class Bullet < Graphics::Body
     self.a = a
     self.m = m + 5
     w.bullets << self
+    w.bullet_snd.play
   end
 
   def update
@@ -125,6 +126,7 @@ class TargetSimulation < Graphics::Simulation
   attr_accessor :tank, :bullets
   attr_accessor :body_img
   attr_accessor :turret_img
+  attr_accessor :bullet_snd
 
   def initialize
     super 640, 640, 16, "Target Practice"
@@ -132,11 +134,13 @@ class TargetSimulation < Graphics::Simulation
     self.tank = Tank.new self
     self.bullets = []
 
+    open_mixer 8
     register_body tank
     register_bodies bullets
 
     self.body_img   = image "resources/images/body.png"
     self.turret_img = image "resources/images/turret.png"
+    self.bullet_snd = audio "resources/sounds/bullet.wav"
   end
 
   def initialize_keys
