@@ -4,6 +4,7 @@ require "sdl"
 
 class Thingy
   D2R = Math::PI / 180.0
+  R2D = 1 / D2R
 
   attr_accessor :screen, :w, :h
   attr_accessor :paused
@@ -271,7 +272,8 @@ class Thingy
 end
 
 class Body
-  D2R = Math::PI / 180.0
+  D2R = Thingy::D2R
+  R2D = Thingy::R2D
 
   NORMAL = {
            :north => 270,
