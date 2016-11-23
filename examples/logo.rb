@@ -39,6 +39,7 @@ class Turtle < Graphics::Body
         end
         move_by a, dist
       else
+        src.delete line
         warn "ERROR: #{line}"
       end
     end
