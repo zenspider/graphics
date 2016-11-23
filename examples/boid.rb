@@ -9,7 +9,9 @@ class Boid < Body
   AA = SDL::Surface::TRANSFORM_AA
 
   PCT_DAMPENER = 0.01
-  TOO_CLOSE = 50
+  TOO_CLOSE    = 50
+  MAX_VELOCITY = 5
+  MAX_DISTANCE = 100
 
   def initialize w
     super
@@ -40,9 +42,6 @@ class Boid < Body
 
     @nearby = nil
   end
-
-  MAX_VELOCITY = 5
-  MAX_DISTANCE = 100
 
   def nearby
     @nearby ||= begin
