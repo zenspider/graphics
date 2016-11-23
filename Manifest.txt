@@ -1,0 +1,14 @@
+.autotest
+History.rdoc
+Manifest.txt
+README.rdoc
+Rakefile
+examples/lito.rb
+examples/lito2.rb
+examples/targeting.rb
+examples/zenspider1.rb
+examples/zenspider2.rb
+examples/zenspider3.rb
+examples/zenspider4.rb
+lib/thingy.rb
+settings.sh
