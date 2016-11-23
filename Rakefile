@@ -5,7 +5,9 @@ require "hoe"
 
 Hoe.plugin :isolate
 Hoe.plugin :seattlerb
+Hoe.plugins.delete :perforce
 Hoe.plugin :rdoc
+Hoe.plugin :git
 
 Hoe.spec "graphics" do
   developer "Ryan Davis", "ryand-ruby@zenspider.com"
