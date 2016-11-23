@@ -1,6 +1,6 @@
 #!/usr/bin/ruby -w
 
-require "thingy"
+require "graphics"
 
 D2R = Math::PI / 180.0
 

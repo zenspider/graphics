@@ -1,6 +1,6 @@
 #!/usr/local/bin/ruby -w
 
-require "thingy"
+require "graphics"
 
 class Ball < Body
   COUNT = 50

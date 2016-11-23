@@ -1,7 +1,7 @@
 #!/usr/local/bin/ruby -w
 # -*- coding: utf-8 -*-
 
-require "thingy"
+require "graphics"
 
 class Editor < Simulation
   attr_accessor :overlay, :s, :lines

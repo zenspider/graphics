@@ -2,7 +2,7 @@
 
 srand 42
 
-require "thingy"
+require "graphics"
 
 class Entity
   attr_accessor :x, :y

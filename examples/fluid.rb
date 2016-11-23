@@ -1,4 +1,4 @@
-require 'thingy'
+require "graphics"
 
 class Float
   ##

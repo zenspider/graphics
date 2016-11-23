@@ -2,7 +2,7 @@
 
 srand 42
 
-require "thingy"
+require "graphics"
 
 class Array
   def sorted_include? o
