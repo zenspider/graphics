@@ -221,10 +221,10 @@ class TestBody < Minitest::Test
     assert_in_epsilon 100, b.distance_to_squared(b2)
 
     b2.x, b2.y = 60, 60
-    assert_in_epsilon (10*Math.sqrt(2))**2, b.distance_to_squared(b2)
+    assert_in_epsilon((10*Math.sqrt(2))**2, b.distance_to_squared(b2))
 
     b2.x, b2.y = 0, 0
-    assert_in_epsilon (50*Math.sqrt(2))**2, b.distance_to_squared(b2)
+    assert_in_epsilon((50*Math.sqrt(2))**2, b.distance_to_squared(b2))
   end
 end
 
@@ -270,7 +270,7 @@ class TestSimulation < Minitest::Test
 
       s = []
 
-      def s.method_missing(*a)
+      def s.method_missing *a
         @data ||= []
         @data << a
       end
@@ -280,7 +280,6 @@ class TestSimulation < Minitest::Test
       end
 
       self.screen = s
-
     end
   end
 

@@ -36,16 +36,16 @@ class Numeric
   # Consider this method private, even tho it is in use by the demos.
 
   def relative_angle n, max
-    deltaCW = (self - n).degrees
-    deltaCC = (n - self).degrees
+    delta_cw = (self - n).degrees
+    delta_cc = (n - self).degrees
 
-    return if deltaCC < 0.1 || deltaCW < 0.1
+    return if delta_cc < 0.1 || delta_cw < 0.1
 
-    if deltaCC.abs < max then
-      deltaCC
-    elsif deltaCW.close_to? 180 then
+    if delta_cc.abs < max then
+      delta_cc
+    elsif delta_cw.close_to? 180 then
       [-max, max].sample
-    elsif deltaCW < deltaCC then
+    elsif delta_cw < delta_cc then
       -max
     else
       max

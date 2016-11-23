@@ -60,7 +60,12 @@ class Graphics::Simulation
 
     self.color = {}
     self.rgb   = Hash.new { |hash, k| hash[k] = screen.get_rgb(color[k]) }
+    self.paused = false
 
+    initialize_colors
+  end
+
+  def initialize_colors
     register_color :black,     0,   0,   0
     register_color :white,     255, 255, 255
     register_color :red,       255, 0,   0
@@ -72,13 +77,11 @@ class Graphics::Simulation
 
     (0..99).each do |n|
       m = (255 * (n / 100.0)).to_i
-      register_color ("gray%02d"  % n).to_sym, m, m, m
-      register_color ("red%02d"   % n).to_sym, m, 0, 0
-      register_color ("green%02d" % n).to_sym, 0, m, 0
-      register_color ("blue%02d"  % n).to_sym, 0, 0, m
+      register_color(("gray%02d"  % n).to_sym, m, m, m)
+      register_color(("red%02d"   % n).to_sym, m, 0, 0)
+      register_color(("green%02d" % n).to_sym, 0, m, 0)
+      register_color(("blue%02d"  % n).to_sym, 0, 0, m)
     end
-
-    self.paused = false
   end
 
   ##
@@ -97,7 +100,8 @@ class Graphics::Simulation
     n.times.map {
       o = klass.new self
       yield o if block_given?
-      o }
+      o
+    }
   end
 
   ##
@@ -136,13 +140,11 @@ class Graphics::Simulation
       SDL::Key.scan
       handle_keys
 
-      unless paused then
-        update n unless paused
+      next if paused
 
-        draw_and_flip n
-
-        n += 1 unless paused
-      end
+      update n
+      draw_and_flip n
+      n += 1
     end
   end
 
@@ -349,7 +351,7 @@ class Graphics::Simulation
   ##
   # Draw a bitmap at x/y with an angle and optional x/y scale.
 
-  def blit o, x, y, a°, xs=1, ys=1, opt=0
+  def blit o, x, y, a°, xs = 1, ys = 1, opt = 0
     SDL::Surface.transform_blit o, screen, -a°, 1, 1, o.w/2, o.h/2, x, h-y, opt
   end
 
