@@ -5,6 +5,8 @@ srand 42
 class Array
   include Comparable
 
+  alias old_spaceship <=>
+
   def <=> other
     x = first <=> other.first
     x.zero? ? self[1] <=> other[1] : x
