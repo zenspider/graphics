@@ -307,7 +307,7 @@ class Graphics::Simulation
   # Draw text s at x/y in color c in font f.
 
   def text s, x, y, c, f = font
-    f.draw_solid_utf8 screen, s, x, self.h-y-f.height, *rgb[c]
+    f.draw_blended_utf8 screen, s, x, self.h-y-f.height, *rgb[c]
   end
 
   ##
