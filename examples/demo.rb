@@ -85,6 +85,4 @@ class Demo < Graphics::Simulation
   end
 end
 
-if $0 == __FILE__
-  Demo.new.run
-end
+Demo.new.run if $0 == __FILE__

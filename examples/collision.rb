@@ -50,7 +50,7 @@ class Collision < Graphics::Simulation
     "<Screen ...>"
   end
 
-  def detect_collisions(sprites)
+  def detect_collisions sprites
     collisions = []
     sprites.combination(2).each do |a, b|
       collisions << a << b if a.collide_with? b

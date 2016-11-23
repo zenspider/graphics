@@ -126,11 +126,11 @@ class Person < Entity
   end
 
   def update_infection
-    if @infect then
-      @infect -= 1
-      sim.zombie << Zombie.from_person(sim.person.delete(self), sim) if @infect <= 0
-      true
-    end
+    return unless @infect
+
+    @infect -= 1
+    sim.zombie << Zombie.from_person(sim.person.delete(self), sim) if @infect <= 0
+    true
   end
 
   def visible
@@ -190,23 +190,24 @@ class Hunter < Person
 
     baddies = sim.zombie + sim.person.select(&:infect)
     nearest = baddies.sort_by { |z| self.distance_from_squared z }.first
-    if nearest then
-      if self.touching? nearest then
-        if Person === nearest then
+
+    return unless nearest
+
+    if self.touching? nearest then
+      if Person === nearest then
+        nearest.kill
+      else
+        if rand(10) != 0 then
           nearest.kill
         else
-          if rand(10) != 0 then
-            nearest.kill
-          else
-            self.state = INFECT
-            self.infect = INFECT_STEPS.to_i
-          end
+          self.state = INFECT
+          self.infect = INFECT_STEPS.to_i
         end
-      elsif near? nearest then
-        move_towards nearest
-      else
-        move_towards nearest
       end
+    elsif near? nearest then
+      move_towards nearest
+    else
+      move_towards nearest
     end
   end
 
@@ -288,13 +289,8 @@ class ZombieGame < Graphics::Simulation
   def draw tick
     clear
 
-    person.each do |p|
-      p.draw
-    end
-
-    zombie.each do |p|
-      p.draw
-    end
+    person.each(&:draw)
+    zombie.each(&:draw)
 
     fps tick
   end
@@ -311,18 +307,18 @@ class ZombieGame < Graphics::Simulation
       p.update i
     end
 
-    if zombie.empty? or person.all?(&:infected?) then
-      t = Time.now - start
-      if zombie.empty? then
-        print "Infestation stopped "
-      else
-        print "All people infected "
-      end
-      puts "in #{i} iterations, #{t} sec"
-      puts "  #{i / t} frames / sec"
+    return unless zombie.empty? or person.empty?
 
-      exit
+    t = Time.now - start
+    if zombie.empty? then
+      print "Infestation stopped "
+    else
+      print "All people infected "
     end
+    puts "in #{i} iterations, #{t} sec"
+    puts "  #{i / t} frames / sec"
+
+    exit
   end
 
   def populate klass, coll
