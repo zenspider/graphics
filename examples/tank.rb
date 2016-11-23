@@ -93,6 +93,7 @@ end
 class TargetThingy < Thingy
   attr_accessor :tank, :bullets
   attr_accessor :body_img
+  attr_accessor :turret_img
 
   def initialize
     super 640, 640, 16, "Target Practice"
@@ -102,15 +103,8 @@ class TargetThingy < Thingy
     self.tank = Tank.new w/2, h/2
     self.bullets = []
 
-    # self.body_img = load "resources/images/body.png"
-
-    self.body_img = new_surface 30, 40 do
-      rect 0,  0, 29, 39, :white
-      rect 4,  0, 21, 39, :white
-
-      line 2,  0, 2,  39, :white
-      line 27, 0, 27, 39, :white
-    end
+    self.body_img   = image "resources/images/body.png"
+    self.turret_img = image "resources/images/turret.png"
   end
 
   def handle_keys
@@ -148,14 +142,8 @@ class TargetThingy < Thingy
   def draw_tank
     x, y, a, t = tank.x, tank.y, tank.angle, tank.turret
 
-    blit body_img, x, y, a, SDL::Surface::TRANSFORM_AA
-
-    rad = t * D2R
-
-    x2 = x + Math.sin(rad) * 20
-    y2 = y - Math.cos(rad) * 20
-
-    line x, y, x2, y2, :white
+    blit body_img, x, y, a
+    blit turret_img, x, y, t
 
     debug "%3d @ %.2f @ %d", tank.angle, tank.speed, tank.energy
   end
