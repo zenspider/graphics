@@ -150,6 +150,13 @@ class Thingy
   end
 
   ##
+  # Draw a point at x/y w/ color c.
+
+  def point x, y, c
+    screen[x, y] = color[c]
+  end
+
+  ##
   # Draw a rect at x/y with w by h dimensions in color c.
 
   def rect x, y, w, h, c, fill = false
