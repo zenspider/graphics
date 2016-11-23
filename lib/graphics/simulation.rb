@@ -118,6 +118,20 @@ class Graphics::AbstractSimulation
       register_color(("red%02d"   % n).to_sym, m, 0, 0)
       register_color(("green%02d" % n).to_sym, 0, m, 0)
       register_color(("blue%02d"  % n).to_sym, 0, 0, m)
+      register_color(("cyan%02d"    % n).to_sym, 0, m, m)
+      register_color(("magenta%02d" % n).to_sym, m, 0, m)
+      register_color(("yellow%02d"  % n).to_sym, m, m, 0)
+    end
+
+    (0...256).each do |n|
+      m = (256 * n / 255.0).to_i
+      register_color(("gray%03d"    % n).to_sym, m, m, m)
+      register_color(("red%03d"     % n).to_sym, m, 0, 0)
+      register_color(("green%03d"   % n).to_sym, 0, m, 0)
+      register_color(("blue%03d"    % n).to_sym, 0, 0, m)
+      register_color(("cyan%03d"    % n).to_sym, 0, m, m)
+      register_color(("magenta%03d" % n).to_sym, m, 0, m)
+      register_color(("yellow%03d"  % n).to_sym, m, m, 0)
     end
   end
 
