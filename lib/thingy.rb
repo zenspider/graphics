@@ -285,6 +285,8 @@ end
 require "matrix"
 
 class V < ::Vector
+  ZERO = V[0, 0]
+
   def inspect
     a = self.to_a
     f = Array.new(a.size, "%.2f").join ", "
@@ -296,7 +298,7 @@ class Body
   D2R = Thingy::D2R
   R2D = Thingy::R2D
 
-  V_ZERO = V[0, 0]
+  V_ZERO = V::ZERO
 
   NORMAL = {
            :north => 270,
