@@ -27,7 +27,7 @@ class Ball < Body
   end
 end
 
-class Demo < Thingy
+class Demo < Simulation
   attr_accessor :ball, :img
 
   def initialize

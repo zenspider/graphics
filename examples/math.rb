@@ -2,7 +2,7 @@
 
 require "thingy"
 
-class MathThingy < Thingy
+class MathSimulation < Simulation
   def initialize
     super 640, 640, 16, "Math"
   end
@@ -39,4 +39,4 @@ class MathThingy < Thingy
   end
 end
 
-MathThingy.new.run
+MathSimulation.new.run

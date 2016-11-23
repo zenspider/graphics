@@ -57,7 +57,7 @@ class ZenspiderGol
   end
 end
 
-class ZenspiderGolThingy < Thingy
+class ZenspiderGolSimulation < Simulation
   attr_accessor :gol
 
   SIZE, WIDTH = 10, 64
@@ -85,7 +85,7 @@ class ZenspiderGolThingy < Thingy
 end
 
 if ARGV.first == "prof" then
-  ZenspiderGolThingy.new.run 5
+  ZenspiderGolSimulation.new.run 5
 else
-  ZenspiderGolThingy.new.run
+  ZenspiderGolSimulation.new.run
 end

@@ -159,7 +159,7 @@ class Float
   end
 end
 
-class FluidDynamics < Thingy
+class FluidDynamics < Simulation
   WINSIZE = 500
   SCALE = 15
   S = WINSIZE / SCALE

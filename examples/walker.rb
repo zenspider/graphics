@@ -76,7 +76,7 @@ class Person < Body
   end
 end
 
-class WalkerThingy < Thingy
+class WalkerSimulation < Simulation
   attr_accessor :ps, :body_img, :cmap
 
   def initialize
@@ -112,4 +112,4 @@ class WalkerThingy < Thingy
   end
 end
 
-WalkerThingy.new.run
+WalkerSimulation.new.run

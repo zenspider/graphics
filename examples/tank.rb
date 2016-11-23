@@ -115,7 +115,7 @@ class Bullet < Body
   end
 end
 
-class TargetThingy < Thingy
+class TargetSimulation < Simulation
   attr_accessor :tank, :bullets
   attr_accessor :body_img
   attr_accessor :turret_img
@@ -157,4 +157,4 @@ class TargetThingy < Thingy
   end
 end
 
-TargetThingy.new.run
+TargetSimulation.new.run

@@ -79,7 +79,7 @@ class LitoGol
   end
 end
 
-class LitoGolThingy < Thingy
+class LitoGolSimulation < Simulation
   attr_accessor :gol
 
   SIZE, WIDTH = 10, 64
@@ -107,4 +107,4 @@ class LitoGolThingy < Thingy
   end
 end
 
-LitoGolThingy.new.run
+LitoGolSimulation.new.run

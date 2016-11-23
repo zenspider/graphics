@@ -32,7 +32,7 @@ class Sprite < Body
   end
 end
 
-class Collision < Thingy
+class Collision < Simulation
   attr_accessor :sprites, :cmap, :image
 
   def initialize

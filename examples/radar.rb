@@ -2,7 +2,7 @@
 
 require "thingy"
 
-class TargetThingy < Thingy
+class TargetSimulation < Simulation
   def initialize
     super 640, 640, 16, "Target Practice"
 
@@ -28,4 +28,4 @@ class TargetThingy < Thingy
   end
 end
 
-TargetThingy.new.run
+TargetSimulation.new.run

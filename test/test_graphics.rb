@@ -10,7 +10,7 @@ require "thingy"
 class TestBody < Minitest::Test
   attr_accessor :w, :b
 
-  FakeThingy = Struct.new(:w, :h)
+  FakeSimulation = Struct.new(:w, :h)
 
   def assert_body x, y, m, a, ga, b
     assert_in_delta x,  b.x,  0.001, "x"
@@ -21,7 +21,7 @@ class TestBody < Minitest::Test
   end
 
   def setup
-    self.w = FakeThingy.new(100, 100)
+    self.w = FakeSimulation.new(100, 100)
     self.b = Body.new w
 
     b.x = 50
@@ -225,10 +225,10 @@ class TestNumeric < Minitest::Test
   end
 end
 
-class TestThingy < Minitest::Test
+class TestSimulation < Minitest::Test
   # make_my_diffs_pretty!
 
-  class FakeThingy < Thingy
+  class FakeSimulation < Simulation
     def initialize
       super 100, 100, 16, "blah"
 
@@ -251,7 +251,7 @@ class TestThingy < Minitest::Test
   attr_accessor :t, :white, :exp
 
   def setup
-    self.t = FakeThingy.new
+    self.t = FakeSimulation.new
     self.white = t.color[:white]
     self.exp = []
   end
