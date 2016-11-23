@@ -197,16 +197,34 @@ class TestBody < Minitest::Test
     b2 = Graphics::Body.new w
 
     b2.x, b2.y = 60, 50
-    assert_equal 0, b.angle_to(b2)   # 50, 60
+    assert_in_epsilon 0, b.angle_to(b2)
 
     b2.x, b2.y = 50, 40
-    assert_equal 270, b.angle_to(b2) # 50, 60
+    assert_in_epsilon 270, b.angle_to(b2)
 
     b2.x, b2.y = 60, 60
-    assert_equal 45, b.angle_to(b2)  # 60, 60
+    assert_in_epsilon 45, b.angle_to(b2)
 
     b2.x, b2.y = 0, 0
-    assert_equal 225, b.angle_to(b2) # 60, 60
+    assert_in_epsilon 225, b.angle_to(b2)
+  end
+
+  def test_distance_to_squared
+    # b is at 50, 50
+
+    b2 = Graphics::Body.new w
+
+    b2.x, b2.y = 60, 50
+    assert_in_epsilon 100, b.distance_to_squared(b2)
+
+    b2.x, b2.y = 50, 40
+    assert_in_epsilon 100, b.distance_to_squared(b2)
+
+    b2.x, b2.y = 60, 60
+    assert_in_epsilon (10*Math.sqrt(2))**2, b.distance_to_squared(b2)
+
+    b2.x, b2.y = 0, 0
+    assert_in_epsilon (50*Math.sqrt(2))**2, b.distance_to_squared(b2)
   end
 end
 
