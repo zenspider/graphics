@@ -1,14 +1,15 @@
 #!/bin/sh
+set -ex
 
-brew uninstall libogg
-brew uninstall libvorbis
-brew uninstall libpng
+brew uninstall libogg || true
+brew uninstall libvorbis || true
+brew uninstall libpng || true
 
-brew uninstall sdl
-brew uninstall sdl_ttf
-brew uninstall sdl_mixer
-brew uninstall sdl_image
-brew uninstall sge
+brew uninstall sdl || true
+brew uninstall sdl_ttf || true
+brew uninstall sdl_mixer || true
+brew uninstall sdl_image || true
+brew uninstall sge || true
 
 # brew update
 
@@ -21,8 +22,8 @@ brew install sdl_mixer -- --with-libvorbis
 brew install sdl_ttf
 brew install sdl_image
 
-gem uninstall -ax rsdl
-gem uninstall -ax rubysdl
+gem uninstall -ax rsdl || true
+gem uninstall -ax rubysdl || true
 
 gem install rsdl
 gem install rubysdl -- --enable-bundled-sge
