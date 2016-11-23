@@ -231,7 +231,7 @@ class Graphics::Simulation
   # Draw a rect at x/y with w by h dimensions in color c. Ignores blending.
 
   def fast_rect x, y, w, h, c
-    screen.fill_rect x, self.h-y-h-1, w, h, color[c]
+    screen.fill_rect x, self.h-y-h, w, h, color[c]
   end
 
   ##
