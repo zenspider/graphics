@@ -11,33 +11,7 @@ class Float
   end
 end
 
-class Vec2 < Struct.new(:x, :y)
-  ZERO = Vec2.new 0, 0
-
-  def + other
-    Vec2.new x+other.x, y+other.y
-  end
-
-  def - other
-    Vec2.new x-other.x, y-other.y
-  end
-
-  def * s
-    Vec2.new x*s, y*s
-  end
-
-  def / s
-    Vec2.new x/s, y/s
-  end
-
-  def == other
-    x == other.x && y == other.y
-  end
-
-  def magnitude
-    Math.sqrt(x*x + y*y)
-  end
-end
+Vec2 = V
 
 class Particle
   attr_accessor :density, :position, :velocity,
@@ -252,10 +226,11 @@ class SimulationWindow < Thingy
       vel = particle.velocity * s
 
       # Particles
-      circle(*pos, 5, :white)
+      circle(pos.x, pos.y, 5, :white)
 
       # Velocity vectors
-      line(*pos, *(pos+vel), :red)
+      p2 = pos + vel
+      line(pos.x, pos.y, p2.x, p2.y, :red)
 
       fps time
     end
