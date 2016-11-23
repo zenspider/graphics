@@ -3,6 +3,8 @@
 require "graphics"
 
 class TargetSimulation < Graphics::Simulation
+  CLEAR_COLOR = :darker_green
+
   def initialize
     super 640, 640, 16, "Target Practice"
 
@@ -12,7 +14,7 @@ class TargetSimulation < Graphics::Simulation
   end
 
   def draw n
-    clear :darker_green
+    clear
 
     (0..640).step(64).each do |r|
       hline r, :dark_green

@@ -4,6 +4,8 @@
 require "graphics"
 
 class Demo < Graphics::Simulation
+  CLEAR_COLOR = :white
+
   attr_accessor :woot, :menlo32
   attr_accessor :rct
 
@@ -27,7 +29,7 @@ class Demo < Graphics::Simulation
   A = R2D*Math.atan2(200, 100)
 
   def draw n
-    clear :white
+    clear
 
     (0..90).step(30) do |deg|
       shift = (woot.h*Math.sin(D2R*deg))

@@ -10,6 +10,9 @@ module SDL; end # :nodoc: -- stupid rdoc :(
 
 class Graphics::Simulation
 
+  # The default color to clear the screen.
+  CLEAR_COLOR = :black
+
   # degrees to radians
   D2R = Math::PI / 180.0
 
@@ -242,9 +245,9 @@ class Graphics::Simulation
   end
 
   ##
-  # Clear the whole screen
+  # Clear the whole screen. Defaults to CLEAR_COLOR.
 
-  def clear c = :black
+  def clear c = self.class::CLEAR_COLOR
     fast_rect 0, 0, w, h, c
   end
 
