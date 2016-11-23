@@ -1,92 +1,117 @@
 #!/usr/bin/ruby -w
-# -*- coding: utf-8 -*-
 
 require "thingy"
 
 D2R = Math::PI / 180.0
 
-class Tank
+class Tank < Body
   ACCELERATE   = 0.25
   DECELERATE   = 0.125
   ROTATION     = 2
   TICK_ENERGY  = 5
   SHOT_ENERGY  = 100
 
+  BULLET_SPEED = 9.0
   MAX_SPEED    = 4.0
   MAX_ROTATION = 360
   MAX_ENERGY   = 100
 
-  attr_accessor :angle, :speed, :x, :y, :sim
-  attr_accessor :turret, :energy
+  attr_accessor :t
+  attr_accessor :e
 
-  def initialize x, y
-    self.x      = x
-    self.y      = y
-    self.angle  = 0
-    self.turret = 0
-    self.speed  = 0
-    self.energy = 0
+  def initialize w
+    super
+
+    self.x = w.w / 2
+    self.y = w.h / 2
+    self.e = 0
+
+    self.t = Turret.new self
   end
 
   def update
-    rad = angle * D2R
+    self.e += TICK_ENERGY
 
-    self.x += Math.cos(rad) * speed
-    self.y -= Math.sin(rad) * speed
-
-    self.energy += TICK_ENERGY
-
+    t.update x, y
+    move
     limit
+    clip
   end
 
   def limit
-    self.angle  %= MAX_ROTATION
-    self.turret %= MAX_ROTATION
-    self.energy = MAX_ENERGY if energy > MAX_ENERGY
+    self.e = MAX_ENERGY if e > MAX_ENERGY
 
-    if speed > MAX_SPEED then
-      self.speed = MAX_SPEED
-    elsif speed < 0 then
-      self.speed = 0
+    if m > MAX_SPEED then
+      self.m = MAX_SPEED
+    elsif m < 0 then
+      self.m = 0
     end
   end
 
   def fire
-    rad = turret * D2R
-    x2 = x + Math.cos(rad) * 20
-    y2 = y - Math.sin(rad) * 20
-
-    if energy >= SHOT_ENERGY then
-      self.energy -= SHOT_ENERGY
-      Bullet.new x2, y2, turret, speed
+    if e >= SHOT_ENERGY then
+      self.e -= SHOT_ENERGY
+      t.fire
     end
   end
 
-  def turn_right; self.angle -= ROTATION; aim_right; end
-  def turn_left;  self.angle += ROTATION; aim_left;  end
+  def draw
+    w.blit w.body_img, x, y, a
+    t.draw
+  end
 
-  def aim_right;  self.turret -= ROTATION; end
-  def aim_left;   self.turret += ROTATION; end
+  def turn_right; turn(-ROTATION); aim_right; end
+  def turn_left;  turn ROTATION;   aim_left;  end
 
-  def accelerate; self.speed += ACCELERATE; end
-  def decelerate; self.speed -= DECELERATE; end
+  def aim_right;  self.t.turn(-ROTATION); end
+  def aim_left;   self.t.turn ROTATION;   end
+
+  def accelerate; self.m += ACCELERATE; self.t.m = m; end
+  def decelerate; self.m -= DECELERATE; self.t.m = m; end
 end
 
-class Bullet
-  attr_accessor :x, :y, :a, :v
+class Turret < Body
+  def initialize tank
+    self.w = tank.w
+    self.x = tank.x
+    self.y = tank.y
+    self.a = tank.a
+    self.m = tank.m
+  end
 
-  def initialize x, y, a, v
+  def fire
+    b = Bullet.new w, x, y, a, m
+    b.move_by a, 15
+  end
+
+  def update x, y
+    self.x = x
+    self.y = y
+  end
+
+  def draw
+    w.blit w.turret_img, x, y, a
+  end
+end
+
+class Bullet < Body
+  def initialize w, x, y, a, m
+    self.w = w
     self.x = x
     self.y = y
     self.a = a
-    self.v = v + 5
+    self.m = m + 5
+    w.bullets << self
   end
 
   def update
-    rad = a * D2R
+    move
+    w.bullets.delete self if clip
+  end
 
-    self.x += Math.cos(rad) * v
-    self.y -= Math.sin(rad) * v
+  def draw
+    w.rect x, y, 2, 2, :white
+    w.debug "%.2f", m
   end
 end
 
@@ -100,7 +125,7 @@ class TargetThingy < Thingy
 
     SDL::Key.enable_key_repeat 50, 10
 
-    self.tank = Tank.new w/2, h/2
+    self.tank = Tank.new self
     self.bullets = []
 
     self.body_img   = image "resources/images/body.png"
@@ -115,43 +140,20 @@ class TargetThingy < Thingy
     tank.decelerate if SDL::Key.press? SDL::Key::DOWN
     tank.aim_left   if SDL::Key.press? SDL::Key::SEMICOLON
     tank.aim_right  if SDL::Key.press? SDL::Key::Q
-    fire            if SDL::Key.press? SDL::Key::SPACE
-  end
-
-  def fire
-    bullet = tank.fire
-    bullets << bullet if bullet
+    tank.fire       if SDL::Key.press? SDL::Key::SPACE
   end
 
   def update n
     tank.update
 
     bullets.each(&:update)
-
-    if tank.x < 0 then tank.x = 0 elsif tank.x > w then tank.x = w end
-    if tank.y < 0 then tank.y = 0 elsif tank.y > h then tank.y = h end
   end
 
   def draw n
     clear
-    draw_tank
-    draw_bullets
+    tank.draw
+    bullets.each(&:draw)
     fps n
-  end
-
-  def draw_tank
-    x, y, a, t = tank.x, tank.y, tank.angle, tank.turret
-
-    blit body_img, x, y, a
-    blit turret_img, x, y, t
-
-    debug "%3d @ %.2f @ %d", tank.angle, tank.speed, tank.energy
-  end
-
-  def draw_bullets
-    bullets.each do |b|
-      rect b.x, b.y, 2, 2, :white
-    end
   end
 end
 

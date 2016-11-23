@@ -294,8 +294,11 @@ class Body
   end
 
   def move
-    rad = a * D2R
+    move_by a, m
+  end
 
+  def move_by a, m
+    rad = a * D2R
     self.x += Math.cos(rad) * m
     self.y -= Math.sin(rad) * m
   end
