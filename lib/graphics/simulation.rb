@@ -200,11 +200,7 @@ class Graphics::Simulation
   # Draw a line from x1/y1 to a particular magnitude and angle in color c.
 
   def angle x1, y1, a, m, c
-    rad = a * D2R
-
-    x2 = x1 + Math.cos(rad) * m
-    y2 = y1 + Math.sin(rad) * m
-
+    x2, y2 = project x1, y1, a, m
     line x1, y1, x2, y2, c
   end
 
@@ -227,6 +223,15 @@ class Graphics::Simulation
 
   def point x, y, c
     screen[x, y] = color[c]
+  end
+
+  ##
+  # Calculate the x/y coordinate offset from x1/y1 with an angle and a
+  # magnitude.
+
+  def project x1, y1, a, m
+    rad = a * D2R
+    [x1 + Math.cos(rad) * m, y1 + Math.sin(rad) * m]
   end
 
   ##
