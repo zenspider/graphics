@@ -1,6 +1,12 @@
-=== 1.0.0 / 2015-03-31
+=== 1.0.0.b1 / 2015-08-04
 
 * 1 major enhancement
 
-  * Birthday!
+  * Beta Birthday!
+
+=== 1.0.0.a1 / 2015-03-31
+
+* 1 major enhancement
+
+  * Alpha Birthday!
 
