@@ -91,7 +91,7 @@ class LitoGolThingy < Thingy
   end
 
   def draw n
-    blank
+    clear
 
     gol.each do |c, x, y|
       if c == 1 then
