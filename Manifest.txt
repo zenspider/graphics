@@ -14,6 +14,7 @@ examples/gol.rb
 examples/gol2.rb
 examples/logo.rb
 examples/math.rb
+examples/maze.rb
 examples/radar.rb
 examples/tank.rb
 examples/tank2.rb
