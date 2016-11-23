@@ -223,28 +223,12 @@ class Graphics::Body
 
   ##
   # Like clip, keep the body in bounds of the window, but set the
-  # angle to the angle of reflection. Also slows momentum by 20%.
+  # angle to the angle of reflection. Also slows momentum by +friction+%.
 
-  def bounce
-    # TODO: rewrite this using clip + NORMAL to clean it up
-    max_h, max_w = w.h, w.w
-    normal = nil
-
-    if x < 0 then
-      self.x, normal = 0, 0
-    elsif x > max_w then
-      self.x, normal = max_w, 180
-    end
-
-    if y < 0 then
-      self.y, normal = 0, 90
-    elsif y > max_h then
-      self.y, normal = max_h, 270
-    end
-
-    if normal then
-      self.a = (2 * normal - 180 - a).degrees
-      self.m *= 0.8
+  def bounce friction = 0.2
+    if wall = clip then
+      self.a = (2 * NORMAL[wall] - 180 - a).degrees
+      self.m *= (1.0 - friction)
     end
   end
 
