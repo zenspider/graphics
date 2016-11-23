@@ -62,12 +62,14 @@ class Demo < Graphics::Simulation
 
     circle 225, 50, 10, :white
 
-    ellipse 250, 50, 10, 10, :white
+    ellipse 250, 50, 10, 20, :white
 
     bezier 275, 50, 275, 100, 285, 0, 300, 50, :white
 
     rect 300, 25, 50, 50, :white
-    blit img, 325, 50
+
+    blit img, 325, 50 # centered
+    put img, 335, 50  # cornered
 
     text "blah", 350, 50, :white
 
