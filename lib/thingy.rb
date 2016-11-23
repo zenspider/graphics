@@ -50,8 +50,11 @@ class Thingy
     color[name] = screen.format.map_rgba r, g, b, a
   end
 
-  def populate klass, n
-    n.times.map { klass.new self }
+  def populate klass, n = klass::COUNT
+    n.times.map {
+      o = klass.new self
+      yield o if block_given?
+      o }
   end
 
   def handle_event event, n
