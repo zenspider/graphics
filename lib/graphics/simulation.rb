@@ -2,16 +2,50 @@
 
 require "sdl"
 
+module SDL; end # :nodoc: -- stupid rdoc :(
+
+##
+# A simulation. This ties everything together and provides a bunch of
+# convenience methods to make life easier.
+
 class Graphics::Simulation
+
+  # degrees to radians
   D2R = Math::PI / 180.0
+
+  # radians to degrees
   R2D = 1 / D2R
 
-  attr_accessor :screen, :w, :h
-  attr_accessor :paused
-  attr_accessor :font
-  attr_accessor :color, :rgb
+  # The window the simulation is drawing in.
+  attr_accessor :screen
 
-  def initialize w, h, c, name, full = false
+  # The window width.
+  attr_accessor :w
+
+  # The window height.
+  attr_accessor :h
+
+  # Pause the simulation.
+  attr_accessor :paused
+
+  # The current font for rendering text.
+  attr_accessor :font
+
+  # A hash of color names to their values.
+
+  attr_accessor :color
+
+  # A hash of color values to their rgb values. For text, apparently. *shrug*
+  attr_accessor :rgb
+
+  ##
+  # Create a new simulation of a certain width and height. Optionally,
+  # you can set the bits per pixel (0 for current screen settings),
+  # the name of the window, and whether or not to run in full screen mode.
+  #
+  # This also names a bunch colors and hues for convenience.
+
+  def initialize w, h, bpp = 0, name = self.class.name, full = false
     SDL.init SDL::INIT_VIDEO
     SDL::TTF.init
 
@@ -21,7 +55,7 @@ class Graphics::Simulation
 
     SDL::WM.set_caption name, name
 
-    self.screen = SDL::Screen.open w, h, c, SDL::HWSURFACE|SDL::DOUBLEBUF|full
+    self.screen = SDL::Screen.open w, h, bpp, SDL::HWSURFACE|SDL::DOUBLEBUF|full
     self.w, self.h = screen.w, screen.h
 
     self.color = {}
@@ -47,9 +81,17 @@ class Graphics::Simulation
     self.paused = false
   end
 
+  ##
+  # Name a color w/ rgba values.
+
   def register_color name, r, g, b, a = 255
     color[name] = screen.format.map_rgba r, g, b, a
   end
+
+  ##
+  # Return an array populated by instances of +klass+. You can specify
+  # how many to create here or it will access +klass::COUNT+ as the
+  # default.
 
   def populate klass, n = klass::COUNT
     n.times.map {
@@ -58,15 +100,32 @@ class Graphics::Simulation
       o }
   end
 
+  ##
+  # Handle an event. By default only handles the Quit event. Override
+  # if you want to add more handlers. Be sure to call super or you
+  # won't be able to quit.
+
   def handle_event event, n
     exit if SDL::Event::Quit === event
   end
+
+  ##
+  # Handle key events. By default handles ESC & Q (quit) and P
+  # (pause). Override this if you want to handle more key events. Be
+  # sure to call super or provide your own means of quitting and/or
+  # pausing.
 
   def handle_keys
     exit                  if SDL::Key.press? SDL::Key::ESCAPE
     exit                  if SDL::Key.press? SDL::Key::Q
     self.paused = !paused if SDL::Key.press? SDL::Key::P
   end
+
+  ##
+  # Run the simulation. This handles all events by polling and
+  # scanning for key presses (multiple keys at once are possible).
+  #
+  # On each tick, call update, then draw the scene.
 
   def run
     self.start_time = Time.now
@@ -87,20 +146,26 @@ class Graphics::Simulation
     end
   end
 
-  def draw_and_flip n
+  def draw_and_flip n # :nodoc:
     self.draw n
     screen.flip
   end
+
+  ##
+  # Draw the scene. This is a subclass responsibility and must draw
+  # the entire window (including calling clear).
 
   def draw n
     raise NotImplementedError, "Subclass Responsibility"
   end
 
+  ##
+  # Update the simulation. This does nothing by default and must be
+  # overridden by the subclass.
+
   def update n
     # do nothing
   end
-
-  ### drawing routines:
 
   ##
   # Clear the whole screen
@@ -130,6 +195,9 @@ class Graphics::Simulation
   def vline x, c, y1 = 0, y2 = w
     line x, y1, x, y2, c
   end
+
+  ##
+  # Draw a line from x1/y1 to a particular magnitude and angle in color c.
 
   def angle x1, y1, a, m, c
     rad = a * D2R
@@ -214,12 +282,19 @@ class Graphics::Simulation
     f.draw_solid_utf8 screen, s, x, self.h-y-f.height, *rgb[c]
   end
 
+  ##
+  # Print out some extra debugging information underneath the fps line
+  # (if any).
+
   def debug fmt, *args
     s = fmt % args
     text s, 10, h-40-font.height, :white
   end
 
-  attr_accessor :start_time
+  attr_accessor :start_time # :nodoc:
+
+  ##
+  # Draw the current frames-per-second in the top left corner in green.
 
   def fps n
     secs = Time.now - start_time
@@ -245,6 +320,9 @@ class Graphics::Simulation
   def image path
     SDL::Surface.load path
   end
+
+  ##
+  # Return the current mouse state: x, y, buttons.
 
   def mouse
     r = SDL::Mouse.state
