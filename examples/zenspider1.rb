@@ -3,8 +3,6 @@
 srand 42
 
 class GameOfLife
-  VERSION = "1.0.0"
-
   attr_accessor :cells
   attr_accessor :cache
 

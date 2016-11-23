@@ -17,7 +17,6 @@ class GameOfLife
   delta   = [-1, 0, 1]
   same    = [0, 0]
 
-  VERSION = "1.0.0"
   DELTAS  = (delta.product(delta) - [same]).sort
   MIN     = { true => 2, false => 3 }
 
