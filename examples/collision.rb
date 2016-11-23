@@ -23,12 +23,14 @@ class Sprite < Graphics::Body
     self.a = (a + 180).degrees
   end
 
-  def draw
-    w.blit image, x, y, a
-  end
-
   def collide_with? other
     w.cmap.check(x, y, w.cmap, other.x, other.y)
+  end
+
+  class View
+    def self.draw w, b
+      w.blit b.image, b.x, b.y, b.a
+    end
   end
 end
 
@@ -44,6 +46,8 @@ class Collision < Graphics::Simulation
     self.sprites = populate Sprite do |s|
       s.image = tank_img
     end
+
+    register_bodies sprites
   end
 
   def inspect
@@ -59,14 +63,12 @@ class Collision < Graphics::Simulation
   end
 
   def update n
-    sprites.each(&:update)
+    super
     detect_collisions(sprites).each(&:collide)
   end
 
   def draw n
-    clear
-
-    sprites.each(&:draw)
+    super
     fps n
   end
 end

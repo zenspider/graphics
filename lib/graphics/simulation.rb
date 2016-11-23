@@ -22,6 +22,9 @@ class Graphics::Simulation
   # Call +log+ every N ticks, if +log+ is defined.
   LOG_INTERVAL = 60
 
+  # Collection of collections of Bodies to auto-update and draw.
+  attr_accessor :_bodies
+
   # The window the simulation is drawing in.
   attr_accessor :screen
 
@@ -63,6 +66,8 @@ class Graphics::Simulation
     SDL.init SDL::INIT_VIDEO
 
     full = full ? SDL::FULLSCREEN : 0
+
+    self._bodies = []
 
     self.font = find_font("Menlo", 32)
 
@@ -128,6 +133,22 @@ class Graphics::Simulation
     raise ArgumentError, "Can't find font named '#{name}'" unless font
 
     SDL::TTF.open(font, size)
+  end
+
+  ##
+  # Register a collection of bodies to be auto-updated and drawn.
+
+  def register_bodies ary
+    _bodies << ary
+    ary
+  end
+
+  ##
+  # Register a single Body to be auto-updated and drawn.
+
+  def register_body obj
+    _bodies << [obj]
+    obj
   end
 
   ##
@@ -229,19 +250,41 @@ class Graphics::Simulation
   end
 
   ##
-  # Draw the scene. This is a subclass responsibility and must draw
-  # the entire window (including calling clear).
+  # Draw the scene by clearing the window and drawing all registered
+  # bodies. You are free to completely override this or call super and
+  # add any extras at the end.
 
   def draw n
-    raise NotImplementedError, "Subclass Responsibility"
+    clear
+
+    _bodies.each do |ary|
+      draw_collection ary
+    end
   end
 
   ##
-  # Update the simulation. This does nothing by default and must be
-  # overridden by the subclass.
+  # Draw a homogeneous collection of bodies. This assumes that the MVC
+  # pattern described on this class is being used.
+
+  def draw_collection ary
+    return if ary.empty?
+
+    cls = ary.first.class.const_get :View
+
+    ary.each do |obj|
+      cls.draw self, obj
+    end
+  end
+
+  ##
+  # Update the simulation by telling all registered bodies to update.
+  # You are free to completely override this or call super and add any
+  # extras at the end.
 
   def update n
-    # do nothing
+    _bodies.each do |ary|
+      ary.each(&:update)
+    end
   end
 
   ##

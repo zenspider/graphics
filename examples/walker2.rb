@@ -90,26 +90,6 @@ class Person < Graphics::Body
     self.m += D_M unless m >= max
   end
 
-  def draw
-    if debug? and attack? then
-      w.angle x, y, a-75, VISIBILITY, :yellow
-      w.angle x, y, a-25, VISIBILITY, :yellow
-      w.angle x, y, a+25, VISIBILITY, :yellow
-      w.angle x, y, a+75, VISIBILITY, :yellow
-      nearby.each do |o|
-        w.line x, y, o.x, o.y, :yellow
-      end
-      # sleep 0.25 unless nearby.empty?
-    end
-
-    w.angle x, y,  a,   20, :green
-    w.angle x, y, ga,   10, :red
-
-    # the blit looks HORRIBLE when rotated... dunno why
-    w.blit w.body_img, x, y
-    w.circle x, y, 5, :red, :filled if attack?
-  end
-
   def turn_towards_goal
     turn a.relative_angle(ga, D_A)
   end
@@ -133,6 +113,30 @@ class Person < Graphics::Body
     self.a = (a + 180).degrees
     change_goal
   end
+
+  class View
+    def self.draw w, b
+      x, y, a, ga = b.x, b.y, b.a, b.ga
+
+      if b.debug? and b.attack? then
+        w.angle x, y, a-75, VISIBILITY, :yellow
+        w.angle x, y, a-25, VISIBILITY, :yellow
+        w.angle x, y, a+25, VISIBILITY, :yellow
+        w.angle x, y, a+75, VISIBILITY, :yellow
+        b.nearby.each do |o|
+          w.line x, y, o.x, o.y, :yellow
+        end
+        # sleep 0.25 unless nearby.empty?
+      end
+
+      w.angle x, y,  a,   20, :green
+      w.angle x, y, ga,   10, :red
+
+      # the blit looks HORRIBLE when rotated... dunno why
+      w.blit w.body_img, x, y
+      w.circle x, y, 5, :red, :filled if b.attack?
+    end
+  end
 end
 
 class WalkerSimulation < Graphics::Simulation
@@ -142,6 +146,7 @@ class WalkerSimulation < Graphics::Simulation
     super 850, 850, 16, "Walker"
 
     self.ps = populate Person, 2
+    register_bodies ps
 
     # 5.times do |n|
     #   ps[n].attack = true
@@ -168,7 +173,8 @@ class WalkerSimulation < Graphics::Simulation
   end
 
   def update n
-    ps.each(&:update)
+    super
+
     detect_collisions(ps).each do |a, b|
       a.collide b
     end
@@ -177,9 +183,7 @@ class WalkerSimulation < Graphics::Simulation
   end
 
   def draw n
-    clear
-
-    ps.each(&:draw)
+    super
 
     debug "#{ps.size}"
     fps n
