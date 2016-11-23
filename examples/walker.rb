@@ -5,9 +5,9 @@
 require "thingy"
 
 class Person < Body
-  COUNT = 25
+  COUNT = 40
 
-  D_A = 2.0
+  D_A = 5.0
   D_M = 0.25
   M_M = 5.0
 
@@ -40,7 +40,7 @@ class Person < Body
   end
 
   def draw
-    w.angle x, y, ga,   60, :blue
+    w.angle x, y, ga,   60, :red
 
     if attack then
       w.angle x, y, a-45, 50, :yellow
@@ -58,19 +58,17 @@ class Person < Body
   end
 
   def possibly_change_goal
-    self.ga = 360 * rand if ga.close_to?(a) && 1 =~ 50
+    self.ga = a + random_turn(180) if ga.close_to?(a) && 1 =~ 25
   end
 end
 
 class WalkerThingy < Thingy
   attr_accessor :ps
 
-  N = 10
-
   def initialize
     super 850, 850, 16, "Walker"
 
-    self.ps = populate Person, Person::COUNT
+    self.ps = populate Person
   end
 
   def update n
@@ -81,6 +79,7 @@ class WalkerThingy < Thingy
     clear
 
     ps.each(&:draw)
+    fps n
   end
 end
 
