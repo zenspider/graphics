@@ -242,7 +242,7 @@ class Boid < Graphics::Body
     def self.draw w, b
       x, y, a, m = b.x, b.y, b.a, b.m
 
-      w.circle x, y, @@max_distance, :gray if w.visual_debug?
+      w.circle x, y, Boid.max_distance, :gray if w.visual_debug?
       w.blit w.body_img, x, y # the blit looks HORRIBLE when rotated... dunno why
       w.angle x, y, a, 3 * m, :red
     end
