@@ -47,6 +47,10 @@ class Boid < Body
 
   MAX_VELOCITY = 10
 
+  def nearby
+    w.boids
+  end
+
   def limit_velocity
     if velocity.magnitude > MAX_VELOCITY then
       self.velocity = (self.velocity / self.velocity.magnitude) * MAX_VELOCITY
@@ -55,13 +59,13 @@ class Boid < Body
 
   def center_mass
     pos = V_ZERO
-    w.boids.each do |b|
+    nearby.each do |b|
       next if self == b
 
       pos += b.position
     end
 
-    pos /= (w.boids.size - 1)
+    pos /= (nearby.size - 1)
     pos
   end
 
@@ -173,7 +177,7 @@ class Boid < Body
 
     hits = 0
 
-    w.boids.each do |b|
+    nearby.each do |b|
       next if self == b
       diff = b.position - self.position
       next unless diff.magnitude.abs < TOO_CLOSE
@@ -213,12 +217,12 @@ class Boid < Body
   def rule3
     v = V_ZERO
 
-    w.boids.each do |b|
+    nearby.each do |b|
       next if self == b
       v += b.velocity
     end
 
-    v /= w.boids.size - 1
+    v /= nearby.size - 1
 
     (v - self.velocity) / 4
   end
