@@ -378,13 +378,6 @@ class Graphics::AbstractSimulation
   end
 
   ##
-  # Draw a point at x/y w/ color c.
-
-  def point x, y, c
-    screen[x, y] = color[c]
-  end
-
-  ##
   # Calculate the x/y coordinate offset from x1/y1 with an angle and a
   # magnitude.
 
