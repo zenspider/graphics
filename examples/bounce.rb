@@ -51,7 +51,6 @@ class BounceThingy < Thingy
 
   def update n
     bs.each(&:update)
-    sleep 0.05
   end
 
   def draw n

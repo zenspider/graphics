@@ -100,7 +100,6 @@ step = false
     end
   end
 
-  sleep 0.01
   matrix = life matrix unless paused
   if step then
     paused = true
