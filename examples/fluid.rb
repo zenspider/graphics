@@ -13,59 +13,35 @@ class Float
   end
 end
 
-class Vec2
-  attr_reader :x, :y
-
-  def initialize x, y
-    @x = x
-    @y = y
-  end
-
-  def x= o
-    @m = nil
-    @x = o
-  end
-
-  def y= o
-    @m = nil
-    @y = o
-  end
+class Vec2 < Struct.new(:x, :y)
+  ZERO = Vec2.new 0, 0
 
   def + other
-    Vec2.new @x+other.x, @y+other.y
+    Vec2.new x+other.x, y+other.y
   end
 
   def - other
-    Vec2.new @x-other.x, @y-other.y
+    Vec2.new x-other.x, y-other.y
   end
 
   def scale s
-    Vec2.new @x*s, @y*s
+    Vec2.new x*s, y*s
   end
 
   def * s
-    Vec2.new @x*s, @y*s
+    Vec2.new x*s, y*s
+  end
+
+  def / s
+    Vec2.new x/s, y/s
   end
 
   def == other
-    @x == other.x && @y == other.y
+    x == other.x && y == other.y
   end
 
   def magnitude
-    Math.sqrt(magnitude2)
-  end
-
-  def magnitude2
-    @m ||= @x*@x + @y*@y
-  end
-
-  def normalize
-    m = self.magnitude2
-    if m == 0
-      Vec2.new 0, 0
-    else
-      Vec2.new @x.to_f/m, @y.to_f/m
-    end
+    Math.sqrt(x*x + y*y)
   end
 end
 
@@ -78,9 +54,9 @@ class Particle
 
     # Forces
     @position        = pos
-    @velocity        = Vec2.new 0.0, 0.0
-    @pressure_force  = Vec2.new 0.0, 0.0
-    @viscosity_force = Vec2.new 0.0, 0.0
+    @velocity        = Vec2::ZERO
+    @pressure_force  = Vec2::ZERO
+    @viscosity_force = Vec2::ZERO
   end
 end
 
@@ -104,7 +80,7 @@ ETA           = 1  # Viscosity constant- higher for more viscous
 #
 
 def W r, h
-  len_r2 = r.magnitude2
+  len_r2 = r.magnitude
 
   if len_r2.xbetween? 0, h*h
     315.0/(64 * Math::PI * h**9) * (h**2 - len_r2)**3
@@ -120,12 +96,13 @@ end
 #
 
 def gradient_Wspiky r, h
-  len_r2 = r.magnitude2
+  len_r2 = r.magnitude
 
   if len_r2.xbetween? 0, h*h
-    r.scale(45.0/(Math::PI * h**6 * len_r2)).scale(h*h - len_r2).scale(-1.0)
+    s = (45.0/(Math::PI * h**6 * len_r2)) * (h*h - len_r2) * (-1.0)
+    r * s
   else
-    Vec2.new 0.0, 0.0
+    Vec2::ZERO
   end
 end
 
@@ -135,7 +112,7 @@ end
 #
 
 def laplacian_W_viscosity r, h
-  len_r2 = r.magnitude2
+  len_r2 = r.magnitude
 
   if len_r2.xbetween? 0, h*h
     45.0/(2 * Math::PI * h**5) * (1 - len_r2/h)
@@ -162,8 +139,8 @@ class SPH
     # Clear everything
     particles.each do |particle|
       particle.density = DENSITY
-      particle.pressure_force = Vec2.new 0.0, 0.0
-      particle.viscosity_force = Vec2.new 0.0, 0.0
+      particle.pressure_force = Vec2::ZERO
+      particle.viscosity_force = Vec2::ZERO
     end
 
     # Calculate fluid density around each particle
@@ -173,7 +150,7 @@ class SPH
         # If particles are close together, density increases
         distance = particle.position - neighbor.position
 
-        if distance.magnitude2 < H2  # Particles are close enough to matter
+        if distance.magnitude < H2  # Particles are close enough to matter
           particle.density += MASS * W(distance, H)
         end
       end
@@ -184,7 +161,7 @@ class SPH
       particles.each do |neighbor|
 
         distance = particle.position - neighbor.position
-        if  distance.magnitude2 <= H2
+        if  distance.magnitude <= H2
           # Temporary terms used to caclulate forces
           density_p = particle.density
           density_n = neighbor.density
@@ -199,14 +176,12 @@ class SPH
           # Navier-Stokes equations for pressure and viscosity
           # (ignoring surface tension)
           particle.pressure_force +=
-            gradient_Wspiky(distance, H).scale(
-              -1.0 * MASS * (pressure_p + pressure_n) / (2 * density_n)
-          )
+            gradient_Wspiky(distance, H) *
+            (-1.0 * MASS * (pressure_p + pressure_n) / (2 * density_n))
 
           particle.viscosity_force +=
-            (neighbor.velocity - particle.velocity).scale(
-              ETA * MASS * (1/density_n) * laplacian_W_viscosity(distance, H)
-          )
+            (neighbor.velocity - particle.velocity) *
+            (ETA * MASS * (1/density_n) * laplacian_W_viscosity(distance, H))
         end
       end
     end
@@ -218,11 +193,11 @@ class SPH
       # 'Eulerian' style momentum:
 
       # Calculate acceleration from forces
-      acceleration = total_force.scale(1.0/particle.density*delta_time)+GRAVITY
+      acceleration = (total_force * (1.0/particle.density*delta_time)) + GRAVITY
 
       # Update position and velocity
-      particle.velocity += acceleration.scale delta_time
-      particle.position += particle.velocity.scale delta_time
+      particle.velocity += acceleration * delta_time
+      particle.position += particle.velocity * delta_time
     end
   end
 
