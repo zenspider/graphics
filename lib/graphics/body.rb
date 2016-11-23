@@ -27,7 +27,35 @@ class Graphics::Body
            :west  => 0,
            }
 
-  attr_accessor :x, :y, :a, :ga, :m, :w # :nodoc:
+  ##
+  # Body's x coordinate.
+
+  attr_accessor :x
+
+  ##
+  # Body's y coordinate.
+
+  attr_accessor :y
+
+  ##
+  # Body's angle, in degrees.
+
+  attr_accessor :a
+
+  ##
+  # Body's goal angle, in degrees.
+
+  attr_accessor :ga
+
+  ##
+  # Body's magnitude.
+
+  attr_accessor :m
+
+  ##
+  # Body's window.
+
+  attr_accessor :w
 
   ##
   # Create a new body in windowing system +w+ with a random x/y and
