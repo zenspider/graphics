@@ -9,42 +9,37 @@ class TargetThingy < Thingy
     super 640, 640, 16, "Target Practice"
 
     self.bombs = []
-    register_color :dark_gray, 77,  77,  77
+    register_color :darker_green,  0, 16,  0
+    register_color :dark_green,   64, 96, 64
+    register_color :dark_blue,     0,  0, 96
   end
 
   def handle_event event, n
-    case event
-    when SDL::Event::MouseButtonDown then
-      bombs << [n, event.x, event.y]
-    else
-      super
-    end
+    bombs << [n, event.x, event.y] if SDL::Event::MouseButtonDown === event
+    super
   end
 
   def draw n
-    clear
-
-    x, y, * = SDL::Mouse.state
-
-    (0..640).step(64).each do |r|
-      line 0, r, 640, r, :dark_gray
-      line r, 0, r, 640, :dark_gray
-      ellipse 320, 320, r, r, :dark_gray unless r > 320
-    end
-
-    line x, 0, x, 640, :white
-    line 0, y, 640, y, :white
-
-    text "#{x}, #{y}", 10, 10, :gray
+    clear :darker_green
 
     bombs.each do |(birth, bx, by)|
       r = n - birth
-      ellipse bx, by, r, r, :yellow
+      r = [r, 100].min
+      circle bx, by, r, :dark_blue, :fill
+      circle bx, by, r, :red unless r == 100
     end
-  end
 
-  def update n
-    bombs.reject! { |(birth, _, _)| (n-birth) > 100 }
+    (0..640).step(64).each do |r|
+      hline r, :dark_green
+      vline r, :dark_green
+      circle 320, 320, r, :dark_green unless r > 320
+    end
+
+    x, y, * = SDL::Mouse.state
+    line x, 0, x, 640, :white
+    line 0, y, 640, y, :white
+
+    fps n
   end
 end
 
