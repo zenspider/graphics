@@ -11,7 +11,16 @@ class Boid < Body
   PCT_DAMPENER = 0.01
   TOO_CLOSE    = 50
   MAX_VELOCITY = 5
-  MAX_DISTANCE = 100
+
+  @@max_distance = 100
+
+  def self.max_distance= n
+    @@max_distance = n
+  end
+
+  def self.max_distance
+    @@max_distance
+  end
 
   def initialize w
     super
@@ -46,7 +55,7 @@ class Boid < Body
   def nearby
     @nearby ||= begin
                   p = self.position
-                  w.boids.find_all { |b| (b.position - p).magnitude.abs < MAX_DISTANCE }
+                  w.boids.find_all { |b| (b.position - p).magnitude.abs < @@max_distance }
                 end
   end
 
