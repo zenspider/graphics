@@ -1,3 +1,23 @@
+=== 1.0.0b5 / 2015-10-31
+
+* 10 minor enhancements:
+
+  * Added Simulation#add_keydown_handler.
+  * Added Simulation#keydown_handler, a hash of "key" -> block handlers.
+  * Added logging every N ticks for headless simulations or debugging.
+  * Switched all default key handlers to keydown handlers.
+  * add example: visualization of pi computation
+  * Improved key event handling.
+  * add example: visualization of pi computation
+  * Renamed rubysdl_setup to graphics_setup. rubysdl is out of the picture.
+  * Added example rainbow fluid simulation. (litonico)
+  * Added rainbows in greyscale, rgb-spectrum, and cubehelix. (litonico)
+
+* 2 bug fixes:
+
+  * Fixed build issues with rubygems.
+  * Switched brew install to build universal packages so it can work with stock ruby.
+
 === 1.0.0b4 / 2015-09-14
 
 * 1 major enhancement:
