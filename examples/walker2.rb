@@ -1,7 +1,5 @@
 #!/usr/local/bin/ruby -w
 
-# srand 42
-
 require "graphics"
 require "graphics/trail"
 
