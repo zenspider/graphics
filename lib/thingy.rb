@@ -33,8 +33,8 @@ class Thingy
     self.paused = false
   end
 
-  def register_color name, r, g, b
-    color[name] = screen.format.map_rgb r, g, b
+  def register_color name, r, g, b, a = 255
+    color[name] = screen.format.map_rgba r, g, b, a
   end
 
   def handle_event event, n
@@ -215,11 +215,11 @@ class Thingy
   end
 
   ##
-  # Create a new surface with a given width and height and yield to a
-  # block with the new surface as the current screen. All drawing
+  # Create a new sprite with a given width and height and yield to a
+  # block with the new sprite as the current screen. All drawing
   # primitives will work and the resulting surface is returned.
 
-  def new_surface w, h
+  def sprite w, h
     new_screen = SDL::Surface.new SDL::SWSURFACE, w, h, screen
     old_screen = screen
 
