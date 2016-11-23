@@ -215,7 +215,7 @@ class Graphics::Simulation
   def polygon *points, color
     points << points.first
     points.each_cons(2) do |p1, p2|
-      w.line(*p1, *p2, color)
+      line(*p1, *p2, color)
     end
   end
 
