@@ -4,7 +4,7 @@ require "rubygems"
 require "hoe"
 
 Hoe.plugin :isolate
-Hoe.plugin :minitest, :history, :email # Hoe.plugin :seattlerb - :perforce
+Hoe.plugin :seattlerb
 Hoe.plugin :rdoc
 Hoe.plugin :git
 Hoe.plugin :compiler
@@ -19,9 +19,6 @@ Hoe.spec "graphics" do
   license "MIT"
 
   dependency "rsdl", "~> 0.1"
-
-  base = "/data/www/docs.seattlerb.org"
-  rdoc_locations << "docs-push.seattlerb.org:#{base}/#{remote_rdoc_dir}"
 end
 
 task :demos => :compile do
