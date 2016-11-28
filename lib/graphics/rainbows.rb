@@ -46,10 +46,6 @@ end
 # Black to white gradient
 #
 class Graphics::Greyscale < Graphics::Rainbow
-  def initialize
-    super
-  end
-
   def _color degree
     brightness_unit = degree/360.0
     brightness = (brightness_unit*255.0).floor # Scale back to RGB
@@ -62,11 +58,6 @@ end
 # The full RGB spectrum
 #
 class Graphics::Hue < Graphics::Rainbow
-
-  def initialize
-    super
-  end
-
   def _color degree
     main_color = 1 * 255 # Let chroma (saturation * brightness) always == 1
     second_strongest_color = ((1 - (degree/60.0 % 2 - 1).abs) * 255).floor
@@ -93,11 +84,6 @@ end
 # Spectrum with linearly increasing brightness
 #
 class Graphics::Cubehelix < Graphics::Rainbow
-
-  def initialize
-    super
-  end
-
   def _color degree
     d = degree/360.0
     start = 0.5 # Starting position in color space - 0=blue, 1=red, 2=green
