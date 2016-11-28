@@ -109,6 +109,7 @@ class SPH
   end
 
   def calculate_density
+    # TODO: Switch to partitioning for better speed
     # Calculate fluid density around each particle
     particles.each do |particle|
       particles.each do |neighbor|

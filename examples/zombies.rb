@@ -187,7 +187,7 @@ class Hunter < Person
     limit_bounds
 
     baddies = sim.zombie + sim.person.select(&:infect)
-    nearest = baddies.sort_by { |z| self.distance_from_squared z }.first
+    nearest = baddies.min_by { |z| self.distance_from_squared z }
 
     return unless nearest
 
@@ -373,6 +373,10 @@ class ZombieGame < Graphics::Simulation
 
   def max
     @max ||= w / scale
+  end
+
+  def inspect
+    "ZombieGame"
   end
 end
 
