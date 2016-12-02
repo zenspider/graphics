@@ -1198,7 +1198,8 @@ void sge_FilledRectAlpha(SDL_Surface *surface, Sint16 x1, Sint16 y1, Sint16 x2, 
 
 					R = ((*pixel & Rmask) + (( dR - (*pixel & Rmask) ) * alpha >> 8)) & Rmask;
 					G = ((*pixel & Gmask) + (( dG - (*pixel & Gmask) ) * alpha >> 8)) & Gmask;
-					B = ((*pixel & Bmask) + (( dB - (*pixel & Bmask) ) * alpha >> 8)) & Bmask;
+					// need to do different shifting here to avoid overflow
+                                        B = ((*pixel & Bmask) + (( dB - (*pixel & Bmask) ) >> 8 * alpha)) & Bmask;
 					if( Amask )
 						A = ((*pixel & Amask) + (( dA - (*pixel & Amask) ) * alpha >> 8)) & Amask;
 
