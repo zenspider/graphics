@@ -42,6 +42,9 @@ class Graphics::AbstractSimulation
   # A hash of color names to their values.
   attr_accessor :color
 
+  # A hash of alpha values per color, because SDL 1.2 sucks
+  attr_accessor :alpha
+
   # A hash of color values to their rgb values. For text, apparently. *shrug*
   attr_accessor :rgb
 
@@ -79,6 +82,7 @@ class Graphics::AbstractSimulation
     self.w, self.h = screen.w, screen.h
 
     self.color = {}
+    self.alpha = {}
     self.rgb   = Hash.new { |hash, k| hash[k] = screen.format.get_rgb(color[k]) }
     self.paused = false
 
@@ -173,6 +177,7 @@ class Graphics::AbstractSimulation
   # Name a color w/ rgba values.
 
   def register_color name, r, g, b, a = 255
+    alpha[name] = a # HACK to wark around SDL 1.2's treatment of alpha
     color[name] = screen.format.map_rgba r, g, b, a
   end
 
@@ -325,9 +330,9 @@ class Graphics::AbstractSimulation
   ##
   # Draw an antialiased line from x1/y1 to x2/y2 in color c.
 
-  def line x1, y1, x2, y2, c
+  def line x1, y1, x2, y2, c, aa = true
     h = self.h
-    screen.draw_line x1, h-y1-1, x2, h-y2-1, color[c]
+    screen.draw_line x1, h-y1-1, x2, h-y2-1, color[c], alpha[c], aa
   end
 
   ##
@@ -391,44 +396,34 @@ class Graphics::AbstractSimulation
 
   def rect x, y, w, h, c, fill = false
     y = self.h-y-h-1
-    if fill then
-      screen.fill_rect x, y, w, h, color[c]
-    else
-      screen.draw_rect x, y, w, h, color[c]
-    end
+
+    screen.draw_rect x, y, w, h, color[c], alpha[c], fill
   end
 
   ##
   # Draw a circle at x/y with radius r in color c.
 
-  def circle x, y, r, c, fill = false
+  def circle x, y, r, c, fill = false, aa = true
     y = h-y-1
-    if fill then
-      screen.fill_circle x, y, r, color[c]
-    else
-      screen.draw_circle x, y, r, color[c]
-    end
+    screen.draw_circle x, y, r, color[c], alpha[c], aa, fill
   end
 
   ##
   # Draw a circle at x/y with radiuses w/h in color c.
 
-  def ellipse x, y, w, h, c, fill = false
+  def ellipse x, y, w, h, c, fill = false, aa = true
     y = self.h-y-1
-    if fill then
-      screen.fill_ellipse x, y, w, h, color[c]
-    else
-      screen.draw_ellipse x, y, w, h, color[c]
-    end
+    screen.draw_ellipse x, y, w, h, color[c], alpha[c], aa, fill
   end
 
   ##
   # Draw an antialiased curve from x1/y1 to x2/y2 via control points
   # cx1/cy1 & cx2/cy2 in color c.
 
-  def bezier x1, y1, cx1, cy1, cx2, cy2, x2, y2, c, l = 7
+  def bezier x1, y1, cx1, cy1, cx2, cy2, x2, y2, c, l = 7, aa = true
     h = self.h
-    screen.draw_bezier x1, h-y1-1, cx1, h-cy1, cx2, h-cy2, x2, h-y2-1, l, color[c]
+    screen.draw_bezier(x1, h-y1-1, cx1, h-cy1, cx2, h-cy2, x2, h-y2-1,
+                       l, color[c], alpha[c], aa)
   end
 
   ## Text

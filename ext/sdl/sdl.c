@@ -50,25 +50,14 @@
 #define FAILURE(s) rb_raise(eSDLError, "%s failed: %s", (s), SDL_GetError());
 #define AUDIO_FAILURE(s) rb_raise(eSDLError, "%s failed: %s", (s), Mix_GetError());
 
+#define SHOULD_BLEND(a) RTEST(a) && NUM2UINT8(a) != 0xff
+
 #ifdef rb_intern
 #undef rb_intern // HACK -- clang warns about recursive macros
 #endif
 
 #define DEFINE_ID(name) static ID id_iv_##name
 #define INIT_ID(name) id_iv_##name = rb_intern("@"#name)
-
-#define DEFINE_DRAW6(type, name, func) \
-  static VALUE Surface_##name(VALUE s, VALUE x, VALUE y, VALUE w, VALUE h, VALUE c) { \
-    return _draw_func_##type(&func, s, x, y, w, h, c); \
-  }
-
-#define DEFINE_SXYRC(name, func) \
-  static VALUE Surface_##name(VALUE s, VALUE x, VALUE y, VALUE r, VALUE c) { \
-    return _draw_func_sxyrc(&func, s, x, y, r, c); \
-  }
-
-#define DEFINE_SXYXYC(name, func) DEFINE_DRAW6(sxyxyc, name, func)
-#define DEFINE_SXYWHC(name, func) DEFINE_DRAW6(sxywhc, name, func)
 
 static VALUE cEvent;
 static VALUE cEventKeydown;
@@ -533,85 +522,189 @@ static VALUE Surface_set_color_key(VALUE self, VALUE flag, VALUE key) {
   return Qnil;
 }
 
-typedef void (*sxyxyc_func)(SDL_Surface *, Sint16, Sint16, Sint16, Sint16, Uint32);
-typedef void (*sxyrc_func)(SDL_Surface *, Sint16, Sint16, Sint16, Uint32);
+#define DEFINE_WRAP12(name)                                \
+  void wrap_##name(SDL_Surface* a,                         \
+                   Sint16 b, Sint16 c, Sint16 d, Sint16 e, \
+                   Sint16 f, Sint16 g, Sint16 h, Sint16 i, \
+                   int j,                                  \
+                   Uint32 k, Uint8 l) { name(a, b, c, d, e, f, g, h, i, j, k); }
+#define DEFINE_WRAP7(name)                                 \
+  void wrap_##name(SDL_Surface* a,                         \
+                   Sint16 b, Sint16 c, Sint16 d, Sint16 e, \
+                   Uint32 f, Uint8 g) { name(a, b, c, d, e, f); }
+#define DEFINE_WRAP6(name)                                 \
+  void wrap_##name(SDL_Surface* a,                         \
+                   Sint16 b, Sint16 c, Sint16 d,           \
+                   Uint32 e, Uint8 f) { name(a, b, c, d, e); }
 
-static VALUE _draw_func_sxyrc(sxyrc_func f, VALUE self, VALUE x, VALUE y, VALUE r, VALUE c) {
-  DEFINE_SELF(Surface, surface, self);
+#define IDX2(a, b)                 (!!(a))<<1 | !!(b);
+#define IDX3(a, b, c) (!!(a))<<2 | (!!(b))<<1 | !!(c);
 
-  Sint16 x1, y1, r_;
-  Uint32 color;
+typedef void (*f_sxyxyxyxylca)(SDL_Surface*,
+                               Sint16, Sint16, Sint16, Sint16,
+                               Sint16, Sint16, Sint16, Sint16,
+                               int,
+                               Uint32, Uint8);
+typedef void (*f_sxyxyca)(SDL_Surface*,
+                          Sint16, Sint16, Sint16, Sint16,
+                          Uint32, Uint8);
+typedef void (*f_sxyrca)(SDL_Surface*,
+                          Sint16, Sint16, Sint16,
+                          Uint32, Uint8);
 
-  x1 = NUM2SINT16(x);
-  y1 = NUM2SINT16(y);
-  r_ = NUM2SINT16(r);
-  color = VALUE2COLOR(c, surface->format);
+DEFINE_WRAP12(sge_Bezier)
+DEFINE_WRAP12(sge_AABezier)
 
-  f(surface, x1, y1, r_, color);
-
-  return Qnil;
-}
-
-static VALUE _draw_func_sxywhc(sxyxyc_func f, VALUE self, VALUE x, VALUE y, VALUE w, VALUE h, VALUE c) {
-  DEFINE_SELF(Surface, surface, self);
-
-  Sint16 x1, y1, x2, y2;
-  Uint32 color;
-
-  x1 = NUM2SINT16(x);
-  y1 = NUM2SINT16(y);
-  x2 = x1 + NUM2SINT16(w);
-  y2 = y1 + NUM2SINT16(h);
-  color = VALUE2COLOR(c, surface->format);
-
-  f(surface, x1, y1, x2, y2, color);
-
-  return Qnil;
-}
-
-static VALUE _draw_func_sxyxyc(sxyxyc_func f, VALUE self, VALUE x, VALUE y, VALUE w, VALUE h, VALUE c) {
-  DEFINE_SELF(Surface, surface, self);
-
-  Sint16 x1, y1, r1, r2;
-  Uint32 color;
-
-  x1 = NUM2SINT16(x);
-  y1 = NUM2SINT16(y);
-  r1 = NUM2SINT16(w);
-  r2 = NUM2SINT16(h);
-  color = VALUE2COLOR(c, surface->format);
-
-  f(surface, x1, y1, r1, r2, color);
-
-  return Qnil;
-}
+static f_sxyxyxyxylca f_bezier[] = { &wrap_sge_Bezier,
+                                     &wrap_sge_AABezier,
+                                     &sge_BezierAlpha,
+                                     &sge_AABezierAlpha };
 
 static VALUE Surface_draw_bezier(VALUE self,
                                  VALUE x1,  VALUE y1,
                                  VALUE cx1, VALUE cy1,
                                  VALUE cx2, VALUE cy2,
                                  VALUE x2,  VALUE y2,
-                                 VALUE l,   VALUE c) {
+                                 VALUE l,
+                                 VALUE c, VALUE a,
+                                 VALUE aa) {
   DEFINE_SELF(Surface, surface, self);
 
-  sge_AABezier(surface,
-               NUM2SINT16(x1), NUM2SINT16(y1),
-               NUM2SINT16(cx1), NUM2SINT16(cy1),
-               NUM2SINT16(cx2), NUM2SINT16(cy2),
-               NUM2SINT16(x2), NUM2SINT16(y2),
-               NUM2INT(l),
-               VALUE2COLOR(c, surface->format));
+  Uint8 idx = IDX2(SHOULD_BLEND(a), RTEST(aa));
+
+  f_bezier[idx](surface,
+                NUM2SINT16(x1),  NUM2SINT16(y1),
+                NUM2SINT16(cx1), NUM2SINT16(cy1),
+                NUM2SINT16(cx2), NUM2SINT16(cy2),
+                NUM2SINT16(x2),  NUM2SINT16(y2),
+                NUM2INT(l),
+                VALUE2COLOR(c, surface->format),
+                NUM2UINT8(a));
 
   return Qnil;
 }
 
-DEFINE_SXYRC(draw_circle,   sge_AACircle)
-DEFINE_SXYRC(fill_circle,   sge_AAFilledCircle)
-DEFINE_SXYXYC(draw_line,    sge_AALine)
-DEFINE_SXYXYC(fill_ellipse, sge_FilledEllipse)
-DEFINE_SXYXYC(draw_ellipse, sge_Ellipse)
-DEFINE_SXYWHC(draw_rect,    sge_Rect)
-DEFINE_SXYWHC(fill_rect,    sge_FilledRect)
+DEFINE_WRAP6(sge_Circle)
+DEFINE_WRAP6(sge_FilledCircle)
+DEFINE_WRAP6(sge_AACircle)
+DEFINE_WRAP6(sge_AAFilledCircle)
+
+static f_sxyrca f_circle[] = { &wrap_sge_Circle,
+                               &wrap_sge_FilledCircle,
+                               &wrap_sge_AACircle,
+                               &wrap_sge_AAFilledCircle,
+                               &sge_CircleAlpha,
+                               &sge_FilledCircleAlpha,
+                               &sge_AACircleAlpha,
+                               &sge_FilledCircleAlpha }; // FIX? n/a
+
+static VALUE Surface_draw_circle(VALUE self,
+                                 VALUE x,  VALUE y,
+                                 VALUE r,
+                                 VALUE c,  VALUE a,
+                                 VALUE aa, VALUE f) {
+  DEFINE_SELF(Surface, surface, self);
+
+  Uint8 idx = IDX3(SHOULD_BLEND(a), RTEST(aa), RTEST(f));
+
+  f_circle[idx](surface,
+                NUM2SINT16(x), NUM2SINT16(y),
+                NUM2SINT16(r),
+                VALUE2COLOR(c, surface->format),
+                NUM2UINT8(a));
+
+  return Qnil;
+}
+
+DEFINE_WRAP7(sge_Ellipse)
+DEFINE_WRAP7(sge_FilledEllipse)
+DEFINE_WRAP7(sge_AAEllipse)
+DEFINE_WRAP7(sge_AAFilledEllipse)
+
+static f_sxyxyca f_ellipse[] = { &wrap_sge_Ellipse,
+                                 &wrap_sge_FilledEllipse,
+                                 &wrap_sge_AAEllipse,
+                                 &wrap_sge_AAFilledEllipse,
+                                 &sge_EllipseAlpha,
+                                 &sge_FilledEllipseAlpha,
+                                 &sge_AAEllipseAlpha,
+                                 &sge_FilledEllipseAlpha }; // FIX? n/a
+
+static VALUE Surface_draw_ellipse(VALUE self,
+                                  VALUE x,  VALUE y,
+                                  VALUE rx, VALUE ry,
+                                  VALUE c,  VALUE a,
+                                  VALUE aa, VALUE f) {
+  DEFINE_SELF(Surface, surface, self);
+
+  Uint8 idx = IDX3(SHOULD_BLEND(a), RTEST(aa), RTEST(f));
+
+  f_ellipse[idx](surface,
+                 NUM2SINT16(x),
+                 NUM2SINT16(y),
+                 NUM2SINT16(rx),
+                 NUM2SINT16(ry),
+                 VALUE2COLOR(c, surface->format),
+                 NUM2UINT8(a));
+
+  return Qnil;
+}
+
+DEFINE_WRAP7(sge_Line);
+DEFINE_WRAP7(sge_AALine);
+
+static f_sxyxyca f_line[] = { &wrap_sge_Line,
+                              &wrap_sge_AALine,
+                              &sge_LineAlpha,
+                              &sge_AALineAlpha };
+
+static VALUE Surface_draw_line(VALUE self,
+                               VALUE x1, VALUE y1,
+                               VALUE x2, VALUE y2,
+                               VALUE c, VALUE a,
+                               VALUE aa) {
+  DEFINE_SELF(Surface, surface, self);
+
+  Uint8 idx = IDX2(SHOULD_BLEND(a), RTEST(aa));
+
+  f_line[idx](surface,
+              NUM2SINT16(x1),
+              NUM2SINT16(y1),
+              NUM2SINT16(x2),
+              NUM2SINT16(y2),
+              VALUE2COLOR(c, surface->format),
+              NUM2UINT8(a));
+
+  return Qnil;
+}
+
+DEFINE_WRAP7(sge_Rect);
+DEFINE_WRAP7(sge_FilledRect);
+
+static f_sxyxyca f_rect[] = { &wrap_sge_Rect,
+                              &wrap_sge_FilledRect,
+                              &sge_RectAlpha,
+                              &sge_FilledRectAlpha };
+
+static VALUE Surface_draw_rect(VALUE self,
+                               VALUE x_, VALUE y_,
+                               VALUE w_, VALUE h_,
+                               VALUE c, VALUE a,
+                               VALUE f) {
+  DEFINE_SELF(Surface, surface, self);
+
+  Sint16 x1 = NUM2SINT16(x_);
+  Sint16 y1 = NUM2SINT16(y_);
+  Sint16 x2 = NUM2SINT16(w_) + x1;
+  Sint16 y2 = NUM2SINT16(h_) + y1;
+  Uint8 idx = IDX2(SHOULD_BLEND(a), RTEST(f));
+
+  f_rect[idx](surface, x1, y1, x2, y2,
+              VALUE2COLOR(c, surface->format),
+              NUM2UINT8(a));
+
+  return Qnil;
+}
 
 static VALUE Surface_fast_rect(VALUE self, VALUE x, VALUE y, VALUE w, VALUE h, VALUE color) {
   DEFINE_SELF(Surface, surface, self);
@@ -900,14 +993,11 @@ void Init_sdl() {
   rb_define_singleton_method(cSurface, "new", Surface_s_new, 3);
   rb_define_singleton_method(cSurface, "load", Surface_s_load, 1);
   rb_define_method(cSurface, "set_color_key",  Surface_set_color_key, 2);
-  rb_define_method(cSurface, "draw_bezier",  Surface_draw_bezier,  10);
-  rb_define_method(cSurface, "draw_circle",  Surface_draw_circle,  4);
-  rb_define_method(cSurface, "fill_circle",  Surface_fill_circle,  4);
-  rb_define_method(cSurface, "draw_ellipse", Surface_draw_ellipse, 5);
-  rb_define_method(cSurface, "fill_ellipse", Surface_fill_ellipse, 5);
-  rb_define_method(cSurface, "draw_line",    Surface_draw_line,    5);
-  rb_define_method(cSurface, "draw_rect",    Surface_draw_rect,    5);
-  rb_define_method(cSurface, "fill_rect",    Surface_fill_rect,    5);
+  rb_define_method(cSurface, "draw_bezier",  Surface_draw_bezier, 12);
+  rb_define_method(cSurface, "draw_circle",  Surface_draw_circle,  7);
+  rb_define_method(cSurface, "draw_ellipse", Surface_draw_ellipse, 8);
+  rb_define_method(cSurface, "draw_line",    Surface_draw_line,    7);
+  rb_define_method(cSurface, "draw_rect",    Surface_draw_rect,    7);
   rb_define_method(cSurface, "fast_rect",    Surface_fast_rect,    5);
   rb_define_method(cSurface, "format",       Surface_format,       0);
   rb_define_method(cSurface, "h",            Surface_h,            0);
