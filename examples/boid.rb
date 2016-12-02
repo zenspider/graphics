@@ -243,8 +243,8 @@ class Boid < Graphics::Body
       x, y, a, m = b.x, b.y, b.a, b.m
 
       w.circle x, y, Boid.max_distance, :gray if w.visual_debug?
-      w.blit w.body_img, x, y # the blit looks HORRIBLE when rotated... dunno why
       w.angle x, y, a, 3 * m, :red
+      w.blit w.body_img, x, y # the blit looks HORRIBLE when rotated... dunno why
     end
   end
 end
@@ -263,7 +263,7 @@ class Boids < Graphics::Simulation
     register_bodies boids
 
     self.body_img = sprite 20, 20 do
-      circle 10, 10, 5, :white, :filled
+      circle 10, 10, 5, :white, :filled, :aa
     end
   end
 
