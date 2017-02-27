@@ -425,7 +425,6 @@ make_my_diffs_pretty!
   end
 
   def test_point
-    skip "not yet"
     t.point 2, 10, :white
 
     exp = [nil, nil, t.color[:white]]
@@ -445,11 +444,14 @@ make_my_diffs_pretty!
   # def test_register_color
   #   raise NotImplementedError, 'Need to write test_register_color'
   # end
-  #
-  # def test_render_text
-  #   raise NotImplementedError, 'Need to write test_render_text'
-  # end
-  #
+
+  def test_render_text
+    skip "not yet"
+    assert_equal 42, t.render_text("blah", :black)
+
+    raise NotImplementedError, 'Need to write test_render_text'
+  end
+
   # def test_run
   #   raise NotImplementedError, 'Need to write test_run'
   # end
@@ -461,11 +463,13 @@ make_my_diffs_pretty!
   # def test_text
   #   raise NotImplementedError, 'Need to write test_text'
   # end
-  #
-  # def test_text_size
-  #   raise NotImplementedError, 'Need to write test_text_size'
-  # end
-  #
+
+  def test_text_size
+    assert_equal [76, 38], t.text_size("blah")
+    assert_equal [0, 38], t.text_size("")
+    assert_equal [0, 38], t.text_size(:blah)
+  end
+
   # def test_update
   #   raise NotImplementedError, 'Need to write test_update'
   # end

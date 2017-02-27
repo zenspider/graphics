@@ -880,6 +880,20 @@ static VALUE Font_draw(VALUE self, VALUE dst, VALUE text, VALUE x, VALUE y, VALU
   return Qnil;
 }
 
+static VALUE Font_text_size(VALUE self, VALUE text) {
+  DEFINE_SELF(TTFFont, font, self);
+  int w = 1, h = 2, result;
+
+  ExportStringValue(text);
+  result = TTF_SizeText(font, StringValueCStr(text), &w, &h);
+
+  if (!result) {
+    return rb_ary_new_from_args(2, INT2FIX(w), INT2FIX(h));
+  } else {
+    FAILURE("SDL::TTF#text_size");
+  }
+}
+
 //// SDL::WM methods:
 
 static VALUE WM_s_set_caption(VALUE mod, VALUE title, VALUE icon) {
@@ -1017,6 +1031,7 @@ void Init_sdl() {
   rb_define_method(cTTFFont, "height", Font_height, 0);
   rb_define_method(cTTFFont, "render", Font_render, 3);
   rb_define_method(cTTFFont, "draw",   Font_draw, 5);
+  rb_define_method(cTTFFont, "text_size", Font_text_size, 1);
 
   //// SDL::WM methods:
 
