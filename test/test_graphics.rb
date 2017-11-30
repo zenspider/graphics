@@ -467,7 +467,7 @@ make_my_diffs_pretty!
   def test_text_size
     assert_equal [76, 38], t.text_size("blah")
     assert_equal [0, 38], t.text_size("")
-    assert_equal [0, 38], t.text_size(:blah)
+    assert_equal [76, 38], t.text_size(:blah)
   end
 
   # def test_update

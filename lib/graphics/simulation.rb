@@ -432,7 +432,7 @@ class Graphics::AbstractSimulation
   # Return the w/h of the text s in font f.
 
   def text_size s, f = font
-    f.text_size s
+    f.text_size s.to_s
   end
 
   ##
