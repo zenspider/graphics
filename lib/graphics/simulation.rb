@@ -182,6 +182,76 @@ class Graphics::AbstractSimulation
   end
 
   ##
+  # Name a color w/ HSL values.
+
+  def register_hsla n, h, s, l, a = 1.0
+    register_color n, *from_hsl(h, s, l), (a*255).round
+  end
+
+  ##
+  # Name a color w/ HSV values.
+
+  def register_hsva n, h, s, v, a = 1.0
+    register_color n, *from_hsv(h, s, v), (a*255).round
+  end
+
+  ##
+  # Convert HSL to RGB.
+  #
+  # https://en.wikipedia.org/wiki/HSL_and_HSV#From_HSV
+
+  def from_hsl h, s, l # 0..360, 0..1, 0..1
+    raise ArgumentError, "%f, %f, %f out of range" % [h, s, v] unless
+      h.between?(0, 360) && s.between?(0, 1) && l.between?(0, 1)
+
+    c  = (1 - (2*l - 1).abs) * s
+    h2 = h / 60.0
+    x  = c * (1 - (h2 % 2 - 1).abs)
+    m  = l - c/2
+
+    r, g, b = case
+              when 0 <= h2 && h2 < 1 then [c+m, x+m, 0+m]
+              when 1 <= h2 && h2 < 2 then [x+m, c+m, 0+m]
+              when 2 <= h2 && h2 < 3 then [0+m, c+m, x+m]
+              when 3 <= h2 && h2 < 4 then [0+m, x+m, c+m]
+              when 4 <= h2 && h2 < 5 then [x+m, 0+m, c+m]
+              when 5 <= h2 && h2 < 6 then [c+m, 0+m, x+m]
+              else
+                raise [h, s, v, h2, x, m].inspect
+              end
+
+    [(r*255).round, (g*255).round, (b*255).round]
+  end
+
+  ##
+  # Convert HSV to RGB.
+  #
+  # https://en.wikipedia.org/wiki/HSL_and_HSV#From_HSV
+
+  def from_hsv h, s, v # 0..360, 0..1, 0..1
+    raise ArgumentError, "%f, %f, %f out of range" % [h, s, v] unless
+      h.between?(0, 360) && s.between?(0, 1) && v.between?(0, 1)
+
+    c  = v * s
+    h2 = h / 60.0
+    x  = c * (1 - (h2 % 2 - 1).abs)
+    m  = v - c
+
+    r, g, b = case
+              when 0 <= h2 && h2 < 1 then [c+m, x+m, 0+m]
+              when 1 <= h2 && h2 < 2 then [x+m, c+m, 0+m]
+              when 2 <= h2 && h2 < 3 then [0+m, c+m, x+m]
+              when 3 <= h2 && h2 < 4 then [0+m, x+m, c+m]
+              when 4 <= h2 && h2 < 5 then [x+m, 0+m, c+m]
+              when 5 <= h2 && h2 < 6 then [c+m, 0+m, x+m]
+              else
+                raise [h, s, v, h2, x, m].inspect
+              end
+
+    [(r*255).round, (g*255).round, (b*255).round]
+  end
+
+  ##
   # Return an array populated by instances of +klass+. You can specify
   # how many to create here or it will access +klass::COUNT+ as the
   # default.

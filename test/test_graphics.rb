@@ -477,6 +477,44 @@ make_my_diffs_pretty!
   # def test_vline
   #   raise NotImplementedError, 'Need to write test_vline'
   # end
+
+  def test_from_hsl
+    assert_equal [  0,   0,   0], t.from_hsl(  0, 0, 0)    # Black
+    assert_equal [255, 255, 255], t.from_hsl(  0, 0, 1)    # White
+    assert_equal [255,   0,   0], t.from_hsl(  0, 1, 0.50) # Red
+    assert_equal [  0, 255,   0], t.from_hsl(120, 1, 0.50) # Lime
+    assert_equal [  0,   0, 255], t.from_hsl(240, 1, 0.50) # Blue
+    assert_equal [255, 255,   0], t.from_hsl( 60, 1, 0.50) # Yellow
+    assert_equal [  0, 255, 255], t.from_hsl(180, 1, 0.50) # Cyan
+    assert_equal [255,   0, 255], t.from_hsl(300, 1, 0.50) # Magenta
+    assert_equal [191, 191, 191], t.from_hsl(  0, 0, 0.75) # Silver
+    assert_equal [128, 128, 128], t.from_hsl(  0, 0, 0.50) # Gray
+    assert_equal [128,   0,   0], t.from_hsl(  0, 1, 0.25) # Maroon
+    assert_equal [128, 128,   0], t.from_hsl( 60, 1, 0.25) # Olive
+    assert_equal [  0, 128,   0], t.from_hsl(120, 1, 0.25) # Green
+    assert_equal [128,   0, 128], t.from_hsl(300, 1, 0.25) # Purple
+    assert_equal [  0, 128, 128], t.from_hsl(180, 1, 0.25) # Teal
+    assert_equal [  0,   0, 128], t.from_hsl(240, 1, 0.25) # Navy
+  end
+
+  def test_from_hsv
+    assert_equal [  0,   0,   0], t.from_hsv(  0, 0, 0)    # Black
+    assert_equal [255, 255, 255], t.from_hsv(  0, 0, 1)    # White
+    assert_equal [255,   0,   0], t.from_hsv(  0, 1, 1)    # Red
+    assert_equal [  0, 255,   0], t.from_hsv(120, 1, 1)    # Lime
+    assert_equal [  0,   0, 255], t.from_hsv(240, 1, 1)    # Blue
+    assert_equal [255, 255,   0], t.from_hsv( 60, 1, 1)    # Yellow
+    assert_equal [  0, 255, 255], t.from_hsv(180, 1, 1)    # Cyan
+    assert_equal [255,   0, 255], t.from_hsv(300, 1, 1)    # Magenta
+    assert_equal [191, 191, 191], t.from_hsv(  0, 0, 0.75) # Silver
+    assert_equal [128, 128, 128], t.from_hsv(  0, 0, 0.50) # Gray
+    assert_equal [128,   0,   0], t.from_hsv(  0, 1, 0.50) # Maroon
+    assert_equal [128, 128,   0], t.from_hsv( 60, 1, 0.50) # Olive
+    assert_equal [  0, 128,   0], t.from_hsv(120, 1, 0.50) # Green
+    assert_equal [128,   0, 128], t.from_hsv(300, 1, 0.50) # Purple
+    assert_equal [  0, 128, 128], t.from_hsv(180, 1, 0.50) # Teal
+    assert_equal [  0,   0, 128], t.from_hsv(240, 1, 0.50) # Navy
+  end
 end
 
 require 'graphics/rainbows'
