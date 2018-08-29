@@ -21,6 +21,12 @@ class Graphics::AbstractSimulation
   # Call +log+ every N ticks, if +log+ is defined.
   LOG_INTERVAL = 60
 
+  # The default font. Menlo on OS X, Deja Vu Sans Mono on linux.
+  DEFAULT_FONT =  case RUBY_PLATFORM
+                  when /darwin/ ; 'Menlo'
+                  when /linux/  ; 'DejaVuSansMono'
+                  end
+
   # Collection of collections of Bodies to auto-update and draw.
   attr_accessor :_bodies
 
@@ -74,7 +80,7 @@ class Graphics::AbstractSimulation
 
     self._bodies = []
 
-    self.font = find_font("Menlo", 32)
+    self.font = find_font(DEFAULT_FONT, 32)
 
     SDL::WM.set_caption name, name
 
@@ -141,10 +147,16 @@ class Graphics::AbstractSimulation
     end
   end
 
-  sys_font  = "/System/Library/Fonts"
-  lib_font  = "/Library/Fonts"
-  user_font = File.expand_path "~/Library/Fonts/"
-  FONT_GLOB = "{#{sys_font},#{lib_font},#{user_font}}" # :nodoc:
+  font_dirs = [
+    # OS X
+    "/System/Library/Fonts",
+    "/Library/Fonts",
+    File.expand_path("~/Library/Fonts/"),
+
+    # Ubuntu
+    "/usr/share/fonts/truetype/**/",
+  ]
+  FONT_GLOB = "{#{font_dirs.join(",")}}" # :nodoc:
 
   ##
   # Find and open a (TTF) font. Should be as system agnostic as possible.

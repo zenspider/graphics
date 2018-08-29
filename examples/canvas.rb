@@ -12,8 +12,8 @@ class Demo < Graphics::Simulation
   def initialize
     super 801, 801
 
-    self.font = find_font("Menlo", 16)
-    self.menlo32 = find_font("Menlo", 32)
+    self.font = find_font(DEFAULT_FONT, 16)
+    self.menlo32 = find_font(DEFAULT_FONT, 32)
 
     self.woot = render_text "woot", :black, menlo32
 
