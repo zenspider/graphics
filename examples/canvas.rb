@@ -6,16 +6,16 @@ require "graphics"
 class Demo < Graphics::Simulation
   CLEAR_COLOR = :white
 
-  attr_accessor :woot, :menlo32
+  attr_accessor :woot, :big_font
   attr_accessor :rct
 
   def initialize
     super 801, 801
 
     self.font = find_font(DEFAULT_FONT, 16)
-    self.menlo32 = find_font(DEFAULT_FONT, 32)
+    self.big_font = find_font(DEFAULT_FONT, 32)
 
-    self.woot = render_text "woot", :black, menlo32
+    self.woot = render_text "woot", :black, big_font
 
     self.rct = sprite 50, 25 do
       rect 0, 0, 49, 24, :blue # TODO: can't be black?!?
@@ -35,7 +35,7 @@ class Demo < Graphics::Simulation
       shift = (woot.h*Math.sin(D2R*deg))
       put woot, 400-shift, 300, deg
     end
-    text "woot", 400, 300, :red, menlo32
+    text "woot", 400, 300, :red, big_font
 
     rect 550, 100, 50, 50, :blue, :filled
     rect 575, 125, 50, 50, :blue
