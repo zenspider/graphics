@@ -22,7 +22,7 @@ Hoe.spec "graphics" do
 end
 
 task :demos => :compile do
-  Dir["examples/*.rb"].each do |script|
+  Dir["examples/*.rb"].sort.each do |script|
     puts script
     system "rsdl -Ilib #{script}"
   end
