@@ -22,10 +22,12 @@ class Graphics::AbstractSimulation
   LOG_INTERVAL = 60
 
   # The default font. Menlo on OS X, Deja Vu Sans Mono on linux.
-  DEFAULT_FONT =  case RUBY_PLATFORM
-                  when /darwin/ ; 'Menlo'
-                  when /linux/  ; 'DejaVuSansMono'
-                  end
+  DEFAULT_FONT = case RUBY_PLATFORM
+                 when /darwin/ then "Menlo"
+                 when /linux/  then "DejaVuSansMono"
+                 else
+                   raise "Unsupported platform #{RUBY_PLATFORM}. Please fix."
+                 end
 
   # Collection of collections of Bodies to auto-update and draw.
   attr_accessor :_bodies
