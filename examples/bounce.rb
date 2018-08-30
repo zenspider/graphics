@@ -29,8 +29,8 @@ class Ball < Graphics::Body
 
   class View
     def self.draw w, b
-      w.angle b.x, b.y, b.a, 10+3*b.m, :red
-      w.circle b.x, b.y, 5, :white, :filled
+      w.angle  b.x, b.y, b.a, 10+3*b.m, :red
+      w.circle b.x, b.y, 5,             :white,   :filled
     end
   end
 end
@@ -39,7 +39,7 @@ class BounceSimulation < Graphics::Simulation
   attr_accessor :bs
 
   def initialize
-    super 640, 640, 16, "Bounce"
+    super
 
     self.bs = populate Ball
     register_bodies bs
@@ -72,7 +72,7 @@ class BounceSimulation < Graphics::Simulation
   LOG_INTERVAL = 120
 
   def log
-    puts bs.map(&:m).inject(&:+)
+    puts "%.1f" % bs.sum(&:m)
   end
 end
 

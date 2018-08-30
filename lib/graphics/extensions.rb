@@ -25,7 +25,7 @@ class Numeric
   # Normalize a number to be within 0...360
 
   def degrees
-    (self < 0 ? self + 360 : self) % 360
+    self % 360
   end
 
   ##
