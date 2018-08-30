@@ -2,7 +2,9 @@
 
 require "sdl/sdl"
 
-module SDL; end # :nodoc: -- stupid rdoc :(
+module SDL
+  init INIT_EVERYTHING
+end
 
 ##
 # An abstract simulation. See Graphics::Simulation and Graphics::Drawing.
@@ -75,8 +77,11 @@ class Graphics::AbstractSimulation
   #
   # This also names a bunch colors and hues for convenience.
 
-  def initialize w, h, bpp = 0, name = self.class.name, full = false
-    SDL.init SDL::INIT_VIDEO
+  def initialize w=nil, h=nil, bpp=0, name=self.class.name, full=false
+    # SDL.init SDL::INIT_VIDEO
+
+    w ||= SDL::Screen::W/2
+    h ||= SDL::Screen::H/2
 
     full = full ? SDL::FULLSCREEN : 0
 
@@ -678,11 +683,4 @@ class Graphics::Drawing < Graphics::AbstractSimulation
     screen.update 0, 0, 0, 0
     # no flip
   end
-end
-
-if $0 == __FILE__ then
-  SDL.init SDL::INIT_EVERYTHING
-  SDL.set_video_mode(640, 480, 16, SDL::SWSURFACE)
-  sleep 1
-  puts "if you saw a window, it was working"
 end

@@ -78,6 +78,9 @@ typedef TTF_Font SDL_TTFFont;
 typedef Mix_Chunk SDL_Audio;
 typedef sge_cdata SDL_CollisionMap;
 
+static ID id_H;
+static ID id_W;
+
 DEFINE_ID(button);
 DEFINE_ID(mod);
 DEFINE_ID(press);
@@ -105,6 +108,11 @@ static SDLMod mod_state;
 void Init_sdl(void);
 
 //// Misc / Utility functions:
+
+static void rb_const_reset(VALUE mod, ID id, VALUE val) { // avoids warnings
+  rb_const_remove(mod, id);
+  rb_const_set(mod, id, val);
+}
 
 // TODO: collapse to one format
 static Uint32 VALUE2COLOR(VALUE color, SDL_PixelFormat *format) {
@@ -139,6 +147,13 @@ static VALUE sdl_s_init(VALUE mod, VALUE flags) {
 
   if (TTF_Init())
     rb_raise(eSDLError, "TTF_Init error: %s", TTF_GetError());
+
+  const SDL_VideoInfo *info = SDL_GetVideoInfo();
+  if (!info)
+    rb_raise(eSDLError, "Failure calling SDL_GetVideoInfo()");
+
+  rb_const_reset(cScreen, id_W, UINT2NUM(info->current_w));
+  rb_const_reset(cScreen, id_H, UINT2NUM(info->current_h));
 
   return Qnil;
 }
@@ -1000,6 +1015,11 @@ void Init_sdl() {
   rb_define_singleton_method(cScreen, "open", Screen_s_open, 4);
   rb_define_method(cScreen, "flip", Screen_flip, 0);
   rb_define_method(cScreen, "update", Screen_update, 4);
+
+  id_W = rb_intern("W");
+  id_H = rb_intern("H");
+  rb_const_set(cScreen, id_W, Qnil);
+  rb_const_set(cScreen, id_H, Qnil);
 
   //// SDL::Surface methods:
 

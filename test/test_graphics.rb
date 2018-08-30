@@ -3,6 +3,13 @@
 require "minitest/autorun"
 require "graphics"
 
+class FakeSimulation < Graphics::Simulation
+  def initialize
+    SDL.init SDL::INIT_VIDEO # HACK? Used to be in Simulation#initialize
+    super 100, 100, 16, "blah"
+  end
+end
+
 class TestBody < Minitest::Test
   attr_accessor :w, :b
 
@@ -300,9 +307,9 @@ end
 class TestSimulation < Minitest::Test
   # make_my_diffs_pretty!
 
-  class FakeSimulation < Graphics::Simulation
+  class FakeSimulation < ::FakeSimulation
     def initialize
-      super 100, 100, 16, "blah"
+      super
 
       s = []
 
@@ -329,21 +336,18 @@ class TestSimulation < Minitest::Test
 
   def test_angle
     h = t.h-1
-
-    t.angle 50, 50, 0, 10, :white
-    exp << [:draw_line, 50, h-50, 60.0, h-50.0, white, 255, true]
-
-    t.angle 50, 50, 90, 10, :white
-    exp << [:draw_line, 50, 49, 50.0, h-60.0, white, 255, true]
-
-    t.angle 50, 50, 180, 10, :white
-    exp << [:draw_line, 50, h-50, 40.0, h-50.0, white, 255, true]
-
-    t.angle 50, 50, 270, 10, :white
-    exp << [:draw_line, 50, h-50, 50.0, h-40.0, white, 255, true]
-
-    t.angle 50, 50, 45, 10, :white
     d45 = 10 * Math.sqrt(2) / 2
+
+    t.angle 50, 50, 0,   10, :white
+    t.angle 50, 50, 90,  10, :white
+    t.angle 50, 50, 180, 10, :white
+    t.angle 50, 50, 270, 10, :white
+    t.angle 50, 50, 45,  10, :white
+
+    exp << [:draw_line, 50, h-50, 60.0,   h-50.0,   white, 255, true]
+    exp << [:draw_line, 50, 49,   50.0,   h-60.0,   white, 255, true] # why 49?
+    exp << [:draw_line, 50, h-50, 40.0,   h-50.0,   white, 255, true]
+    exp << [:draw_line, 50, h-50, 50.0,   h-40.0,   white, 255, true]
     exp << [:draw_line, 50, h-50, 50+d45, h-50-d45, white, 255, true]
 
     assert_equal exp, t.screen.data
@@ -520,7 +524,7 @@ end
 require 'graphics/rainbows'
 class TestGraphics < Minitest::Test
   def setup
-    @t = Graphics::Simulation.new 100, 100, 16, ""
+    @t = FakeSimulation.new
   end
 
   def test_registering_rainbows
