@@ -1,12 +1,13 @@
 #!/bin/sh
 set -e
+set -v
 
 # if [ $(id -u) != 0 ]; then
 #     echo "Please run this as root or with sudo"
 #     exit 1
 # fi
 
-for gem in graphics rubysdl rsdl; do
+for gem in graphics rsdl; do
   gem uninstall -ax $gem || true
 done
 
@@ -24,7 +25,8 @@ case `uname` in
 		echo "I'm on linux, using sudo where needed"
 		SUDO=sudo
 
-		sudo apt-get install libsdl1.2-dev libsdl-image1.2-dev libsdl-mixer1.2-dev libsdl-ttf2.0-dev
+		$SUDO apt-get install --no-install-recommends --no-install-suggests libsdl1.2-dev libsdl-image1.2-dev libsdl-mixer1.2-dev libsdl-ttf2.0-dev
+		$SUDO apt-get install --no-install-recommends --no-install-suggests gcc g++
 		;;
   *)
 		echo "Unknown OS $OSTYPE, aborting"
@@ -32,11 +34,17 @@ case `uname` in
 		;;
 esac
 
+$SUDO gem update --system -N -V
+
+if ! gem list -i --silent hoe; then
+    $SUDO gem install hoe -N
+fi
+
 $SUDO rake newb
 rake test
 
 if [ -f $0 ]; then
-		rake clean package
+    rake clean package
     $SUDO gem install pkg/graphics*.gem
 else
     $SUDO gem install graphics --pre
