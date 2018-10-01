@@ -72,7 +72,7 @@ class BounceSimulation < Graphics::Simulation
   LOG_INTERVAL = 120
 
   def log
-    puts "%.1f" % bs.sum(&:m)
+    puts "%.1f" % bs.inject(0) { |ms, o| ms + o.m }
   end
 end
 
