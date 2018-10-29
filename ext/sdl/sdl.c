@@ -334,18 +334,21 @@ static VALUE Event__mouseup(SDL_Event *event) {
 
 //// SDL::Key methods:
 
-static VALUE Key_s_press_p(VALUE mod, VALUE keysym) {
+static VALUE Key_s_press_p(VALUE mod, VALUE keycode_) {
   UNUSED(mod);
-  int sym = NUM2INT(keysym);
 
   if (!key_state)
     rb_raise(eSDLError,
              "You should call SDL::Key#scan before calling SDL::Key#press?");
 
-  if (0 >= sym || sym >= key_state_len)
-    rb_raise(eSDLError, "%d is out of key (%d)", sym, key_state_len);
+  SDL_Keycode keycode   = NUM2INT(keycode_);
+  SDL_Scancode scancode = SDL_GetScancodeFromKey(keycode);
 
-  return INT2BOOL(key_state[sym]);
+  if (0 >= scancode || scancode >= key_state_len)
+    rb_raise(eSDLError, "%d (%d) is out of bounds: %d",
+             keycode, scancode, key_state_len);
+
+  return INT2BOOL(key_state[scancode]);
 }
 
 static VALUE Key_s_scan(VALUE mod) {
