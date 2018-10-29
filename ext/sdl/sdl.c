@@ -880,13 +880,6 @@ static VALUE Surface_transform(VALUE self, VALUE bgcolor, VALUE angle,
   if (!result)
     FAILURE("Surface#transform");
 
-  Uint8 alpha;
-  if (SDL_GetSurfaceAlphaMod(surface, &alpha))
-    FAILURE("Surface#transform(get_alpha)");
-
-  if (SDL_SetSurfaceAlphaMod(result, alpha))
-    FAILURE("Surface#transform(set_alpha)");
-
   return TypedData_Wrap_Struct(cSurface, &_Surface_type, result);
 }
 

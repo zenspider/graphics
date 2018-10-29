@@ -595,8 +595,7 @@ class Graphics::AbstractSimulation
   # Draw a bitmap centered at x/y with optional angle, x/y scale, and flags.
 
   def blit src, x, y, a° = 0, xscale = 1, yscale = 1, flags = 0
-    bg = color[self.class::CLEAR_COLOR]
-    img = src.transform bg, -a°, xscale, yscale, flags
+    img = src.transform color[:alpha], -a°, xscale, yscale, flags
 
     SDL::Surface.blit img, 0, 0, 0, 0, screen, x-img.w/2, h-y-img.h/2
   end
@@ -605,8 +604,7 @@ class Graphics::AbstractSimulation
   # Draw a bitmap at x/y with optional angle, x/y scale, and flags.
 
   def put src, x, y, a° = 0, xscale = 1, yscale = 1, flags = 0
-    bg = color[self.class::CLEAR_COLOR]
-    img = src.transform bg, -a°, xscale, yscale, flags
+    img = src.transform color[:alpha], -a°, xscale, yscale, flags
 
     # why x-1? because transform adds a pixel to all sides even if a°==0
     SDL::Surface.blit img, 0, 0, 0, 0, screen, x-1, h-y-img.h
