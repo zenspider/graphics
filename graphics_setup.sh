@@ -41,10 +41,7 @@ esac
 
 $SUDO gem update --system -N -V
 
-if ! gem list -i --silent hoe; then
-    $SUDO gem install hoe -N
-fi
-
+gem install hoe --conservative
 $SUDO rake newb
 rake test
 
