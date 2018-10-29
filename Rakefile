@@ -27,7 +27,7 @@ task :demos => :compile do
 end
 
 task :sanity => :compile do
-  sh %[ruby -Ilib -rgraphics -e 'Class.new(Graphics::Simulation) { def draw n; clear :white; text "hit escape to quit", 100, 100, :black; end; }.new(500, 250, 0, "Working!").run']
+  sh %[ruby -Ilib -rgraphics -e 'Class.new(Graphics::Simulation) { def draw n; clear :white; text "hit escape to quit", 100, 100, :black; end; }.new(500, 250, "Working!").run']
 end
 
 # vim: syntax=ruby
