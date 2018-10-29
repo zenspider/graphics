@@ -80,14 +80,6 @@
 
 
 /*
-*  Older versions of SDL doesn't have SDL_CreateRGBSurface
-*/
-#ifndef SDL_AllocSurface
-	#define SDL_CreateRGBSurface  SDL_AllocSurface
-#endif
-
-
-/*
 *  Macro to get clipping
 */
 #if SDL_VERSIONNUM(SDL_MAJOR_VERSION, SDL_MINOR_VERSION, SDL_PATCHLEVEL) >= \

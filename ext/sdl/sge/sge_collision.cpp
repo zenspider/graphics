@@ -40,6 +40,7 @@ sge_cdata *sge_make_cmap(SDL_Surface *img)
 	Uint8 *map;
 	Sint16 x,y;
 	Sint32 offs;
+	Uint32 key;
 	int i;
 	
 	cdata=new(nothrow) sge_cdata;
@@ -56,7 +57,8 @@ sge_cdata *sge_make_cmap(SDL_Surface *img)
 	for(y=0; y < img->h; y++){
 		for(x=0; x < img->w; x++){
 			if(i>7){i=0;map++;}
-			if(sge_GetPixel(img, Sint16(x),Sint16(y))!=img->format->colorkey){
+			SDL_GetColorKey(img, &key);
+			if(sge_GetPixel(img, Sint16(x),Sint16(y))!=key){
 				*map=*map|sge_mask[i];	
 			}
 			i++;

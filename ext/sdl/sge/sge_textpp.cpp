@@ -310,8 +310,10 @@ bool sge_TextEditor::check(SDL_Event* event)
 		return move_start();
 	else if(event->key.keysym.sym==SDLK_END)
 		return move_end();
+/*
 	else if(event->key.keysym.unicode!=0)
 		return insert(event->key.keysym.unicode);
+*/
 	
 	return false;
 }
@@ -415,10 +417,10 @@ bool sge_text::update_textSurface(bool force)
 			if(!text_surface)
 				return false;
 				
-			SDL_SetColorKey(text_surface,SDL_SRCCOLORKEY,SDL_MapRGB(text_surface->format,background.r,background.g,background.b));
+			SDL_SetColorKey(text_surface,SDL_TRUE,SDL_MapRGB(text_surface->format,background.r,background.g,background.b));
 			
 			if( alpha_level != SDL_ALPHA_OPAQUE )
-				SDL_SetAlpha(text_surface, SDL_SRCALPHA, alpha_level);
+				SDL_SetSurfaceAlphaMod(text_surface, alpha_level);
 				
 			set_textSurface(text_surface);
 		}else 
@@ -453,7 +455,7 @@ bool sge_text::update_textSurface(bool force)
 				c[1].r=bm_font->FontSurface->format->palette->colors[1].r;
 				c[1].g=bm_font->FontSurface->format->palette->colors[1].g;
 				c[1].b=bm_font->FontSurface->format->palette->colors[1].b;
-				SDL_SetColors(text_surface, c, 0, 2);
+				SDL_SetPaletteColors(text_surface->format->palette, c, 0, 2);
 				bcol = 0;
 			}else{
 				//Use the same background color as the font surface
@@ -465,10 +467,10 @@ bool sge_text::update_textSurface(bool force)
 			
 			sge_BF_textout(text_surface, bm_font, (char*)(text.c_str()), 0, 0);
 				
-			SDL_SetColorKey(text_surface,SDL_SRCCOLORKEY, bcol);
+			SDL_SetColorKey(text_surface,SDL_TRUE, bcol);
 			
 			if( alpha_level != SDL_ALPHA_OPAQUE )
-				SDL_SetAlpha(text_surface, SDL_SRCALPHA, alpha_level);
+				SDL_SetSurfaceAlphaMod(text_surface, alpha_level);
 			
 			set_textSurface(text_surface);
 		}else
@@ -519,9 +521,9 @@ SDL_Rect sge_text::render_text(SDL_Surface *surface, Sint16 x, Sint16 y)
 		if(!tmp)
 			return ret;
 			
-		SDL_SetColorKey(tmp,SDL_SRCCOLORKEY,SDL_MapRGB(tmp->format,background.r,background.g,background.b));
+		SDL_SetColorKey(tmp,SDL_TRUE,SDL_MapRGB(tmp->format,background.r,background.g,background.b));
 		if( alpha_level != SDL_ALPHA_OPAQUE )
-				SDL_SetAlpha(tmp, SDL_SRCALPHA, alpha_level);
+				SDL_SetSurfaceAlphaMod(tmp, alpha_level);
 				
 		sge_Blit(tmp, surface, 0, 0, x, y, tmp->w, tmp->h);
 		ret.x=x; ret.y=y; ret.w=tmp->w; ret.h=tmp->h;
@@ -534,7 +536,7 @@ SDL_Rect sge_text::render_text(SDL_Surface *surface, Sint16 x, Sint16 y)
 		string text=get_string(sCursor);
 		
 		if( alpha_level != SDL_ALPHA_OPAQUE  &&  !bm_font->FontSurface->format->Amask)
-			SDL_SetAlpha(bm_font->FontSurface,SDL_SRCALPHA, alpha_level);
+			SDL_SetSurfaceAlphaMod(bm_font->FontSurface, alpha_level);
 			
 		return sge_BF_textout(surface, bm_font, (char*)(text.c_str()), x, y);
 	}else{
@@ -705,17 +707,19 @@ int sge_text_input(sge_TextSurface *tc, Uint8 flags)
 	bool is_ttf = tc->get_bg(&bg);       /* No bc color indicates bitmap font */
 	
 	if( flags&SGE_FLAG1  ||  !is_ttf ){  /* Keep background? */
-		buffer = SDL_DisplayFormat(screen);
+		SDL_assert(0 && "sge_text_input");
+		//buffer = SDL_DisplayFormat(screen);
 		if(buffer==NULL){
 			SDL_SetError("SGE - Out of memory");return -3;
 		}
  	}
 	
 	/* Enable keyrepeat */
-	if(!(flags&SGE_FLAG3))
- 		SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL+50);
+	//if(!(flags&SGE_FLAG3))
+ 	//	SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL+50);
 	
-	int uflag = SDL_EnableUNICODE(1);
+	SDL_assert(0 && "sge_text_input");
+	//int uflag = SDL_EnableUNICODE(1);
  
 	Sint16 x = tc->get_xpos();
 	Sint16 y = tc->get_ypos();
@@ -773,7 +777,7 @@ int sge_text_input(sge_TextSurface *tc, Uint8 flags)
 
 	_sge_update = update;
 
-	SDL_EnableUNICODE(uflag);  //Restore unicode setting
+	//SDL_EnableUNICODE(uflag);  //Restore unicode setting
 
 	if( quit < 0 )
 		return quit;

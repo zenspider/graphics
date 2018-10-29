@@ -27,6 +27,11 @@
 
 using namespace std;
 
+template <typename T>
+T absDiff(T a, T b)
+{
+    return (a > b) ? (a - b) : (b - a);
+}
 
 sge_screen *the_screen=NULL;  //The pointer to the active screen class (or NULL)
 
@@ -37,10 +42,12 @@ sge_screen::sge_screen(SDL_Surface *screen)
 {
 	sge_screen::screen=screen;  //Our screen pointer
 	
-	/* Test some flags */
+	SDL_assert(0 && "sge_screen");
+	/* Test some flags
 	HW=(((screen->flags) & SDL_HWSURFACE) != 0);	
 	DB=(((screen->flags) & SDL_DOUBLEBUF) != 0);
 	FS=(((screen->flags) & SDL_FULLSCREEN) != 0);
+	*/
 	
 	/* Test the resolution of SDL_Delay() */
 	//sge_CalibrateDelay();
@@ -144,14 +151,16 @@ void sge_screen::update(void)
 			r[j++]=*i;	
 		}
 		
-		SDL_UpdateRects(screen,rects.size(), r); //Let SDL update the rectangles
+		SDL_assert(0 && "sge_screen::update");
+		//SDL_UpdateRects(screen,rects.size(), r); //Let SDL update the rectangles
 		
 		delete[] r;
 
 		rects.clear(); //Empty the list
 	}
 	else if(DB)   //double-buffered
-		SDL_Flip(screen);
+		SDL_assert(0 && "sge_screen::update");
+		//SDL_Flip(screen);
 }
 
 
@@ -214,14 +223,14 @@ int sge_surface::get_warp(SDL_Rect rec, SDL_Rect &r1, SDL_Rect &r2, SDL_Rect &r3
 		if(rec.x<border.x){
 			r1.w = border.x - rec.x;
 			r1.x = border.x + border.w - r1.w;
-			r2.w = abs(rec.w - r1.w);           //SDL_Rect w/h is unsigned
+			r2.w = absDiff(rec.w, r1.w);           //SDL_Rect w/h is unsigned
 			r2.x = border.x;
 			rects=2; 
 		}else if(rec.x+rec.w > border.x + border.w){
 			r1.x = rec.x;
 			r1.w = border.x + border.w - rec.x;
 			r2.x = border.x;
-			r2.w = abs(rec.w - r1.w);
+			r2.w = absDiff(rec.w, r1.w);
 			rects=2;
 		}
 		
@@ -232,13 +241,13 @@ int sge_surface::get_warp(SDL_Rect rec, SDL_Rect &r1, SDL_Rect &r2, SDL_Rect &r3
 			if(rects==0){
 				r1.h = border.y - rec.y;
 				r1.y = border.y + border.h - r1.h;
-				r2.h = abs(rec.h - r1.h);
+				r2.h = absDiff(rec.h, r1.h);
 				r2.y = border.y;
 				rects=2;
 			}else{
 				r2.h = r1.h= border.y - rec.y;
 				r2.y = r1.y= border.y + border.h - r1.h;
-				r4.h = r3.h= abs(rec.h - r1.h);
+				r4.h = r3.h= absDiff(rec.h, r1.h);
 				r4.y = r3.y= border.y;
 				rects=4;
 			}
@@ -247,13 +256,13 @@ int sge_surface::get_warp(SDL_Rect rec, SDL_Rect &r1, SDL_Rect &r2, SDL_Rect &r3
 				r1.y = rec.y;
 				r1.h = border.y + border.h - rec.y;
 				r2.y = border.y;
-				r2.h = abs(rec.h - r1.h);
+				r2.h = absDiff(rec.h, r1.h);
 				rects=2;
 			}else{
 				r2.y = r1.y = rec.y;
 				r2.h = r1.h = border.y + border.h - rec.y;
 				r4.y = r3.y = border.y;
-				r4.h = r3.h = abs(rec.h - r1.h);
+				r4.h = r3.h = absDiff(rec.h, r1.h);
 				rects=4;
 			}
 		}	

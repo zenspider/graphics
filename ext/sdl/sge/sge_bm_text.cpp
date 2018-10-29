@@ -51,12 +51,13 @@ sge_bmpFont* sge_BF_CreateFont(SDL_Surface *surface, Uint8 flags)
 	font = new(nothrow) sge_bmpFont; if(font==NULL){SDL_SetError("SGE - Out of memory");return NULL;}
 	
 	if(!(flags&SGE_BFNOCONVERT) && !(flags&SGE_BFSFONT)){    /* Get a converted copy */
-		font->FontSurface = SDL_DisplayFormat(surface);
+		SDL_assert(0 && "sge_BF_CreateFont");
+		/*font->FontSurface = SDL_DisplayFormat(surface);*/
 		if(font->FontSurface==NULL){SDL_SetError("SGE - Out of memory");return NULL;}
 		
 		if(flags&SGE_BFPALETTE){  //We want an 8bit surface
 			SDL_Surface *tmp;
-			tmp = SDL_AllocSurface(SDL_SWSURFACE, surface->w, surface->h, 8, 0, 0, 0, 0);
+			tmp = SDL_CreateRGBSurface(SDL_SWSURFACE, surface->w, surface->h, 8, 0, 0, 0, 0);
 			if(tmp==NULL){SDL_SetError("SGE - Out of memory");SDL_FreeSurface(font->FontSurface);return NULL;}
 			
 			//Set the palette
@@ -64,7 +65,7 @@ sge_bmpFont* sge_BF_CreateFont(SDL_Surface *surface, Uint8 flags)
 			c[0].r=0; c[1].r=255;
 			c[0].g=0; c[1].g=255;
 			c[0].b=0; c[1].b=255;
-			SDL_SetColors(tmp, c, 0, 2);
+			SDL_SetPaletteColors(tmp->format->palette, c, 0, 2);
 			
 			if (SDL_MUSTLOCK(font->FontSurface) && _sge_lock)
 				if (SDL_LockSurface(font->FontSurface) < 0){
@@ -154,7 +155,7 @@ sge_bmpFont* sge_BF_CreateFont(SDL_Surface *surface, Uint8 flags)
 	if(flags&SGE_BFTRANSP || flags&SGE_BFSFONT)
 		#if SDL_VERSIONNUM(SDL_MAJOR_VERSION, SDL_MINOR_VERSION, SDL_PATCHLEVEL) >= \
     		SDL_VERSIONNUM(1, 1, 4)
-		SDL_SetColorKey(font->FontSurface,SDL_SRCCOLORKEY, font->bcolor);  //Some versions of SDL have a bug with SDL_RLEACCEL
+		SDL_SetColorKey(font->FontSurface,SDL_TRUE, font->bcolor);  //Some versions of SDL have a bug with SDL_RLEACCEL
 		#else
 		SDL_SetColorKey(font->FontSurface,SDL_SRCCOLORKEY|SDL_RLEACCEL, font->bcolor);
 		#endif
@@ -383,7 +384,7 @@ void sge_BF_SetColor(sge_bmpFont *font, Uint8 R, Uint8 G, Uint8 B)
 		c[0].r=0; c[1].r=R;
 		c[0].g=0; c[1].g=G;
 		c[0].b=0; c[1].b=B;
-		SDL_SetColors(font->FontSurface, c, 0, 2);
+		SDL_SetPaletteColors(font->FontSurface->format->palette, c, 0, 2);
 	}
 }
 
@@ -393,7 +394,7 @@ void sge_BF_SetColor(sge_bmpFont *font, Uint8 R, Uint8 G, Uint8 B)
 //==================================================================================
 void sge_BF_SetAlpha(sge_bmpFont *font, Uint8 alpha)
 {
-	SDL_SetAlpha(font->FontSurface,SDL_SRCALPHA|SDL_RLEACCEL, alpha);
+	SDL_SetSurfaceAlphaMod(font->FontSurface, alpha);
 }
 
 

@@ -8,24 +8,49 @@ LIBS =$(SGE_LIBS)
 SGE_VER = 030809
 API_VER = 0
 
+UNAME = $(shell uname)
+ARCH = $(shell uname -m)
+ifeq ($(UNAME), Darwin)
+	LIBNAME = libSGE2.dylib
+	LIBNAMEAPI = libSGE2.$(API_VER).dylib
+	LIBNAMEVER = libSGE2.$(API_VER).$(SGE_VER).dylib
+	LIBDIR = lib
+	LIBFLAG = -install_name
+else
+	LIBNAME = libSGE2.so
+	LIBNAMEAPI = libSGE2.so.$(API_VER)
+	LIBNAMEVER = libSGE2.so.$(API_VER).$(SGE_VER)
+	LIBFLAG = -soname
+	ifeq ($(FORCE32), y)
+		LIBDIR = lib
+	else
+		ifeq ($(ARCH), x86_64)
+			LIBDIR = lib64
+		else
+			LIBDIR = lib
+		endif
+	endif
+endif
+
+
 OBJECTS=sge_surface.o sge_primitives.o sge_tt_text.o sge_bm_text.o sge_misc.o sge_textpp.o sge_blib.o sge_rotation.o sge_collision.o sge_shape.o
 
 all:	config $(OBJECTS) 
-	@ar rsc libSGE.a $(OBJECTS)
+	@ar rsc libSGE2.a $(OBJECTS)
 
 $(OBJECTS):	%.o:%.cpp %.h   #Each object depends on thier .cpp and .h file
 	$(CXX) $(CFLAGS) -c $<
 
 shared: all
-	$(CXX) $(CFLAGS) -Wl,-soname,libSGE.so.$(API_VER) -fpic -fPIC -shared -o libSGE.so $(OBJECTS) $(LIBS)
+	$(CXX) $(CFLAGS) -Wl,$(LIBFLAG),$(LIBNAMEAPI) -fpic -fPIC -shared -o $(LIBNAME) $(OBJECTS) $(LIBS)
 
 shared-strip:	shared
-	@strip libSGE.so
+	@strip $(LIBNAME)
 
 # Building a dll... I have no idea how to do this, but it should be something like below.
 dll:	config $(OBJECTS)
 	dlltool --output-def SGE.def $(OBJECTS)
-	dllwrap --driver-name $(CXX) -o SGE.dll --def SGE.def --output-lib libSGE.a --dllname SGE.dll $(OBJECTS) $(LIBS)
+	dllwrap --driver-name $(CXX) -o SGE.dll --def SGE.def --output-lib libSGE2.a --dllname SGE.dll $(OBJECTS) $(LIBS)
 
 dll-strip:	dll
 	@strip SGE.dll
@@ -73,11 +98,11 @@ endif
 install:	shared
 	@mkdir -p $(PREFIX_H)
 	install -c -m 644 sge*.h $(PREFIX_H)
-	@mkdir -p $(PREFIX)/lib
-	install -c -m 644 libSGE.a $(PREFIX)/lib
-	install -c libSGE.so $(PREFIX)/lib/libSGE.so.$(API_VER).$(SGE_VER)
-	@cd $(PREFIX)/lib;\
-	ln -sf libSGE.so.$(API_VER).$(SGE_VER) libSGE.so.$(API_VER);\
-	ln -sf libSGE.so.$(API_VER) libSGE.so
+	@mkdir -p $(PREFIX)/$(LIBDIR)
+	install -c -m 644 libSGE2.a $(PREFIX)/$(LIBDIR)
+	install -c $(LIBNAME) $(PREFIX)/$(LIBDIR)/$(LIBNAMEVER)
+	@cd $(PREFIX)/$(LIBDIR);\
+	ln -sf $(LIBNAMEVER) $(LIBNAMEAPI);\
+	ln -sf $(LIBNAMEAPI) $(LIBNAME)
 	@echo "** Headerfiles installed in $(PREFIX_H)"
-	@echo "** Library files installed in $(PREFIX)/lib"
+	@echo "** Library files installed in $(PREFIX)/$(LIBDIR)"

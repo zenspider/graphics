@@ -1198,8 +1198,7 @@ void sge_FilledRectAlpha(SDL_Surface *surface, Sint16 x1, Sint16 y1, Sint16 x2, 
 
 					R = ((*pixel & Rmask) + (( dR - (*pixel & Rmask) ) * alpha >> 8)) & Rmask;
 					G = ((*pixel & Gmask) + (( dG - (*pixel & Gmask) ) * alpha >> 8)) & Gmask;
-					// need to do different shifting here to avoid overflow
-                                        B = ((*pixel & Bmask) + (( dB - (*pixel & Bmask) ) >> 8 * alpha)) & Bmask;
+					B = ((*pixel & Bmask) + (( dB - (*pixel & Bmask) ) * alpha >> 8)) & Bmask;
 					if( Amask )
 						A = ((*pixel & Amask) + (( dA - (*pixel & Amask) ) * alpha >> 8)) & Amask;
 
@@ -2515,14 +2514,3 @@ void sge_AABezier(SDL_Surface *surface, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 
 	sge_AABezierAlpha(surface,x1,y1,x2,y2,x3,y3,x4,y4,level, SDL_MapRGB(surface->format,R,G,B),255);
 }
 
-//==================================================================================
-// Added by zenspider:
-//==================================================================================
-
-void sge_FastFilledRect(SDL_Surface *Surface, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2, Uint32 color) {
-  for (Sint16 y = y1; y <= y2; y++) {
-    _HLine(Surface, x1, x2, y, color);
-  }
-
-  sge_UpdateRect(Surface, x1, y1, x2, y2);
-}
