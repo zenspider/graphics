@@ -32,8 +32,7 @@ class Demo < Graphics::Simulation
     clear
 
     (0..90).step(30) do |deg|
-      shift = (woot.h*Math.sin(D2R*deg))
-      put woot, 400-shift, 300, deg
+      put woot, 400, 300, deg
     end
     text "woot", 400, 300, :red, big_font
 

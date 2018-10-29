@@ -18,7 +18,7 @@ $LOCAL_LIBS += " " + `#{sdl_config} --libs`.chomp
 have_library("SDL2_mixer", "Mix_OpenAudio") or abort "Need sdl2_mixer"
 have_library("SDL2_image", "IMG_Load")      or abort "Need sdl2_image"
 have_library("SDL2_ttf", "TTF_Init")        or abort "Need sdl2_ttf"
-# have_library("SDL2_gfx", "fuck")          or abort "Need sdl2_gfx"
+have_library("SDL2_gfx", "hlineColor")          or abort "Need sdl2_gfx"
 
 # have_func "TTF_OpenFontIndex"
 # have_func "TTF_FontFaces"

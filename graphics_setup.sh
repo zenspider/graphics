@@ -25,6 +25,7 @@ case `uname` in
 	brew install sdl2_mixer
 	brew install sdl2_ttf
 	brew install sdl2_image --without-webp
+        brew install sdl2_gfx
 	;;
     Linux)
 	echo "I'm on linux, using sudo where needed"

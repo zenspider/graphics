@@ -411,7 +411,7 @@ class Graphics::AbstractSimulation
   # Clear the whole screen. Defaults to CLEAR_COLOR.
 
   def clear c = self.class::CLEAR_COLOR
-    fast_rect 0, 0, w, h, c
+    screen.clear color[c]
   end
 
   ##
@@ -506,10 +506,14 @@ class Graphics::AbstractSimulation
   # Draw an antialiased curve from x1/y1 to x2/y2 via control points
   # cx1/cy1 & cx2/cy2 in color c.
 
-  def bezier x1, y1, cx1, cy1, cx2, cy2, x2, y2, c, l = 7, aa = true
+  def bezier *points, c
     h = self.h
-    screen.draw_bezier(x1, h-y1-1, cx1, h-cy1, cx2, h-cy2, x2, h-y2-1,
-                       l, color[c], aa)
+
+    # TODO: there is probably a cleaner way... or move entirely into C
+    xs, ys = points.each_slice(2).to_a.transpose
+    ys.map! { |y| h-y }
+
+    screen.draw_bezier xs, ys, 5, color[c]
   end
 
   ## Text
@@ -558,8 +562,6 @@ class Graphics::AbstractSimulation
 
   ### Blitting Methods:
 
-  # TODO: copy_rect(x,y,w,h)
-
   ##
   # Load an image at path into a new surface.
 
@@ -593,20 +595,15 @@ class Graphics::AbstractSimulation
   ##
   # Draw a bitmap centered at x/y with optional angle, x/y scale, and flags.
 
-  def blit src, x, y, a° = 0, xscale = 1, yscale = 1, flags = 0
-    img = src.transform color[:alpha], -a°, xscale, yscale, flags
-
-    SDL::Surface.blit img, 0, 0, 0, 0, screen, x-img.w/2, h-y-img.h/2
+  def blit src, x, y, a° = nil, xscale = nil, yscale = nil, flags = nil
+    screen.blit src, x-1, h-y-src.h, a°, xscale, yscale, :center
   end
 
   ##
   # Draw a bitmap at x/y with optional angle, x/y scale, and flags.
 
-  def put src, x, y, a° = 0, xscale = 1, yscale = 1, flags = 0
-    img = src.transform color[:alpha], -a°, xscale, yscale, flags
-
-    # why x-1? because transform adds a pixel to all sides even if a°==0
-    SDL::Surface.blit img, 0, 0, 0, 0, screen, x-1, h-y-img.h
+  def put src, x, y, a° = nil, xscale = nil, yscale = nil, flags = nil
+    screen.blit src, x-1, h-y-src.h, a°, xscale, yscale, false
   end
 
   ##
