@@ -17,15 +17,17 @@ Hoe.spec "graphics" do
   extension :sdl
 
   license "MIT"
-
-  dependency "rsdl", "~> 0.1"
 end
 
 task :demos => :compile do
   Dir["examples/*.rb"].sort.each do |script|
     puts script
-    system "rsdl -Ilib #{script}"
+    system "ruby -Ilib #{script}"
   end
+end
+
+task :sanity => :compile do
+  sh %[ruby -Ilib -rgraphics -e 'Class.new(Graphics::Simulation) { def draw n; clear :white; text "hit escape to quit", 100, 100, :black; end; }.new(500, 250, 0, "Working!").run']
 end
 
 # vim: syntax=ruby

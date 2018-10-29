@@ -12,26 +12,31 @@ for gem in graphics rsdl; do
 done
 
 case `uname` in
-  Darwin)
-		echo "I'm on OSX. Not using sudo"
-		SUDO=
+    Darwin)
+	echo "I'm on OSX. Not using sudo"
+	SUDO=
 
-		brew install sdl       --universal
-		brew install sdl_mixer --universal --with-smpeg
-		brew install sdl_ttf   --universal
-		brew install sdl_image --universal --without-webp
-		;;
-  Linux)
-		echo "I'm on linux, using sudo where needed"
-		SUDO=sudo
+	brew unlink sdl
+	brew unlink sdl_mixer
+	brew unlink sdl_ttf
+	brew unlink sdl_image
 
-		$SUDO apt-get install --no-install-recommends --no-install-suggests libsdl1.2-dev libsdl-image1.2-dev libsdl-mixer1.2-dev libsdl-ttf2.0-dev
-		$SUDO apt-get install --no-install-recommends --no-install-suggests gcc g++
-		;;
-  *)
-		echo "Unknown OS $OSTYPE, aborting"
-		exit 1
-		;;
+	brew install sdl2
+	brew install sdl2_mixer
+	brew install sdl2_ttf
+	brew install sdl2_image --without-webp
+	;;
+    Linux)
+	echo "I'm on linux, using sudo where needed"
+	SUDO=sudo
+
+	$SUDO apt-get install --no-install-recommends --no-install-suggests libsdl1.2-dev libsdl-image1.2-dev libsdl-mixer1.2-dev libsdl-ttf2.0-dev
+	$SUDO apt-get install --no-install-recommends --no-install-suggests gcc g++
+	;;
+    *)
+	echo "Unknown OS $OSTYPE, aborting"
+	exit 1
+	;;
 esac
 
 $SUDO gem update --system -N -V

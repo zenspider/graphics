@@ -18,7 +18,7 @@ class Demo < Graphics::Simulation
     self.woot = render_text "woot", :black, big_font
 
     self.rct = sprite 50, 25 do
-      rect 0, 0, 49, 24, :blue # TODO: can't be black?!?
+      rect 0, 0, 49, 24, :black
     end
   end
 
@@ -37,13 +37,13 @@ class Demo < Graphics::Simulation
     end
     text "woot", 400, 300, :red, big_font
 
-    rect 550, 100, 50, 50, :blue, :filled
-    rect 575, 125, 50, 50, :blue
+    rect 550, 100, 50, 50, :black, :filled
+    rect 575, 125, 50, 50, :black
 
     ellipse 550, 200, 50, 25, :red
     ellipse 550, 250, 50, 25, :red, :filled
 
-    angle 50, 50, 90, 25, :blue
+    angle 50, 50, 90, 25, :black
 
     (0..w).step(100) do |x|
       vline x, :red
@@ -55,11 +55,11 @@ class Demo < Graphics::Simulation
       text y.to_s, 5, y+5, :black
     end
 
-    circle 200, 200, 100, :blue
-    text "circle 200, 200, 100, :blue", 100, 200, :black
+    circle 200, 200, 100, :black
+    text "circle 200, 200, 100, :black", 100, 200, :black
 
-    bezier 400, 400, 450, 700, 550, 300, 600, 600, :blue
-    text "bezier 400, 400, 450, 700, 550, 300, 600, 600, :blue", 200, 400, :black
+    bezier 400, 400, 450, 700, 550, 300, 600, 600, :black
+    text "bezier 400, 400, 450, 700, 550, 300, 600, 600, :black", 200, 400, :black
 
     angle 200, 500, A, L, :black
     text "angle 200, 500, %.2f, %.2f, :black" % [A, L], 100, 500, :black

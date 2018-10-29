@@ -27,7 +27,6 @@ class Polygnome < Array
 
     if size > 2
       sort_radar
-      SDL::WM.set_caption compute_pi, ''
     end
   end
 
@@ -133,6 +132,12 @@ class PiPolygon < Graphics::Simulation
     @balls = []
     register_bodies @balls
     BALLS.times { @balls << Bouncer.new(self, MAGND) }
+  end
+
+  def update n
+    super
+
+    self.screen.title = poly.compute_pi
   end
 
   def draw n

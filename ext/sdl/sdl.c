@@ -47,14 +47,11 @@
 
 #define ZERO_RECT(r) r.x == 0 && r.y == 0 && r.w == 0 && r.h == 0
 
-#define FAILURE(s) rb_raise(eSDLError, "%s failed: %s", (s), SDL_GetError());
-#define AUDIO_FAILURE(s) rb_raise(eSDLError, "%s failed: %s", (s), Mix_GetError());
+#define FAILURE(s) rb_raise(eSDLError, "%s failed: %s", (s), SDL_GetError())
+#define AUDIO_FAILURE(s) rb_raise(eSDLError, "%s failed: %s", (s), Mix_GetError())
+#define TTF_FAILURE(s)   rb_raise(eSDLError, "%s failed: %s", (s), TTF_GetError())
 
-#define SHOULD_BLEND(a) RTEST(a) && NUM2UINT8(a) != 0xff
-
-#ifdef rb_intern
-#undef rb_intern // HACK -- clang warns about recursive macros
-#endif
+#define SHOULD_BLEND(a) (a) != 0xff
 
 #define DEFINE_ID(name) static ID id_iv_##name
 #define INIT_ID(name) id_iv_##name = rb_intern("@"#name)
@@ -71,7 +68,6 @@ static VALUE eSDLError;
 static VALUE eSDLMem;
 static VALUE mKey;
 static VALUE mSDL;
-static VALUE mWM;
 static VALUE mMouse;
 
 typedef TTF_Font SDL_TTFFont;
@@ -81,12 +77,14 @@ typedef sge_cdata SDL_CollisionMap;
 static ID id_H;
 static ID id_W;
 
+DEFINE_ID(renderer);
+DEFINE_ID(window);
+DEFINE_ID(texture);
 DEFINE_ID(button);
 DEFINE_ID(mod);
 DEFINE_ID(press);
 DEFINE_ID(state);
 DEFINE_ID(sym);
-DEFINE_ID(unicode);
 DEFINE_ID(x);
 DEFINE_ID(xrel);
 DEFINE_ID(y);
@@ -94,16 +92,21 @@ DEFINE_ID(yrel);
 
 DEFINE_CLASS(Audio,        "SDL::Audio")
 DEFINE_CLASS(Surface,      "SDL::Surface")
+DEFINE_CLASS(Texture,      "SDL::Texture")   // TODO: I kinda want these hidden
+DEFINE_CLASS(Renderer,     "SDL::Renderer")  // TODO: I kinda want these hidden
+DEFINE_CLASS(Window,       "SDL::Window")    // TODO: I kinda want these hidden
 DEFINE_CLASS(CollisionMap, "SDL::CollisionMap")
 DEFINE_CLASS(PixelFormat,  "SDL::PixelFormat")
 DEFINE_CLASS_0(TTFFont,    "SDL::TTFFont")
 
+#define SDL_NUMEVENTS 0xFFFF // HACK
 typedef VALUE (*event_creator)(SDL_Event *);
 static event_creator event_creators[SDL_NUMEVENTS];
 
 static int is_quit = 0;
+static int key_state_len = 0;
 static Uint8* key_state = NULL;
-static SDLMod mod_state;
+static SDL_Keymod mod_state;
 
 void Init_sdl(void);
 
@@ -118,6 +121,7 @@ static void rb_const_reset(VALUE mod, ID id, VALUE val) { // avoids warnings
 static Uint32 VALUE2COLOR(VALUE color, SDL_PixelFormat *format) {
   // TODO: reverse and use FIXNUM_P ?
   if (rb_obj_is_kind_of(color, rb_cArray)) {
+    rb_warn("when are colors arrays?!??"); // TODO: remove
     switch (RARRAY_LEN(color)) {
     case 3:
       return SDL_MapRGB(format,
@@ -148,12 +152,14 @@ static VALUE sdl_s_init(VALUE mod, VALUE flags) {
   if (TTF_Init())
     rb_raise(eSDLError, "TTF_Init error: %s", TTF_GetError());
 
-  const SDL_VideoInfo *info = SDL_GetVideoInfo();
-  if (!info)
-    rb_raise(eSDLError, "Failure calling SDL_GetVideoInfo()");
+  SDL_Rect r;
+  if (SDL_GetDisplayBounds(0, &r) != 0) {
+    rb_raise(eSDLError, "Failure calling SDL_GetDisplayBounds()");
+    return 1;
+  }
 
-  rb_const_reset(cScreen, id_W, UINT2NUM(info->current_w));
-  rb_const_reset(cScreen, id_H, UINT2NUM(info->current_h));
+  rb_const_reset(cScreen, id_W, UINT2NUM(r.w));
+  rb_const_reset(cScreen, id_H, UINT2NUM(r.h));
 
   return Qnil;
 }
@@ -209,7 +215,7 @@ static VALUE Audio_s_load(VALUE self, VALUE path) {
   Mix_Chunk *chunk = Mix_LoadWAV(RSTRING_PTR(path));
 
   if (!chunk)
-    FAILURE("Audio.load");
+    AUDIO_FAILURE("Audio.load");
 
   return TypedData_Wrap_Struct(cAudio, &_Audio_type, chunk);
 }
@@ -283,7 +289,6 @@ static VALUE __new_key_event(VALUE klass, SDL_Event *event) {
   rb_ivar_set(obj, id_iv_press,   INT2BOOL(event->key.state == SDL_PRESSED)); // TODO: nuke?
   rb_ivar_set(obj, id_iv_sym,     INT2FIX(event->key.keysym.sym));
   rb_ivar_set(obj, id_iv_mod,     UINT2NUM(event->key.keysym.mod));
-  rb_ivar_set(obj, id_iv_unicode, UINT2NUM(event->key.keysym.unicode));
   return obj;
 }
 
@@ -333,12 +338,12 @@ static VALUE Key_s_press_p(VALUE mod, VALUE keysym) {
   UNUSED(mod);
   int sym = NUM2INT(keysym);
 
-  if (SDLK_FIRST >= sym || sym >= SDLK_LAST)
-    rb_raise(eSDLError, "%d is out of key", sym);
-
   if (!key_state)
     rb_raise(eSDLError,
              "You should call SDL::Key#scan before calling SDL::Key#press?");
+
+  if (0 >= sym || sym >= key_state_len)
+    rb_raise(eSDLError, "%d is out of key (%d)", sym, key_state_len);
 
   return INT2BOOL(key_state[sym]);
 }
@@ -346,7 +351,7 @@ static VALUE Key_s_press_p(VALUE mod, VALUE keysym) {
 static VALUE Key_s_scan(VALUE mod) {
   UNUSED(mod);
 
-  key_state = SDL_GetKeyState(NULL);
+  key_state = (Uint8 *) SDL_GetKeyboardState(&key_state_len);
   mod_state = SDL_GetModState();
 
   return Qnil;
@@ -401,58 +406,96 @@ static VALUE PixelFormat_map_rgba(VALUE self, VALUE r, VALUE g, VALUE b, VALUE a
                               NUM2UINT8(b), NUM2UINT8(a)));
 }
 
-static VALUE PixelFormat_get_rgb(VALUE self, VALUE pixel) {
+static VALUE PixelFormat_get_rgba(VALUE self, VALUE pixel) {
   DEFINE_SELF(PixelFormat, format, self);
-  Uint8 r, g, b;
+  Uint8 r, g, b, a;
 
-  SDL_GetRGB(NUM2UINT(pixel), format, &r, &g, &b);
+  SDL_GetRGBA(NUM2UINT(pixel), format, &r, &g, &b, &a);
 
-  return rb_ary_new3(3, UINT2NUM(r), UINT2NUM(g), UINT2NUM(b));
-}
-
-static VALUE PixelFormat_colorkey(VALUE self) {
-  DEFINE_SELF(PixelFormat, format, self);
-
-  return UINT2NUM(format->colorkey);
-}
-
-static VALUE PixelFormat_alpha(VALUE self) {
-  DEFINE_SELF(PixelFormat, format, self);
-
-  return UINT2NUM(format->alpha);
+  return rb_ary_new3(4, UINT2NUM(r), UINT2NUM(g), UINT2NUM(b), UINT2NUM(a));
 }
 
 //// SDL::Screen methods:
 
-static VALUE Screen_s_open(VALUE klass, VALUE w, VALUE h, VALUE bpp, VALUE flags) {
+static VALUE Screen_s_open(VALUE klass, VALUE w_, VALUE h_, VALUE bpp_, VALUE flags_) {
   UNUSED(klass);
-  SDL_Surface *screen;
+  SDL_Window   *window;
+  SDL_Renderer *renderer;
+  SDL_Surface  *surface;
 
-  screen = SDL_SetVideoMode(NUM2INT(w), NUM2INT(h), NUM2INT(bpp), NUM2UINT(flags));
+  int w        = NUM2INT(w_);
+  int h        = NUM2INT(h_);
+  int bpp      = NUM2INT(bpp_);
+  Uint32 flags = NUM2UINT32(flags_);
 
-  if (!screen)
-    rb_raise(eSDLError, "Couldn't set %dx%d %d bpp video mode: %s",
-             NUM2INT(w), NUM2INT(h), NUM2INT(bpp), SDL_GetError());
+  if (!bpp) bpp = 32; // TODO: remove bpp option and always be 32?
 
-  return TypedData_Wrap_Struct(cScreen, &_Surface_type, screen);
+  window = SDL_CreateWindow("", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+                            w, h,
+                            flags);
+  if (!window) FAILURE("Screen.open(CreateWindow)");
+
+  renderer = SDL_CreateRenderer(window, -1,
+                                SDL_RENDERER_PRESENTVSYNC|SDL_RENDERER_ACCELERATED);
+  if (!renderer) FAILURE("Screen.open(CreateRenderer)");
+
+  surface = SDL_CreateRGBSurfaceWithFormat(0, w, h, bpp,
+                                           SDL_PIXELFORMAT_RGBA32);
+  if (!surface) FAILURE("Screen.open(CreateRGBSurface)");
+
+  SDL_Texture *texture = SDL_CreateTexture(renderer,
+                                           SDL_PIXELFORMAT_RGBA32,
+                                           SDL_TEXTUREACCESS_STREAMING,
+                                           w, h);
+  if (!texture)
+    FAILURE("Screen.open(CreateTexture)");
+
+  SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
+  SDL_RenderSetLogicalSize(renderer, w, h);
+
+  // TODO: make this a cSurface? Moves Screen#flip to Surface#flip
+  VALUE vsurface  = TypedData_Wrap_Struct(cScreen,   &_Surface_type,  surface);
+  VALUE vwindow   = TypedData_Wrap_Struct(cWindow,   &_Window_type,   window);
+  VALUE vrenderer = TypedData_Wrap_Struct(cRenderer, &_Renderer_type, renderer);
+  VALUE vtexture  = TypedData_Wrap_Struct(cTexture,  &_Texture_type,  texture);
+
+  rb_ivar_set(vsurface, id_iv_renderer, vrenderer);
+  rb_ivar_set(vsurface, id_iv_texture,  vtexture);
+  rb_ivar_set(vsurface, id_iv_window,   vwindow);
+
+  return vsurface;
 }
 
 static VALUE Screen_flip(VALUE self) {
-  DEFINE_SELF(Surface, surface, self);
+  DEFINE_SELF(Surface,  surface,  self);
+  DEFINE_SELF(Renderer, renderer, rb_ivar_get(self, id_iv_renderer));
+  DEFINE_SELF(Texture,  texture,  rb_ivar_get(self, id_iv_texture));
 
-  if (SDL_Flip(surface) < 0)
-    FAILURE("Screen#flip");
+  // TODO: there's a note about this being for fairly static textures...
+  if (SDL_UpdateTexture(texture, NULL, surface->pixels, surface->pitch))
+    FAILURE("Screen#flip: SDL_UpdateTexture");
+  if (SDL_RenderClear(renderer))
+    FAILURE("Screen#flip: SDL_RenderClear");
+  if (SDL_RenderCopy(renderer, texture, NULL, NULL))
+    FAILURE("Screen#flip: SDL_RenderCopy");
+
+  SDL_RenderPresent(renderer);
+
+  return Qnil;
+}
+
+static VALUE Screen_set_title(VALUE self, VALUE title) {
+  DEFINE_SELF(Window, window, rb_ivar_get(self, id_iv_window));
+
+  ExportStringValue(title);
+
+  SDL_SetWindowTitle(window, StringValueCStr(title));
 
   return Qnil;
 }
 
 static VALUE Screen_update(VALUE self, VALUE x, VALUE y, VALUE w, VALUE h) {
-  DEFINE_SELF(Surface, surface, self);
-
-  SDL_UpdateRect(surface,
-                 NUM2SINT32(x), NUM2SINT32(y),
-                 NUM2UINT32(w), NUM2UINT32(h));
-
+  rb_raise(eSDLError, "Do not call Screen#update");
   return Qnil;
 }
 
@@ -465,6 +508,7 @@ static void _Surface_free(void* surface) {
 
 static void _Surface_mark(void* surface) {
   UNUSED(surface);
+  // TODO: might need to mark ivars? I don't think so tho
 }
 
 static size_t _Surface_memsize(const void *p) {
@@ -526,6 +570,17 @@ static VALUE Surface_s_load(VALUE klass, VALUE path) {
   return TypedData_Wrap_Struct(cSurface, &_Surface_type, surface);
 }
 
+static VALUE Surface_color_key(VALUE self) {
+  DEFINE_SELF(Surface, surface, self);
+
+  Uint32 colorkey = 0;
+
+  if (SDL_GetColorKey(surface, &colorkey))
+    rb_raise(eSDLError, "Couldn't get color_key: %s", SDL_GetError());
+
+  return UINT2NUM(colorkey);
+}
+
 static VALUE Surface_set_color_key(VALUE self, VALUE flag, VALUE key) {
   DEFINE_SELF(Surface, surface, self);
 
@@ -567,6 +622,13 @@ typedef void (*f_sxyrca)(SDL_Surface*,
                           Sint16, Sint16, Sint16,
                           Uint32, Uint8);
 
+static
+Uint8 my_GetAlpha(VALUE c, SDL_Surface* s) {
+  Uint8 q, a;
+  SDL_GetRGBA(NUM2UINT(c), s->format, &q, &q, &q, &a);
+  return a;
+}
+
 DEFINE_WRAP12(sge_Bezier)
 DEFINE_WRAP12(sge_AABezier)
 
@@ -581,10 +643,11 @@ static VALUE Surface_draw_bezier(VALUE self,
                                  VALUE cx2, VALUE cy2,
                                  VALUE x2,  VALUE y2,
                                  VALUE l,
-                                 VALUE c, VALUE a,
+                                 VALUE c,
                                  VALUE aa) {
   DEFINE_SELF(Surface, surface, self);
 
+  Uint8 a   = my_GetAlpha(c, surface);
   Uint8 idx = IDX2(SHOULD_BLEND(a), RTEST(aa));
 
   f_bezier[idx](surface,
@@ -594,7 +657,7 @@ static VALUE Surface_draw_bezier(VALUE self,
                 NUM2SINT16(x2),  NUM2SINT16(y2),
                 NUM2INT(l),
                 VALUE2COLOR(c, surface->format),
-                NUM2UINT8(a));
+                a);
 
   return Qnil;
 }
@@ -616,17 +679,19 @@ static f_sxyrca f_circle[] = { &wrap_sge_Circle,
 static VALUE Surface_draw_circle(VALUE self,
                                  VALUE x,  VALUE y,
                                  VALUE r,
-                                 VALUE c,  VALUE a,
+                                 VALUE c,
                                  VALUE aa, VALUE f) {
   DEFINE_SELF(Surface, surface, self);
 
+  Uint8 a   = my_GetAlpha(c, surface);
   Uint8 idx = IDX3(SHOULD_BLEND(a), RTEST(aa), RTEST(f));
 
+  // TODO: seems like SGE isn't keeping up with SDL's RGBA support
   f_circle[idx](surface,
                 NUM2SINT16(x), NUM2SINT16(y),
                 NUM2SINT16(r),
                 VALUE2COLOR(c, surface->format),
-                NUM2UINT8(a));
+                a);
 
   return Qnil;
 }
@@ -648,10 +713,11 @@ static f_sxyxyca f_ellipse[] = { &wrap_sge_Ellipse,
 static VALUE Surface_draw_ellipse(VALUE self,
                                   VALUE x,  VALUE y,
                                   VALUE rx, VALUE ry,
-                                  VALUE c,  VALUE a,
+                                  VALUE c,
                                   VALUE aa, VALUE f) {
   DEFINE_SELF(Surface, surface, self);
 
+  Uint8 a   = my_GetAlpha(c, surface);
   Uint8 idx = IDX3(SHOULD_BLEND(a), RTEST(aa), RTEST(f));
 
   f_ellipse[idx](surface,
@@ -660,7 +726,7 @@ static VALUE Surface_draw_ellipse(VALUE self,
                  NUM2SINT16(rx),
                  NUM2SINT16(ry),
                  VALUE2COLOR(c, surface->format),
-                 NUM2UINT8(a));
+                 a);
 
   return Qnil;
 }
@@ -676,9 +742,11 @@ static f_sxyxyca f_line[] = { &wrap_sge_Line,
 static VALUE Surface_draw_line(VALUE self,
                                VALUE x1, VALUE y1,
                                VALUE x2, VALUE y2,
-                               VALUE c, VALUE a,
+                               VALUE c,
                                VALUE aa) {
   DEFINE_SELF(Surface, surface, self);
+
+  Uint8 a = my_GetAlpha(c, surface);
 
   Uint8 idx = IDX2(SHOULD_BLEND(a), RTEST(aa));
 
@@ -704,7 +772,7 @@ static f_sxyxyca f_rect[] = { &wrap_sge_Rect,
 static VALUE Surface_draw_rect(VALUE self,
                                VALUE x_, VALUE y_,
                                VALUE w_, VALUE h_,
-                               VALUE c, VALUE a,
+                               VALUE c,
                                VALUE f) {
   DEFINE_SELF(Surface, surface, self);
 
@@ -712,11 +780,12 @@ static VALUE Surface_draw_rect(VALUE self,
   Sint16 y1 = NUM2SINT16(y_);
   Sint16 x2 = NUM2SINT16(w_) + x1;
   Sint16 y2 = NUM2SINT16(h_) + y1;
+  Uint8 a   = my_GetAlpha(c, surface);
   Uint8 idx = IDX2(SHOULD_BLEND(a), RTEST(f));
 
   f_rect[idx](surface, x1, y1, x2, y2,
               VALUE2COLOR(c, surface->format),
-              NUM2UINT8(a));
+              a);
 
   return Qnil;
 }
@@ -728,21 +797,6 @@ static VALUE Surface_fast_rect(VALUE self, VALUE x, VALUE y, VALUE w, VALUE h, V
 
   if (SDL_FillRect(surface, &rect, VALUE2COLOR(color, surface->format)) < 0)
     FAILURE("Surface#fast_rect");
-
-  return Qnil;
-}
-
-static VALUE Surface_flags(VALUE self) {
-  DEFINE_SELF(Surface, surface, self);
-
-  return UINT2NUM(surface->flags);
-}
-
-static VALUE Surface_set_alpha(VALUE self, VALUE flag, VALUE alpha) {
-  DEFINE_SELF(Surface, surface, self);
-
-  if (SDL_SetAlpha(surface, NUM2UINT(flag), NUM2UINT8(alpha)))
-    FAILURE("Surface#set_alpha");
 
   return Qnil;
 }
@@ -819,17 +873,15 @@ static VALUE Surface_transform(VALUE self, VALUE bgcolor, VALUE angle,
                                               NUM2FLT(angle),
                                               NUM2FLT(xscale),
                                               NUM2FLT(yscale),
-                                              NUM2UINT8(flags));
+                                              NUM2UINT8(flags)|SGE_TAA|SGE_TSAFE);
   if (!result)
     FAILURE("Surface#transform");
 
-  if (SDL_SetColorKey(result,
-                      SDL_SRCCOLORKEY|SDL_RLEACCEL,
-                      surface->format->colorkey) < 0)
-    FAILURE("Surface#transform(set_color_key)");
+  Uint8 alpha;
+  if (SDL_GetSurfaceAlphaMod(surface, &alpha))
+    FAILURE("Surface#transform(get_alpha)");
 
-
-  if (SDL_SetAlpha(result, SDL_SRCALPHA|SDL_RLEACCEL, surface->format->alpha))
+  if (SDL_SetSurfaceAlphaMod(result, alpha))
     FAILURE("Surface#transform(set_alpha)");
 
   return TypedData_Wrap_Struct(cSurface, &_Surface_type, result);
@@ -838,7 +890,52 @@ static VALUE Surface_transform(VALUE self, VALUE bgcolor, VALUE angle,
 static VALUE Surface_save(VALUE self, VALUE path) {
   DEFINE_SELF(Surface, surface, self);
 
-  return INT2NUM(SDL_SaveBMP(surface, RSTRING_PTR(path)));
+  return INT2NUM(IMG_SavePNG(surface, RSTRING_PTR(path)));
+}
+
+//// SDL::Renderer methods:
+
+static void _Renderer_free(void* renderer) {
+  if (is_quit) return;
+  if (renderer) SDL_DestroyRenderer(renderer);
+}
+
+static void _Renderer_mark(void* renderer) {
+  UNUSED(renderer);
+}
+
+static size_t _Renderer_memsize(const void *p) {
+  return p ? sizeof(void *) : 0; // HACK: SDL_Renderer is opaque
+}
+
+//// SDL::Texture methods:
+
+static void _Texture_free(void* texture) {
+  if (is_quit) return;
+  if (texture) SDL_DestroyTexture(texture);
+}
+
+static void _Texture_mark(void* texture) {
+  UNUSED(texture);
+}
+
+static size_t _Texture_memsize(const void *p) {
+  return p ? sizeof(void*) : 0; // HACK: SDL_Texture is opaque
+}
+
+//// SDL::Window methods:
+
+static void _Window_free(void* Window) {
+  if (is_quit) return;
+  if (Window) SDL_DestroyWindow(Window);
+}
+
+static void _Window_mark(void* Window) {
+  UNUSED(Window);
+}
+
+static size_t _Window_memsize(const void *p) {
+  return p ? sizeof(void *) : 0; // HACK: SDL_Window is opaque
 }
 
 //// SDL::TTFFont methods:
@@ -876,11 +973,16 @@ static VALUE Font_render(VALUE self, VALUE dst, VALUE text, VALUE c) {
   DEFINE_SELF(Surface, surface, dst);
 
   SDL_Surface *result;
+  SDL_Color fg;
 
-  SDL_Color fg = sge_GetRGB(surface, VALUE2COLOR(c, surface->format));
+  SDL_GetRGBA(VALUE2COLOR(c, surface->format), surface->format,
+              &(fg.r), &(fg.g), &(fg.b), &(fg.a));
 
   ExportStringValue(text);
   result = TTF_RenderUTF8_Blended(font, StringValueCStr(text), fg);
+
+  if (!result)
+    TTF_FAILURE("Font.render");
 
   if (result) return TypedData_Wrap_Struct(cSurface, &_Surface_type, result);
   return Qnil;
@@ -909,25 +1011,12 @@ static VALUE Font_text_size(VALUE self, VALUE text) {
   }
 }
 
-//// SDL::WM methods:
-
-static VALUE WM_s_set_caption(VALUE mod, VALUE title, VALUE icon) {
-  UNUSED(mod);
-  ExportStringValue(title);
-  ExportStringValue(icon);
-
-  SDL_WM_SetCaption(StringValueCStr(title), StringValueCStr(icon));
-
-  return Qnil;
-}
-
 // The Rest...
 
 void Init_sdl() {
 
   mSDL         = rb_define_module("SDL");
   mKey         = rb_define_module_under(mSDL, "Key");
-  mWM          = rb_define_module_under(mSDL, "WM");
   mMouse       = rb_define_module_under(mSDL, "Mouse");
 
   cAudio        = rb_define_class_under(mSDL, "Audio",        rb_cData);
@@ -938,6 +1027,9 @@ void Init_sdl() {
   cTTFFont      = rb_define_class_under(mSDL, "TTF",          rb_cData); // TODO: Font
 
   cScreen       = rb_define_class_under(mSDL, "Screen",       cSurface);
+  cRenderer     = rb_define_class_under(mSDL, "Renderer",     cSurface);
+  cWindow       = rb_define_class_under(mSDL, "Window",       cSurface);
+  cTexture      = rb_define_class_under(mSDL, "Texture",      cSurface);
 
   cEventQuit   = rb_define_class_under(cEvent, "Quit", cEvent);
   cEventKeydown = rb_define_class_under(cEvent, "Keydown", cEvent);
@@ -971,7 +1063,6 @@ void Init_sdl() {
   rb_define_attr(cEventKeydown, "press",   1, 1);
   rb_define_attr(cEventKeydown, "sym",     1, 1);
   rb_define_attr(cEventKeydown, "mod",     1, 1);
-  rb_define_attr(cEventKeydown, "unicode", 1, 1);
 
   rb_define_attr(cEventKeyup, "press",   1, 1); // TODO: refactor, possibly subclass
   rb_define_attr(cEventKeyup, "sym",     1, 1);
@@ -1005,15 +1096,14 @@ void Init_sdl() {
 
   //// SDL::PixelFormat methods:
 
-  rb_define_method(cPixelFormat, "get_rgb",  PixelFormat_get_rgb, 1);
+  rb_define_method(cPixelFormat, "get_rgba", PixelFormat_get_rgba, 1);
   rb_define_method(cPixelFormat, "map_rgba", PixelFormat_map_rgba, 4);
-  rb_define_method(cPixelFormat, "colorkey", PixelFormat_colorkey, 0);
-  rb_define_method(cPixelFormat, "alpha", PixelFormat_alpha, 0);
 
   //// SDL::Screen methods:
 
   rb_define_singleton_method(cScreen, "open", Screen_s_open, 4);
   rb_define_method(cScreen, "flip", Screen_flip, 0);
+  rb_define_method(cScreen, "title=", Screen_set_title, 1);
   rb_define_method(cScreen, "update", Screen_update, 4);
 
   id_W = rb_intern("W");
@@ -1026,12 +1116,13 @@ void Init_sdl() {
   rb_define_singleton_method(cSurface, "blit", Surface_s_blit, 8);
   rb_define_singleton_method(cSurface, "new", Surface_s_new, 3);
   rb_define_singleton_method(cSurface, "load", Surface_s_load, 1);
-  rb_define_method(cSurface, "set_color_key",  Surface_set_color_key, 2);
-  rb_define_method(cSurface, "draw_bezier",  Surface_draw_bezier, 12);
-  rb_define_method(cSurface, "draw_circle",  Surface_draw_circle,  7);
-  rb_define_method(cSurface, "draw_ellipse", Surface_draw_ellipse, 8);
-  rb_define_method(cSurface, "draw_line",    Surface_draw_line,    7);
-  rb_define_method(cSurface, "draw_rect",    Surface_draw_rect,    7);
+  rb_define_method(cSurface, "color_key",     Surface_color_key, 0);
+  rb_define_method(cSurface, "set_color_key", Surface_set_color_key, 2);
+  rb_define_method(cSurface, "draw_bezier",  Surface_draw_bezier, 11);
+  rb_define_method(cSurface, "draw_circle",  Surface_draw_circle,  6);
+  rb_define_method(cSurface, "draw_ellipse", Surface_draw_ellipse, 7);
+  rb_define_method(cSurface, "draw_line",    Surface_draw_line,    6);
+  rb_define_method(cSurface, "draw_rect",    Surface_draw_rect,    6);
   rb_define_method(cSurface, "fast_rect",    Surface_fast_rect,    5);
   rb_define_method(cSurface, "format",       Surface_format,       0);
   rb_define_method(cSurface, "h",            Surface_h,            0);
@@ -1041,8 +1132,6 @@ void Init_sdl() {
   rb_define_method(cSurface, "[]=",          Surface_index_equals, 3);
   rb_define_method(cSurface, "transform",    Surface_transform,    5);
   rb_define_method(cSurface, "save",         Surface_save,         1);
-  rb_define_method(cSurface, "flags",        Surface_flags,        0);
-  rb_define_method(cSurface, "set_alpha",    Surface_set_alpha,    2);
 
   //// SDL::TTFFont methods:
 
@@ -1053,15 +1142,10 @@ void Init_sdl() {
   rb_define_method(cTTFFont, "draw",   Font_draw, 5);
   rb_define_method(cTTFFont, "text_size", Font_text_size, 1);
 
-  //// SDL::WM methods:
-
-  rb_define_module_function(mWM, "set_caption", WM_s_set_caption, 2);
-
   //// Other Init Actions:
 
   sge_Lock_ON();
   sge_Update_OFF();
-  SDL_EnableUNICODE(1);
 
   for (int i=0; i < SDL_NUMEVENTS; ++i)
     event_creators[i] = Event__null;
@@ -1076,42 +1160,47 @@ void Init_sdl() {
   // event_creators[SDL_SYSWMEVENT]      = Event__syswm;
   // event_creators[SDL_VIDEORESIZE]     = Event__videoresize;
 
+  // TODO: maybe pause/unpause automatically instead of chewing CPU?
+  // SDL_APP_DIDENTERBACKGROUND
+  // SDL_APP_DIDENTERFOREGROUND
+
   rb_set_end_proc(sdl__quit, 0);
 
   //// Simple Mapped Constants:
 
+  INIT_ID(renderer);
+  INIT_ID(window);
+  INIT_ID(texture);
   INIT_ID(button);
   INIT_ID(mod);
   INIT_ID(press);
   INIT_ID(state);
   INIT_ID(sym);
-  INIT_ID(unicode);
   INIT_ID(x);
   INIT_ID(xrel);
   INIT_ID(y);
   INIT_ID(yrel);
 
   #define DC(n) rb_define_const(mSDL, #n, UINT2NUM(SDL_##n))
-  DC(DOUBLEBUF);
-  DC(FULLSCREEN);
-  DC(HWSURFACE);
   DC(INIT_EVERYTHING);
-  DC(INIT_VIDEO);
-  DC(RLEACCEL);
-  DC(SRCALPHA);
-  DC(SRCCOLORKEY);
-  DC(SWSURFACE);
+  DC(INIT_VIDEO); // TODO: phase out? it's in the tests...
+  DC(TRUE);
 
-  // DC("ANYFORMAT");
-  // DC("ASYNCBLIT");
-  // DC("HWACCEL");
-  // DC("HWPALETTE");
-  // DC("NOFRAME");
-  // DC("OPENGL");
-  // DC("OPENGLBLIT");
-  // DC("PREALLOC");
-  // DC("RESIZABLE");
-  // DC("RLEACCELOK");
+  #define DW(n) rb_define_const(mSDL, #n, UINT2NUM(SDL_WINDOW_##n))
+  DW(FULLSCREEN);
+  DW(OPENGL);
+  DW(SHOWN);
+  DW(HIDDEN);
+  DW(BORDERLESS);
+  DW(RESIZABLE);
+  DW(MINIMIZED);
+  DW(MAXIMIZED);
+  DW(INPUT_GRABBED);
+  DW(INPUT_FOCUS);
+  DW(MOUSE_FOCUS);
+  DW(FULLSCREEN_DESKTOP);
+  DW(FOREIGN);
+  DW(ALLOW_HIGHDPI);
 
   //// Keyboard Constants
 
@@ -1120,9 +1209,8 @@ void Init_sdl() {
   #define DK(n)      _KEY(#n,      SDLK_##n)
   #define DKP(n)     _KEY("K"#n,   SDLK_##n)
   #define DM(n)      _KEY("MOD_"#n, KMOD_##n)
-  #define DR(n)      _KEY("DEFAULT_REPEAT_"#n, SDL_DEFAULT_REPEAT_##n)
 
-  DK(UNKNOWN);   DK(FIRST);      DK(BACKSPACE); DK(TAB);       DK(CLEAR);
+  DK(UNKNOWN);                   DK(BACKSPACE); DK(TAB);       DK(CLEAR);
   DK(RETURN);    DK(PAUSE);      DK(ESCAPE);    DK(SPACE);     DK(EXCLAIM);
   DK(QUOTEDBL);  DK(HASH);       DK(DOLLAR);    DK(AMPERSAND); DK(QUOTE);
   DK(LEFTPAREN); DK(RIGHTPAREN); DK(ASTERISK);  DK(PLUS);      DK(COMMA);
@@ -1142,31 +1230,9 @@ void Init_sdl() {
   KEY("U", u); KEY("V", v); KEY("W", w); KEY("X", x); KEY("Y", y);
   KEY("Z", z);
 
-  // International keyboard syms
-  DK(WORLD_0);  DK(WORLD_1);  DK(WORLD_2);  DK(WORLD_3);  DK(WORLD_4);
-  DK(WORLD_5);  DK(WORLD_6);  DK(WORLD_7);  DK(WORLD_8);  DK(WORLD_9);
-  DK(WORLD_10); DK(WORLD_11); DK(WORLD_12); DK(WORLD_13); DK(WORLD_14);
-  DK(WORLD_15); DK(WORLD_16); DK(WORLD_17); DK(WORLD_18); DK(WORLD_19);
-  DK(WORLD_20); DK(WORLD_21); DK(WORLD_22); DK(WORLD_23); DK(WORLD_24);
-  DK(WORLD_25); DK(WORLD_26); DK(WORLD_27); DK(WORLD_28); DK(WORLD_29);
-  DK(WORLD_30); DK(WORLD_31); DK(WORLD_32); DK(WORLD_33); DK(WORLD_34);
-  DK(WORLD_35); DK(WORLD_36); DK(WORLD_37); DK(WORLD_38); DK(WORLD_39);
-  DK(WORLD_40); DK(WORLD_41); DK(WORLD_42); DK(WORLD_43); DK(WORLD_44);
-  DK(WORLD_45); DK(WORLD_46); DK(WORLD_47); DK(WORLD_48); DK(WORLD_49);
-  DK(WORLD_50); DK(WORLD_51); DK(WORLD_52); DK(WORLD_53); DK(WORLD_54);
-  DK(WORLD_55); DK(WORLD_56); DK(WORLD_57); DK(WORLD_58); DK(WORLD_59);
-  DK(WORLD_60); DK(WORLD_61); DK(WORLD_62); DK(WORLD_63); DK(WORLD_64);
-  DK(WORLD_65); DK(WORLD_66); DK(WORLD_67); DK(WORLD_68); DK(WORLD_69);
-  DK(WORLD_70); DK(WORLD_71); DK(WORLD_72); DK(WORLD_73); DK(WORLD_74);
-  DK(WORLD_75); DK(WORLD_76); DK(WORLD_77); DK(WORLD_78); DK(WORLD_79);
-  DK(WORLD_80); DK(WORLD_81); DK(WORLD_82); DK(WORLD_83); DK(WORLD_84);
-  DK(WORLD_85); DK(WORLD_86); DK(WORLD_87); DK(WORLD_88); DK(WORLD_89);
-  DK(WORLD_90); DK(WORLD_91); DK(WORLD_92); DK(WORLD_93); DK(WORLD_94);
-  DK(WORLD_95);
-
   // Numeric keypad
-  DK(KP0); DK(KP1); DK(KP2); DK(KP3); DK(KP4);
-  DK(KP5); DK(KP6); DK(KP7); DK(KP8); DK(KP9);
+  DK(KP_0); DK(KP_1); DK(KP_2); DK(KP_3); DK(KP_4);
+  DK(KP_5); DK(KP_6); DK(KP_7); DK(KP_8); DK(KP_9);
 
   DK(KP_PERIOD); DK(KP_DIVIDE); DK(KP_MULTIPLY); DK(KP_MINUS);
   DK(KP_PLUS);   DK(KP_ENTER);  DK(KP_EQUALS);
@@ -1180,20 +1246,14 @@ void Init_sdl() {
   DK(F10); DK(F11); DK(F12); DK(F13); DK(F14); DK(F15);
 
   // Key state modifier keys
-  DK(NUMLOCK); DK(CAPSLOCK); DK(SCROLLOCK); DK(RSHIFT); DK(LSHIFT); DK(RCTRL);
-  DK(LCTRL); DK(RALT); DK(LALT); DK(RMETA); DK(LMETA); DK(LSUPER); DK(RSUPER);
-  DK(MODE);
+  DK(CAPSLOCK); DK(SCROLLLOCK); DK(RSHIFT); DK(LSHIFT); DK(RCTRL);
+  DK(LCTRL); DK(RALT); DK(LALT); DK(RGUI); DK(LGUI); DK(MODE);
 
   // Miscellaneous function keys
-  DK(HELP); DK(PRINT); DK(SYSREQ); DK(BREAK);
-  DK(MENU); DK(POWER); DK(EURO); DK(LAST);
+  DK(HELP); DK(SYSREQ); DK(MENU); DK(POWER);
 
   // key mods
   DM(NONE);  DM(LSHIFT); DM(RSHIFT); DM(LCTRL); DM(RCTRL); DM(LALT);     DM(RALT);
-  DM(LMETA); DM(RMETA);  DM(NUM);    DM(CAPS);  DM(MODE);  DM(RESERVED); DM(CTRL);
-  DM(SHIFT); DM(ALT);    DM(META);
-
-  // key repeat constants
-  DR(DELAY);
-  DR(INTERVAL);
+  DM(LGUI);  DM(RGUI);   DM(NUM);    DM(CAPS);  DM(MODE);  DM(RESERVED); DM(CTRL);
+  DM(SHIFT); DM(ALT);    DM(GUI);
 }

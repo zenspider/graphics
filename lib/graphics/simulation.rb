@@ -52,11 +52,8 @@ class Graphics::AbstractSimulation
   # A hash of color names to their values.
   attr_accessor :color
 
-  # A hash of alpha values per color, because SDL 1.2 sucks
-  attr_accessor :alpha
-
-  # A hash of color values to their rgb values. For text, apparently. *shrug*
-  attr_accessor :rgb
+  # A hash of color values to their rgba values. For text, apparently. *shrug*
+  attr_accessor :rgba # TODO: remove?
 
   # Number of update iterations per drawing tick.
   attr_accessor :iter_per_tick
@@ -77,11 +74,11 @@ class Graphics::AbstractSimulation
   #
   # This also names a bunch colors and hues for convenience.
 
-  def initialize w=nil, h=nil, bpp=0, name=self.class.name, full=false
-    # SDL.init SDL::INIT_VIDEO
-
+  def initialize w=nil, h=nil, bpp=nil, name=self.class.name, full=false
     w ||= SDL::Screen::W/2
     h ||= SDL::Screen::H/2
+
+    warn "Do NOT pass bpp to Simulation anymore" if bpp # TODO: raise
 
     full = full ? SDL::FULLSCREEN : 0
 
@@ -89,14 +86,17 @@ class Graphics::AbstractSimulation
 
     self.font = find_font(DEFAULT_FONT, 32)
 
-    SDL::WM.set_caption name, name
+    name ||= "Unknown"
+    name = name.gsub(/[A-Z]/, ' \0').strip
 
-    self.screen = SDL::Screen.open w, h, bpp, self.class::SCREEN_FLAGS|full
-    self.w, self.h = screen.w, screen.h
+    self.screen = SDL::Screen.open w, h, 32, self.class::SCREEN_FLAGS|full
+    self.w, self.h = w, h # screen.w, screen.h
+
+    screen.title = name
 
     self.color = {}
-    self.alpha = {}
-    self.rgb   = Hash.new { |hash, k| hash[k] = screen.format.get_rgb(color[k]) }
+    # self.alpha = {}
+    self.rgba  = Hash.new { |hash, k| hash[k] = screen.format.get_rgba(color[k]) }
     self.paused = false
 
     self.iter_per_tick = 1
@@ -196,7 +196,6 @@ class Graphics::AbstractSimulation
   # Name a color w/ rgba values.
 
   def register_color name, r, g, b, a = 255
-    alpha[name] = a # HACK to wark around SDL 1.2's treatment of alpha
     color[name] = screen.format.map_rgba r, g, b, a
   end
 
@@ -421,7 +420,7 @@ class Graphics::AbstractSimulation
 
   def line x1, y1, x2, y2, c, aa = true
     h = self.h
-    screen.draw_line x1, h-y1-1, x2, h-y2-1, color[c], alpha[c], aa
+    screen.draw_line x1, h-y1-1, x2, h-y2-1, color[c], aa
   end
 
   ##
@@ -485,8 +484,7 @@ class Graphics::AbstractSimulation
 
   def rect x, y, w, h, c, fill = false
     y = self.h-y-h-1
-
-    screen.draw_rect x, y, w, h, color[c], alpha[c], fill
+    screen.draw_rect x, y, w, h, color[c], fill
   end
 
   ##
@@ -494,7 +492,7 @@ class Graphics::AbstractSimulation
 
   def circle x, y, r, c, fill = false, aa = true
     y = h-y-1
-    screen.draw_circle x, y, r, color[c], alpha[c], aa, fill
+    screen.draw_circle x, y, r, color[c], aa, fill
   end
 
   ##
@@ -502,7 +500,7 @@ class Graphics::AbstractSimulation
 
   def ellipse x, y, w, h, c, fill = false, aa = true
     y = self.h-y-1
-    screen.draw_ellipse x, y, w, h, color[c], alpha[c], aa, fill
+    screen.draw_ellipse x, y, w, h, color[c], aa, fill
   end
 
   ##
@@ -512,7 +510,7 @@ class Graphics::AbstractSimulation
   def bezier x1, y1, cx1, cy1, cx2, cy2, x2, y2, c, l = 7, aa = true
     h = self.h
     screen.draw_bezier(x1, h-y1-1, cx1, h-cy1, cx2, h-cy2, x2, h-y2-1,
-                       l, color[c], alpha[c], aa)
+                       l, color[c], aa)
   end
 
   ## Text
@@ -597,7 +595,8 @@ class Graphics::AbstractSimulation
   # Draw a bitmap centered at x/y with optional angle, x/y scale, and flags.
 
   def blit src, x, y, a° = 0, xscale = 1, yscale = 1, flags = 0
-    img = src.transform src.format.colorkey, -a°, xscale, yscale, flags
+    bg = color[self.class::CLEAR_COLOR]
+    img = src.transform bg, -a°, xscale, yscale, flags
 
     SDL::Surface.blit img, 0, 0, 0, 0, screen, x-img.w/2, h-y-img.h/2
   end
@@ -606,14 +605,15 @@ class Graphics::AbstractSimulation
   # Draw a bitmap at x/y with optional angle, x/y scale, and flags.
 
   def put src, x, y, a° = 0, xscale = 1, yscale = 1, flags = 0
-    img = src.transform src.format.colorkey, -a°, xscale, yscale, flags
+    bg = color[self.class::CLEAR_COLOR]
+    img = src.transform bg, -a°, xscale, yscale, flags
 
     # why x-1? because transform adds a pixel to all sides even if a°==0
     SDL::Surface.blit img, 0, 0, 0, 0, screen, x-1, h-y-img.h
   end
 
   ##
-  # Save the current screen to a bmp
+  # Save the current screen to a png.
 
   def save path
     screen.save path
@@ -633,7 +633,7 @@ class Graphics::AbstractSimulation
     self.screen = new_screen
     yield if block_given?
 
-    new_screen.set_color_key SDL::SRCCOLORKEY, 0
+    new_screen.set_color_key SDL::TRUE, 0
 
     new_screen
   ensure
@@ -661,7 +661,7 @@ end
 # + Ball::View.draw takes a window and a ball and draws it.
 
 class Graphics::Simulation < Graphics::AbstractSimulation
-  SCREEN_FLAGS = SDL::HWSURFACE|SDL::DOUBLEBUF
+  SCREEN_FLAGS = 0
 end
 
 ##
@@ -671,16 +671,17 @@ end
 # See AbstractSimulation for most methods.
 
 class Graphics::Drawing < Graphics::AbstractSimulation
-  SCREEN_FLAGS = SDL::HWSURFACE
+  SCREEN_FLAGS = 0
 
   def initialize(*a)
     super
+
+    raise "Unknown if this class can continue under SDL2"
 
     clear
   end
 
   def draw_and_flip n
-    screen.update 0, 0, 0, 0
-    # no flip
+    # no flip or draw
   end
 end

@@ -74,7 +74,7 @@ class WalkerSimulation < Graphics::Simulation
   attr_accessor :ps, :body_img, :cmap
 
   def initialize
-    super 850, 850, 16, "Walker"
+    super 850, 850
 
     self.ps = populate Person
     register_bodies ps
