@@ -426,14 +426,14 @@ class Graphics::AbstractSimulation
   ##
   # Draw a horizontal line from x1 to x2 at y in color c.
 
-  def hline y, c, x1 = 0, x2 = h
+  def hline y, c, x1 = 0, x2 = w
     line x1, y, x2, y, c
   end
 
   ##
   # Draw a vertical line from y1 to y2 at y in color c.
 
-  def vline x, c, y1 = 0, y2 = w
+  def vline x, c, y1 = h-1, y2 = 0
     line x, y1, x, y2, c
   end
 

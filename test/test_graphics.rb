@@ -6,7 +6,7 @@ require "graphics"
 class FakeSimulation < Graphics::Simulation
   def initialize
     SDL.init SDL::INIT_VIDEO # HACK? Used to be in Simulation#initialize
-    super 100, 100
+    super 300, 200
   end
 end
 
@@ -345,7 +345,7 @@ class TestSimulation < Minitest::Test
     t.angle 50, 50, 45,  10, :white
 
     exp << [:draw_line, 50, h-50, 60.0,   h-50.0,   white, true]
-    exp << [:draw_line, 50, 49,   50.0,   h-60.0,   white, true] # why 49?
+    exp << [:draw_line, 50, h-50, 50.0,   h-60.0,   white, true]
     exp << [:draw_line, 50, h-50, 40.0,   h-50.0,   white, true]
     exp << [:draw_line, 50, h-50, 50.0,   h-40.0,   white, true]
     exp << [:draw_line, 50, h-50, 50+d45, h-50-d45, white, true]
@@ -411,7 +411,7 @@ make_my_diffs_pretty!
   def test_hline
     t.hline 42, :white
     h = t.h - 1
-    exp << [:draw_line, 0, h-42, 100, h-42, t.color[:white], true]
+    exp << [:draw_line, 0, h-42, 300, h-42, t.color[:white], true]
 
     assert_equal exp, t.screen.data
   end
@@ -477,10 +477,15 @@ make_my_diffs_pretty!
   # def test_update
   #   raise NotImplementedError, 'Need to write test_update'
   # end
-  #
-  # def test_vline
-  #   raise NotImplementedError, 'Need to write test_vline'
-  # end
+
+  def test_vline
+    t.vline 42, :white
+    h = t.h - 1
+
+    exp << [:draw_line, 42, 0, 42, h, t.color[:white], true]
+
+    assert_equal exp, t.screen.data
+  end
 
   def test_from_hsl
     assert_equal [  0,   0,   0], t.from_hsl(  0, 0, 0)    # Black
