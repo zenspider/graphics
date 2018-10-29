@@ -203,7 +203,9 @@ class SPH
   end
 end
 
-class SimulationWindow < Graphics::Simulation
+class FluidDynamics < Graphics::Simulation
+  include ShowFPS
+
   WINSIZE = 500
 
   attr_reader :simulation, :s
@@ -223,7 +225,7 @@ class SimulationWindow < Graphics::Simulation
   end
 
   def draw time
-    clear
+    super
 
     simulation.particles.each do |particle|
       pos = particle.position * s
@@ -236,10 +238,8 @@ class SimulationWindow < Graphics::Simulation
       # Velocity vectors
       p2 = pos + vel
       line(pos.x, pos.y, p2.x, p2.y, :red)
-
-      fps time
     end
   end
 end
 
-SimulationWindow.new.run
+FluidDynamics.new.run

@@ -125,6 +125,12 @@ class Particle < Graphics::Body
   ######################################################################
   # Helpers
 
+  ##
+  # A weighting function (kernel) for the contribution of each neighbor
+  # to a particle's density. Forms a nice smooth gradient from the center
+  # of a particle to H, where it's 0
+  #
+
   def weight r, h
     len_r = r.magnitude
 
@@ -135,6 +141,12 @@ class Particle < Graphics::Body
     end
   end
 
+  ##
+  # Gradient ( that is, V(dx, dy) ) of a weighting function for
+  # a particle's pressure. This weight function is spiky (not flat or
+  # smooth at x=0) so particles close together repel strongly.
+  #
+
   def gradient_weight_spiky r, h
     len_r = r.magnitude
 
@@ -144,6 +156,11 @@ class Particle < Graphics::Body
       V::ZERO
     end
   end
+
+  ##
+  # The laplacian of a weighting function that tends towards infinity when
+  # approching 0 (slows down particles moving faster than their neighbors)
+  #
 
   def laplacian_weight_viscosity r, h
     len_r = r.magnitude
@@ -162,7 +179,9 @@ class Float
   end
 end
 
-class FluidDynamics < Graphics::Simulation
+class FluidDynamics2 < Graphics::Simulation
+  include ShowFPS
+
   WINSIZE = 500
   SCALE = 15
   S = WINSIZE / SCALE
@@ -187,12 +206,6 @@ class FluidDynamics < Graphics::Simulation
     register_bodies particles
   end
 
-  def draw n
-    super
-
-    fps n
-  end
-
   def update n
     particles.each(&:clear)
     particles.each(&:calculate_density)
@@ -201,4 +214,4 @@ class FluidDynamics < Graphics::Simulation
   end
 end
 
-FluidDynamics.new.run
+FluidDynamics2.new.run
