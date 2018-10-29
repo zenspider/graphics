@@ -10,6 +10,7 @@ module SDL
   class Renderer
     attr_reader :format
     attr_reader :surface
+    attr_reader :window
 
     def title= s
       @window.title = s
@@ -466,14 +467,21 @@ class Graphics::AbstractSimulation
   # Draw a rect at x/y with w by h dimensions in color c. Ignores blending.
 
   def fast_rect x, y, w, h, c
-    renderer.fast_rect x, self.h-y-h, w, h, color[c]
+    y = self.h-y-h # TODO: -1???
+    renderer.fast_rect x, y, w, h, color[c]
   end
 
   ##
-  # Draw a point at x/y w/ color c.
+  # Read or write a color to x/y. If c is given, write, otherwise read.
+  #
+  # Reading is pretty slow. Try to avoid.
 
-  def point x, y, c
-    renderer[x, h-y-1] = color[c]
+  def point x, y, c = nil
+    if c then
+      renderer[x, h-y-1] = color[c]
+    else
+      renderer[x, h-y-1]
+    end
   end
 
   ##
@@ -489,7 +497,7 @@ class Graphics::AbstractSimulation
   # Draw a rect at x/y with w by h dimensions in color c.
 
   def rect x, y, w, h, c, fill = false
-    y = self.h-y-h-1
+    y = self.h-y-h # TODO: -1???
     renderer.draw_rect x, y, w, h, color[c], fill
   end
 
@@ -514,7 +522,7 @@ class Graphics::AbstractSimulation
   # cx1/cy1 & cx2/cy2 in color c.
 
   def bezier *points, c
-    h = self.h
+    h = self.h-1
 
     # TODO: there is probably a cleaner way... or move entirely into C
     xs, ys = points.each_slice(2).to_a.transpose
@@ -610,7 +618,7 @@ class Graphics::AbstractSimulation
   # Draw a bitmap at x/y with optional angle, x/y scale, and flags.
 
   def put src, x, y, a° = nil, xscale = nil, yscale = nil, flags = nil
-    renderer.blit src, x-1, h-y-src.h, a°, xscale, yscale, false
+    renderer.blit src, x, h-y-src.h, a°, xscale, yscale, false
   end
 
   ##
@@ -633,7 +641,7 @@ class Graphics::AbstractSimulation
 
     yield if block_given?
 
-    new_renderer.surface # or texture?
+    new_renderer.surface
   ensure
     self.renderer  = old_renderer
     self.w, self.h = old_w, old_h
@@ -671,15 +679,40 @@ end
 class Graphics::Drawing < Graphics::AbstractSimulation
   SCREEN_FLAGS = 0
 
+  attr_accessor :texture
+
   def initialize(*a)
     super
 
-    raise "Unknown if this class can continue under SDL2"
+    self.texture = renderer.new_texture
 
-    clear
+    draw_on texture do
+      clear
+      yield if block_given?
+    end
   end
 
-  def draw_and_flip n
-    # no flip or draw
+  ##
+  # Temporarily render to a texture instead of the renderer's window,
+  # then copy that texture to the renderer and present it.
+
+  def draw_on texture
+    renderer.target = texture
+
+    yield if block_given?
+  ensure
+    renderer.target = nil
+    renderer.copy_texture texture
+    renderer.present
+  end
+
+  def pre_draw n # :nodoc:
+    # no clear
+  end
+
+  def draw_and_flip n # :nodoc:
+    draw_on texture do
+      self.draw n
+    end
   end
 end

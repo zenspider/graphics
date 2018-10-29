@@ -305,7 +305,11 @@ class TestNumeric < Minitest::Test
 end
 
 class TestSimulation < Minitest::Test
-  # make_my_diffs_pretty!
+  class FakePixelFormat < SDL::PixelFormat
+    def initialize
+
+    end
+  end
 
   class FakeSimulation < ::FakeSimulation
     def initialize
@@ -313,29 +317,46 @@ class TestSimulation < Minitest::Test
 
       s = []
 
+      sc = s.singleton_class
+
+      sc.send :undef_method, :clear
+      sc.send :undef_method, :[]=
+
       def s.method_missing *a
         @data ||= []
         @data << a
+        self
       end
 
       def s.data
         @data
       end
 
+      pf = self.renderer.format
+
+      s.instance_variable_set :@format, pf
+
       self.renderer = s
     end
   end
 
-  attr_accessor :t, :white, :exp
+  attr_accessor :t, :white, :black, :exp, :h
 
   def setup
     self.t = FakeSimulation.new
     self.white = t.color[:white]
+    self.black = t.color[:black]
     self.exp = []
+    self.h = t.h-1
+  end
+
+  def assert_drawing *calls
+    exp.concat calls
+
+    assert_equal exp, t.renderer.data
   end
 
   def test_angle
-    h = t.h-1
     d45 = 10 * Math.sqrt(2) / 2
 
     t.angle 50, 50, 0,   10, :white
@@ -344,76 +365,107 @@ class TestSimulation < Minitest::Test
     t.angle 50, 50, 270, 10, :white
     t.angle 50, 50, 45,  10, :white
 
-    exp << [:draw_line, 50, h-50, 60.0,   h-50.0,   white, true]
-    exp << [:draw_line, 50, h-50, 50.0,   h-60.0,   white, true]
-    exp << [:draw_line, 50, h-50, 40.0,   h-50.0,   white, true]
-    exp << [:draw_line, 50, h-50, 50.0,   h-40.0,   white, true]
-    exp << [:draw_line, 50, h-50, 50+d45, h-50-d45, white, true]
-
-    assert_equal exp, t.renderer.data
+    assert_drawing([:draw_line, 50, h-50, 60.0,   h-50,     white, true],
+                   [:draw_line, 50, h-50, 50.0,   h-60,     white, true],
+                   [:draw_line, 50, h-50, 40.0,   h-50,     white, true],
+                   [:draw_line, 50, h-50, 50.0,   h-40,     white, true],
+                   [:draw_line, 50, h-50, 50+d45, h-50-d45, white, true])
   end
 
-  # def test_bezier
-  #   raise NotImplementedError, 'Need to write test_bezier'
-  # end
-  #
-  # def test_blit
-  #   raise NotImplementedError, 'Need to write test_blit'
-  # end
-  #
-  # def test_circle
-  #   raise NotImplementedError, 'Need to write test_circle'
-  # end
-  #
-  # def test_clear
-  #   raise NotImplementedError, 'Need to write test_clear'
-  # end
-  #
-  # def test_debug
-  #   raise NotImplementedError, 'Need to write test_debug'
-  # end
-  #
-  # def test_draw
-  #   raise NotImplementedError, 'Need to write test_draw'
-  # end
-  #
-  # def test_draw_and_flip
-  #   raise NotImplementedError, 'Need to write test_draw_and_flip'
-  # end
+  def test_bezier
+    t.bezier 50, 50, 25, 25, 100, 25, :white
 
-make_my_diffs_pretty!
+    assert_drawing [:draw_bezier, [50, 25, 100], [h-50, h-25, h-25], 5, white]
+  end
+
+  def test_blit
+    s = t.render_text "blah", :white
+
+    assert_instance_of SDL::Surface, s
+    assert_equal [76, 38], [s.w, s.h]
+
+    t.blit s, 100, 10
+
+    assert_drawing [:blit, s, 100-(76/2), h-(38/2)-10+1, nil, nil, nil, :center]
+  end
+
+  def test_put
+    s = t.render_text "blah", :white
+
+    assert_instance_of SDL::Surface, s
+    assert_equal [76, 38], [s.w, s.h]
+
+    t.put s, 10, 10
+
+    # TODO: extra -1 / +1 doesn't make sense
+    assert_drawing [:blit, s, 10, h-38-10+1, nil, nil, nil, false]
+  end
+
+  def test_circle
+    t.circle 50, 50, 25, :white
+    t.circle 50, 50, 25, :white, :filled
+
+    t.circle 50, 50, 25, :white, false, false
+    t.circle 50, 50, 25, :white, :filled, false
+
+    assert_drawing([:draw_circle, 50, 149, 25, white, true, false],
+                   [:draw_circle, 50, 149, 25, white, true, :filled],
+                   [:draw_circle, 50, 149, 25, white, false, false],
+                   [:draw_circle, 50, 149, 25, white, false, :filled])
+  end
+
+  def test_clear
+    t.clear
+    t.clear :white
+
+    assert_drawing([:clear, black],
+                   [:clear, white])
+  end
+
+  def test_debug
+    skip "not yet, figure out test_text first"
+
+    raise NotImplementedError, 'Need to write test_debug'
+  end
 
   def test_ellipse
     t.ellipse 0, 0, 25, 25, :white
 
-    h = t.h-1
-    exp << [:draw_ellipse, 0, h, 25, 25, t.color[:white], true, false]
-
-    assert_equal exp, t.renderer.data
+    assert_drawing [:draw_ellipse, 0, h, 25, 25, t.color[:white], true, false]
   end
 
-  # def test_fast_rect
-  #   raise NotImplementedError, 'Need to write test_fast_rect'
-  # end
-  #
-  # def test_fps
-  #   raise NotImplementedError, 'Need to write test_fps'
-  # end
-  #
+  def test_fast_rect
+    t.fast_rect 25, 25,  10,  20, :white
+    t.fast_rect  0,  0, 100, 100, :white
+
+    assert_drawing([:fast_rect, 25, h+1-25-20,  10,  20, white],
+                   [:fast_rect,  0, h+1-0-100, 100, 100, white])
+  end
+
+  def test_fps
+    skip "not yet, figure out test_text first"
+
+    t.start_time = Time.now - 1
+
+    t.fps 42
+
+    assert_drawing
+  end
+
   # def test_handle_event
   #   raise NotImplementedError, 'Need to write test_handle_event'
   # end
-  #
+
   # def test_handle_keys
   #   raise NotImplementedError, 'Need to write test_handle_keys'
   # end
 
   def test_hline
     t.hline 42, :white
-    h = t.h - 1
-    exp << [:draw_line, 0, h-42, 300, h-42, t.color[:white], true]
+    t.hline  0, :white
 
-    assert_equal exp, t.renderer.data
+    assert_drawing([:draw_line, 0, h-42, 300, h-42, t.color[:white], true],
+                   [:draw_line, 0, h- 0, 300, h- 0, t.color[:white], true])
   end
 
   # def test_image
@@ -421,70 +473,90 @@ make_my_diffs_pretty!
   # end
 
   def test_line
+    t.line 0, 0, 25, 0, :white
+    t.line 0, 0, 0, 25, :white
     t.line 0, 0, 25, 25, :white
-    h = t.h - 1
-    exp << [:draw_line, 0, h, 25, h-25, t.color[:white], true]
+    t.line 0, 0, 25, 25, :white, false
 
-    assert_equal exp, t.renderer.data
+    t.line 0, 200-1, 25, 200-1,    :white
+    t.line 0, 200-1,  0, 200-1-25, :white
+    t.line 0, 200-1, 25, 200-1-25, :white
+
+    assert_drawing([:draw_line, 0, h, 25, h- 0, t.color[:white], true],
+                   [:draw_line, 0, h,  0, h-25, t.color[:white], true],
+                   [:draw_line, 0, h, 25, h-25, t.color[:white], true],
+                   [:draw_line, 0, h, 25, h-25, t.color[:white], false],
+                   [:draw_line, 0, 0, 25,    0, t.color[:white], true],
+                   [:draw_line, 0, 0,  0,   25, t.color[:white], true],
+                   [:draw_line, 0, 0, 25,   25, t.color[:white], true])
   end
 
   def test_point
     t.point 2, 10, :white
 
-    exp = [nil, nil, t.color[:white]]
-    assert_equal exp, t.renderer
-
-    skip "This test isn't sufficient"
+    assert_drawing [:[]=, 2, h-10, white]
   end
 
-  # def test_populate
-  #   raise NotImplementedError, 'Need to write test_populate'
-  # end
-  #
-  # def test_rect
-  #   raise NotImplementedError, 'Need to write test_rect'
-  # end
-  #
-  # def test_register_color
-  #   raise NotImplementedError, 'Need to write test_register_color'
-  # end
+  def test_populate
+    skip "not done yet"
+  end
+
+  make_my_diffs_pretty!
+
+
+  def test_rect
+    t.rect 25, 25,  10,  20, :white
+    t.rect  0,  0, 100, 100, :white
+    t.rect 25, 25,  10,  20, :white, :filled
+
+    assert_drawing([:draw_rect, 25, h+1-25-20,  10,  20, white, false],
+                   [:draw_rect,  0, h+1-0-100, 100, 100, white, false],
+                   [:draw_rect, 25, h+1-25-20,  10,  20, white, :filled])
+  end
+
+  def test_register_color
+    skip "not done yet"
+  end
 
   def test_render_text
-    skip "not yet"
-    assert_equal 42, t.render_text("blah", :black)
+    s = t.render_text("blah", :black)
 
-    raise NotImplementedError, 'Need to write test_render_text'
+    assert_instance_of SDL::Surface, s
+    assert_equal [76, 38], [s.w, s.h]
   end
 
-  # def test_run
-  #   raise NotImplementedError, 'Need to write test_run'
-  # end
-  #
-  # def test_sprite
-  #   raise NotImplementedError, 'Need to write test_sprite'
-  # end
-  #
-  # def test_text
-  #   raise NotImplementedError, 'Need to write test_text'
-  # end
+  def test_run
+    skip "not done yet"
+  end
+
+  def test_sprite
+    skip "not done yet"
+  end
+
+  def test_text
+    skip "um... not sure how to test this yet"
+
+    t.text "woot", 25, 25, :white
+
+    assert_drawing
+  end
 
   def test_text_size
     assert_equal [76, 38], t.text_size("blah")
-    assert_equal [0, 38], t.text_size("")
+    assert_equal [ 0, 38], t.text_size("")
     assert_equal [76, 38], t.text_size(:blah)
   end
 
-  # def test_update
-  #   raise NotImplementedError, 'Need to write test_update'
-  # end
+  def test_update
+    skip "not done yet"
+  end
 
   def test_vline
+    t.vline  0, :white
     t.vline 42, :white
-    h = t.h - 1
 
-    exp << [:draw_line, 42, 0, 42, h, t.color[:white], true]
-
-    assert_equal exp, t.renderer.data
+    assert_drawing([:draw_line,  0, 0,  0, h, t.color[:white], true],
+                   [:draw_line, 42, 0, 42, h, t.color[:white], true])
   end
 
   def test_from_hsl

@@ -35,6 +35,9 @@
 #define DEFINE_SELF(type, var, rb_var)                           \
   SDL_##type* var = ruby_to_##type(rb_var)
 
+#define DEFINE_SELF0(type, var, rb_var)                           \
+  SDL_##type* var = RTEST(rb_var) ? ruby_to_##type(rb_var) : NULL;
+
 #define NUM2SINT32(n) (Sint32)NUM2INT(n)
 #define NUM2SINT16(n) (Sint16)NUM2INT(n)
 #define NUM2UINT32(n) (Uint32)NUM2UINT(n)
@@ -47,9 +50,7 @@
 
 #define UNUSED(x) (void)(x)
 
-#define ZERO_RECT(r) r.x == 0 && r.y == 0 && r.w == 0 && r.h == 0
-
-#define FAILURE(s) rb_raise(eSDLError, "%s failed: %s", (s), SDL_GetError())
+#define FAILURE(s)       rb_raise(eSDLError, "%s failed: %s", (s), SDL_GetError())
 #define AUDIO_FAILURE(s) rb_raise(eSDLError, "%s failed: %s", (s), Mix_GetError())
 #define TTF_FAILURE(s)   rb_raise(eSDLError, "%s failed: %s", (s), TTF_GetError())
 
@@ -82,6 +83,7 @@ DEFINE_ID(surface);
 DEFINE_ID(format);
 DEFINE_ID(renderer);
 DEFINE_ID(window);
+DEFINE_ID(texture);
 DEFINE_ID(button);
 DEFINE_ID(mod);
 DEFINE_ID(press);
@@ -99,6 +101,7 @@ DEFINE_CLASS(PixelFormat,  "SDL::PixelFormat")
 DEFINE_CLASS_0(TTFFont,    "SDL::TTFFont")
 DEFINE_CLASS_0(Renderer,   "SDL::Renderer") // TODO: I kinda want these hidden
 DEFINE_CLASS_0(Window,     "SDL::Window")   // TODO: I kinda want these hidden
+DEFINE_CLASS_0(Texture,    "SDL::Texture")  // TODO: I kinda want these hidden
 
 #define SDL_NUMEVENTS 0xFFFF // HACK
 typedef VALUE (*event_creator)(SDL_Event *);
@@ -420,20 +423,28 @@ static VALUE Screen_s_open(VALUE klass, VALUE w_, VALUE h_, VALUE bpp_, VALUE fl
   return vrenderer;
 }
 
+static VALUE Renderer_new_texture(VALUE self) {
+  DEFINE_SELF(Renderer, renderer, self);
+
+  int w, h;
+  if (SDL_GetRendererOutputSize(renderer, &w, &h))
+    FAILURE("Renderer#new_texture(GetRendererOutputSize");
+
+  SDL_Texture *texture = SDL_CreateTexture(renderer,
+                                           SDL_PIXELFORMAT_RGBA32,
+                                           SDL_TEXTUREACCESS_TARGET,
+                                           w, h);
+  if (!texture)
+    FAILURE("Renderer#new_texture(CreateTexture)");
+
+  return TypedData_Wrap_Struct(cTexture, &_Texture_type, texture);
+}
+
+
 static VALUE Renderer_present(VALUE self) {
   DEFINE_SELF(Renderer, renderer, self);
 
   SDL_RenderPresent(renderer);
-
-  return Qnil;
-}
-
-static VALUE Window_set_title(VALUE self, VALUE title) {
-  DEFINE_SELF(Window, window, self);
-
-  ExportStringValue(title);
-
-  SDL_SetWindowTitle(window, StringValueCStr(title));
 
   return Qnil;
 }
@@ -494,6 +505,27 @@ typedef int (*f_rxyxyc)(SDL_Renderer*,
 typedef int (*f_rxyrc)(SDL_Renderer*,
                         Sint16, Sint16, Sint16,
                         Uint32);
+
+// TODO: ? maybe ?
+// int  hlineColor                  (SDL_Renderer *renderer, Sint16 x1, Sint16 x2, Sint16 y, Uint32 color)
+// int  vlineColor                  (SDL_Renderer *renderer, Sint16 x, Sint16 y1, Sint16 y2, Uint32 color)
+// int  roundedRectangleColor       (SDL_Renderer *renderer, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2, Sint16 rad, Uint32 color)
+// int  roundedBoxColor             (SDL_Renderer *renderer, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2, Sint16 rad, Uint32 color)
+// int  thickLineColor              (SDL_Renderer *renderer, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2, Uint8 width, Uint32 color)
+// int  arcColor                    (SDL_Renderer *renderer, Sint16 x, Sint16 y, Sint16 rad, Sint16 start, Sint16 end, Uint32 color)
+// int  pieColor                    (SDL_Renderer *renderer, Sint16 x, Sint16 y, Sint16 rad, Sint16 start, Sint16 end, Uint32 color)
+// int  filledPieColor              (SDL_Renderer *renderer, Sint16 x, Sint16 y, Sint16 rad, Sint16 start, Sint16 end, Uint32 color)
+// int  trigonColor                 (SDL_Renderer *renderer, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2, Sint16 x3, Sint16 y3, Uint32 color)
+// int  aatrigonColor               (SDL_Renderer *renderer, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2, Sint16 x3, Sint16 y3, Uint32 color)
+// int  filledTrigonColor           (SDL_Renderer *renderer, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2, Sint16 x3, Sint16 y3, Uint32 color)
+// int  polygonColor                (SDL_Renderer *renderer, const Sint16 *vx, const Sint16 *vy, int n, Uint32 color)
+// int  aapolygonColor              (SDL_Renderer *renderer, const Sint16 *vx, const Sint16 *vy, int n, Uint32 color)
+// int  filledPolygonColor          (SDL_Renderer *renderer, const Sint16 *vx, const Sint16 *vy, int n, Uint32 color)
+// int  texturedPolygon             (SDL_Renderer *renderer, const Sint16 *vx, const Sint16 *vy, int n, SDL_Surface *texture, int texture_dx, int texture_dy)
+// void gfxPrimitivesSetFont        (const void *fontdata, Uint32 cw, Uint32 ch)
+// void gfxPrimitivesSetFontRotation(Uint32 rotation)
+// int  characterColor              (SDL_Renderer *renderer, Sint16 x, Sint16 y, char c, Uint32 color)
+// int  stringColor                 (SDL_Renderer *renderer, Sint16 x, Sint16 y, const char *s, Uint32 color)
 
 static VALUE Renderer_draw_bezier(VALUE self,
                                   VALUE xs_,
@@ -635,24 +667,21 @@ static VALUE Renderer_clear(VALUE self, VALUE color) {
   return Qnil;
 }
 
+static VALUE Renderer_copy_texture(VALUE self, VALUE texture_) {
+  DEFINE_SELF(Renderer, renderer, self);
+  DEFINE_SELF(Texture,  texture,  texture_);
+
+  if (SDL_RenderCopy(renderer, texture, NULL, NULL))
+    FAILURE("Renderer#copy_texture");
+
+  return Qnil;
+}
+
 static VALUE Renderer_fast_rect(VALUE self,
                                VALUE x, VALUE y,
                                VALUE w, VALUE h,
                                VALUE color) {
-  DEFINE_SELF(Renderer, renderer, self);
-  DEFINE_SELF(PixelFormat, format, rb_ivar_get(self, id_iv_format));
-
-  SDL_Rect rect = NewRect(x, y, w, h);
-
-  Uint8 r, g, b, a;
-  SDL_GetRGBA(NUM2UINT(color), format, &r, &g, &b, &a);
-
-  SDL_SetRenderDrawColor(renderer, r, g, b, a);
-
-  if (SDL_RenderFillRect(renderer, &rect))
-    FAILURE("Renderer#fast_rect");
-
-  return Qnil;
+  return Renderer_draw_rect(self, x, y, w, h, color, Qtrue);
 }
 
 static VALUE Surface_format(VALUE self) {
@@ -711,15 +740,31 @@ static VALUE Surface_index(VALUE self, VALUE x, VALUE y) {
   return Qnil;
 }
 
-static VALUE Renderer_index_equals(VALUE self, VALUE x, VALUE y, VALUE color) {
+static VALUE Renderer_index_eq(VALUE self, VALUE x, VALUE y, VALUE color) {
   DEFINE_SELF(Renderer, renderer, self);
 
-  pixelColor(renderer,
-             NUM2SINT16(x),
-             NUM2SINT16(y),
-             VALUE2COLOR(color));
+  pixelColor(renderer, NUM2SINT16(x), NUM2SINT16(y), VALUE2COLOR(color));
 
   return Qnil;
+}
+
+static SDL_Surface *pixel = NULL;
+
+static VALUE Renderer_index(VALUE self, VALUE x, VALUE y) {
+  DEFINE_SELF(Renderer, renderer, self);
+
+  SDL_Rect pixel_rect = { NUM2SINT16(x), NUM2SINT16(y), 1, 1 };
+
+  if (!pixel)
+    pixel = SDL_CreateRGBSurfaceWithFormat(0, 1, 1, 32,
+                                           SDL_PIXELFORMAT_RGBA32);
+
+  if (SDL_RenderReadPixels(renderer, &pixel_rect, SDL_PIXELFORMAT_RGBA32,
+                           pixel->pixels,
+                           pixel->pitch))
+    FAILURE("Renderer#[]");
+
+  return UINT2NUM(((Uint32*)pixel->pixels)[0]);
 }
 
 static VALUE Surface_make_collision_map(VALUE self) {
@@ -756,13 +801,20 @@ static VALUE Surface_transform(VALUE self, VALUE angle,
   return TypedData_Wrap_Struct(cSurface, &_Surface_type, result);
 }
 
-// TODO: maybe unfactor
-static void _blit(SDL_Renderer *renderer,
-                  SDL_Surface *src,
-                  int x, int y,
-                  double a,
-                  float ws, float hs,
-                  int isCenter) {
+static VALUE Renderer_blit(VALUE self, VALUE src_,
+                           VALUE x_, VALUE y_,
+                           VALUE a_,
+                           VALUE ws_, VALUE hs_,
+                           VALUE center_) {
+  DEFINE_SELF(Renderer, renderer, self);
+  DEFINE_SELF(Surface, src, src_);
+
+  int x    = NUM2SINT16(x_);
+  int y    = NUM2SINT16(y_);
+  double a = RTEST(a_)  ? -NUM2DBL(a_) : 0.0;
+  float ws = RTEST(ws_) ? NUM2FLT(ws_) : 1.0;
+  float hs = RTEST(hs_) ? NUM2FLT(hs_) : 1.0;
+
   SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, src);
   if (!texture)
     FAILURE("_blit(SDL_CreateTextureFromSurface)");
@@ -774,29 +826,16 @@ static void _blit(SDL_Renderer *renderer,
   SDL_Rect dst_rect = { x, y, w*ws, h*hs };
   SDL_Point center  = { 0, h };
 
-  if (SDL_RenderCopyEx(renderer, texture,
-                       NULL, &dst_rect, a, (isCenter ? NULL : &center),
-                       SDL_FLIP_NONE))
-    FAILURE("_blit(SDL_RenderCopyEx)");
+  if (RTEST(a_) || RTEST(ws_) || RTEST(hs_)) {
+    if (SDL_RenderCopyEx(renderer, texture, NULL, &dst_rect,
+                         a, (RTEST(center_) ? NULL : &center), SDL_FLIP_NONE))
+      FAILURE("_blit(SDL_RenderCopyEx)");
+  } else {
+    if (SDL_RenderCopy(renderer, texture, NULL, &dst_rect))
+      FAILURE("_blit(SDL_RenderCopyEx)");
+  }
 
   SDL_DestroyTexture(texture);
-}
-
-static VALUE Renderer_blit(VALUE self, VALUE src_,
-                           VALUE x_, VALUE y_,
-                           VALUE a_,
-                           VALUE ws_, VALUE hs_,
-                           VALUE center_) {
-  DEFINE_SELF(Renderer, renderer, self);
-  DEFINE_SELF(Surface, src, src_);
-
-  int x    = NUM2SINT16(x_);
-  int y    = NUM2SINT16(y_);
-  double a = RTEST(a_)  ? -NUM2DBL(a_)  : 0.0;
-  float ws = RTEST(ws_) ? NUM2FLT(ws_) : 1.0;
-  float hs = RTEST(hs_) ? NUM2FLT(hs_) : 1.0;
-
-  _blit(renderer, src, x, y, a, ws, hs, RTEST(center_));
 
   return Qnil;
 }
@@ -840,9 +879,10 @@ static VALUE Renderer_save(VALUE self, VALUE path) {
 
   SDL_Surface *sshot = SDL_CreateRGBSurfaceWithFormat(0, w, h, 32,
                                                       SDL_PIXELFORMAT_RGBA32);
-  SDL_RenderReadPixels(renderer, NULL, SDL_PIXELFORMAT_RGBA32,
-                       sshot->pixels,
-                       sshot->pitch);
+  if (SDL_RenderReadPixels(renderer, NULL, SDL_PIXELFORMAT_RGBA32,
+                           sshot->pixels,
+                           sshot->pitch))
+    FAILURE("Renderer#save");
   int ret = IMG_SavePNG(sshot, RSTRING_PTR(path));
   SDL_FreeSurface(sshot);
 
@@ -860,6 +900,38 @@ static void _Renderer_mark(void* renderer) {
   UNUSED(renderer);
 }
 
+static VALUE Renderer_target(VALUE self) {
+  DEFINE_SELF(Renderer, renderer, self);
+
+  SDL_Texture* texture = SDL_GetRenderTarget(renderer);
+
+  if (!texture)
+    FAILURE("Renderer#target");
+
+  return TypedData_Wrap_Struct(cTexture, &_Texture_type, texture);
+}
+
+static VALUE Renderer_target_eq(VALUE self, VALUE texture_) {
+  DEFINE_SELF(Renderer, renderer, self);
+  DEFINE_SELF0(Texture, texture, texture_);
+
+  if (SDL_SetRenderTarget(renderer, texture))
+    FAILURE("Renderer#target=");
+
+  return texture_;
+}
+
+//// SDL::Texture methods:
+
+static void _Texture_free(void* texture) {
+  if (is_quit) return;
+  if (texture) SDL_DestroyTexture(texture);
+}
+
+static void _Texture_mark(void* texture) {
+  UNUSED(texture);
+}
+
 //// SDL::Window methods:
 
 static void _Window_free(void* Window) {
@@ -869,6 +941,25 @@ static void _Window_free(void* Window) {
 
 static void _Window_mark(void* Window) {
   UNUSED(Window);
+}
+
+static VALUE Window_title_eq(VALUE self, VALUE title) {
+  DEFINE_SELF(Window, window, self);
+
+  ExportStringValue(title);
+
+  SDL_SetWindowTitle(window, StringValueCStr(title));
+
+  return Qnil;
+}
+
+static VALUE Window_update(VALUE self) {
+  DEFINE_SELF(Window, window, self);
+
+  if (SDL_UpdateWindowSurface(window))
+    FAILURE("Window#update");
+
+  return Qnil;
 }
 
 //// SDL::TTFFont methods:
@@ -956,6 +1047,7 @@ void Init_sdl() {
   cScreen       = rb_define_class_under(mSDL, "Screen",       cSurface);
   cRenderer     = rb_define_class_under(mSDL, "Renderer",     rb_cData);
   cWindow       = rb_define_class_under(mSDL, "Window",       rb_cData);
+  cTexture      = rb_define_class_under(mSDL, "Texture",      rb_cData);
 
   cEventQuit    = rb_define_class_under(cEvent, "Quit",    cEvent);
   cEventKeydown = rb_define_class_under(cEvent, "Keydown", cEvent);
@@ -1038,13 +1130,16 @@ void Init_sdl() {
   //// SDL::Window methods:
 
   // TODO: move to top renderer?
-  rb_define_method(cWindow, "title=", Window_set_title, 1);
+  rb_define_method(cWindow, "title=", Window_title_eq, 1);
+  rb_define_method(cWindow, "update", Window_update, 0);
 
   //// SDL::Renderer methods:
 
-  rb_define_method(cRenderer, "[]=",           Renderer_index_equals, 3);
+  rb_define_method(cRenderer, "[]",            Renderer_index,        2);
+  rb_define_method(cRenderer, "[]=",           Renderer_index_eq,     3);
   rb_define_method(cRenderer, "blit",          Renderer_blit,         7);
   rb_define_method(cRenderer, "clear",         Renderer_clear,        1);
+  rb_define_method(cRenderer, "copy_texture",  Renderer_copy_texture, 1);
   rb_define_method(cRenderer, "draw_bezier",   Renderer_draw_bezier,  4);
   rb_define_method(cRenderer, "draw_circle",   Renderer_draw_circle,  6);
   rb_define_method(cRenderer, "draw_ellipse",  Renderer_draw_ellipse, 7);
@@ -1052,9 +1147,12 @@ void Init_sdl() {
   rb_define_method(cRenderer, "draw_rect",     Renderer_draw_rect,    6);
   rb_define_method(cRenderer, "fast_rect",     Renderer_fast_rect,    5);
   rb_define_method(cRenderer, "h",             Renderer_h,            0);
+  rb_define_method(cRenderer, "new_texture",   Renderer_new_texture,  0);
   rb_define_method(cRenderer, "present",       Renderer_present,      0);
   rb_define_method(cRenderer, "save",          Renderer_save,         1);
   rb_define_method(cRenderer, "sprite",        Renderer_sprite,       2);
+  rb_define_method(cRenderer, "target",        Renderer_target,       0);
+  rb_define_method(cRenderer, "target=",       Renderer_target_eq,    1);
   rb_define_method(cRenderer, "w",             Renderer_w,            0);
 
   //// SDL::Surface methods:
@@ -1106,6 +1204,7 @@ void Init_sdl() {
   INIT_ID(format);
   INIT_ID(renderer);
   INIT_ID(window);
+  INIT_ID(texture);
   INIT_ID(button);
   INIT_ID(mod);
   INIT_ID(press);

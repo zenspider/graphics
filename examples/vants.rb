@@ -15,7 +15,7 @@ class Vant < Graphics::Body
   def initialize w
     super
     self.a = random_angle
-    self.s = w.screen
+    self.s = w.renderer
 
     self.white = w.color[:white]
     self.black = w.color[:black]
@@ -23,10 +23,9 @@ class Vant < Graphics::Body
 
   def update
     move_by a, M
-    mutate
   end
 
-  def mutate
+  def draw
     if s[x, y] == white then
       s[x, y] = black
       turn 270
@@ -47,6 +46,16 @@ class Vants < Graphics::Drawing
 
     self.vs = populate Vant
     register_bodies vs
+  end
+
+  def draw n
+    draw_on texture do
+      _bodies.each do |a|
+        a.each do |v|
+          v.draw
+        end
+      end
+    end
   end
 end
 
