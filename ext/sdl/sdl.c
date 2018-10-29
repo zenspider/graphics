@@ -824,11 +824,16 @@ static VALUE Renderer_blit(VALUE self, VALUE src_,
     FAILURE("_blit(SDL_QueryTexture)");
 
   SDL_Rect dst_rect = { x, y, w*ws, h*hs };
-  SDL_Point center  = { 0, h };
+
+  if (SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND))
+    FAILURE("Renderer#blit(SetTextureBlendMode)");
 
   if (RTEST(a_) || RTEST(ws_) || RTEST(hs_)) {
+    SDL_Point bottom_left  = { 0, h-1 };
+    SDL_Point *point = (RTEST(center_) ? NULL : &bottom_left);
+
     if (SDL_RenderCopyEx(renderer, texture, NULL, &dst_rect,
-                         a, (RTEST(center_) ? NULL : &center), SDL_FLIP_NONE))
+                         a, point, SDL_FLIP_NONE))
       FAILURE("_blit(SDL_RenderCopyEx)");
   } else {
     if (SDL_RenderCopy(renderer, texture, NULL, &dst_rect))
