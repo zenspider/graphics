@@ -117,30 +117,7 @@ static void rb_const_reset(VALUE mod, ID id, VALUE val) { // avoids warnings
   rb_const_set(mod, id, val);
 }
 
-// TODO: collapse to one format
-static Uint32 VALUE2COLOR(VALUE color, SDL_PixelFormat *format) {
-  // TODO: reverse and use FIXNUM_P ?
-  if (rb_obj_is_kind_of(color, rb_cArray)) {
-    rb_warn("when are colors arrays?!??"); // TODO: remove
-    switch (RARRAY_LEN(color)) {
-    case 3:
-      return SDL_MapRGB(format,
-                        (Uint8)FIX2UINT(rb_ary_entry(color, 0)),
-                        (Uint8)FIX2UINT(rb_ary_entry(color, 1)),
-                        (Uint8)FIX2UINT(rb_ary_entry(color, 2)));
-    case 4:
-      return SDL_MapRGBA(format,
-                         (Uint8)FIX2UINT(rb_ary_entry(color, 0)),
-                         (Uint8)FIX2UINT(rb_ary_entry(color, 1)),
-                         (Uint8)FIX2UINT(rb_ary_entry(color, 2)),
-                         (Uint8)FIX2UINT(rb_ary_entry(color, 3)));
-    default:
-      rb_raise(rb_eArgError, "type mismatch:color array needs 3 or 4 elements");
-    }
-  } else {
-    return NUM2UINT(color);
-  }
-}
+#define VALUE2COLOR(c) NUM2UINT(c)
 
 //// SDL methods:
 
@@ -589,7 +566,7 @@ static VALUE Surface_set_color_key(VALUE self, VALUE flag, VALUE key) {
 
   if (SDL_SetColorKey(surface,
                       NUM2UINT(flag),
-                      VALUE2COLOR(key, surface->format)) < 0)
+                      VALUE2COLOR(key)) < 0)
     FAILURE("Surface#set_color_key");
 
   return Qnil;
@@ -659,7 +636,7 @@ static VALUE Surface_draw_bezier(VALUE self,
                 NUM2SINT16(cx2), NUM2SINT16(cy2),
                 NUM2SINT16(x2),  NUM2SINT16(y2),
                 NUM2INT(l),
-                VALUE2COLOR(c, surface->format),
+                VALUE2COLOR(c),
                 a);
 
   return Qnil;
@@ -693,7 +670,7 @@ static VALUE Surface_draw_circle(VALUE self,
   f_circle[idx](surface,
                 NUM2SINT16(x), NUM2SINT16(y),
                 NUM2SINT16(r),
-                VALUE2COLOR(c, surface->format),
+                VALUE2COLOR(c),
                 a);
 
   return Qnil;
@@ -728,7 +705,7 @@ static VALUE Surface_draw_ellipse(VALUE self,
                  NUM2SINT16(y),
                  NUM2SINT16(rx),
                  NUM2SINT16(ry),
-                 VALUE2COLOR(c, surface->format),
+                 VALUE2COLOR(c),
                  a);
 
   return Qnil;
@@ -758,7 +735,7 @@ static VALUE Surface_draw_line(VALUE self,
               NUM2SINT16(y1),
               NUM2SINT16(x2),
               NUM2SINT16(y2),
-              VALUE2COLOR(c, surface->format),
+              VALUE2COLOR(c),
               NUM2UINT8(a));
 
   return Qnil;
@@ -787,7 +764,7 @@ static VALUE Surface_draw_rect(VALUE self,
   Uint8 idx = IDX2(SHOULD_BLEND(a), RTEST(f));
 
   f_rect[idx](surface, x1, y1, x2, y2,
-              VALUE2COLOR(c, surface->format),
+              VALUE2COLOR(c),
               a);
 
   return Qnil;
@@ -798,7 +775,7 @@ static VALUE Surface_fast_rect(VALUE self, VALUE x, VALUE y, VALUE w, VALUE h, V
 
   SDL_Rect rect = NewRect(x, y, w, h);
 
-  if (SDL_FillRect(surface, &rect, VALUE2COLOR(color, surface->format)) < 0)
+  if (SDL_FillRect(surface, &rect, VALUE2COLOR(color)) < 0)
     FAILURE("Surface#fast_rect");
 
   return Qnil;
@@ -834,10 +811,11 @@ static VALUE Surface_h(VALUE self) {
 }
 
 static VALUE Surface_index(VALUE self, VALUE x, VALUE y) {
-  DEFINE_SELF(Surface, surface, self);
-
-  return UINT2NUM(sge_GetPixel(surface,
-                               NUM2SINT16(x), NUM2SINT16(y)));
+  rb_raise(eSDLError, "Reading the canvas isn't currently supported");
+  // DEFINE_SELF(Surface, surface, self);
+  // return UINT2NUM(sge_GetPixel(surface,
+  //                              NUM2SINT16(x), NUM2SINT16(y)));
+  return Qnil;
 }
 
 static VALUE Surface_index_equals(VALUE self, VALUE x, VALUE y, VALUE color) {
@@ -845,7 +823,7 @@ static VALUE Surface_index_equals(VALUE self, VALUE x, VALUE y, VALUE color) {
 
   sge_PutPixel(surface,
                NUM2SINT16(x), NUM2SINT16(y),
-               VALUE2COLOR(color, surface->format));
+               VALUE2COLOR(color));
 
   return Qnil;
 }
@@ -872,7 +850,7 @@ static VALUE Surface_transform(VALUE self, VALUE bgcolor, VALUE angle,
   DEFINE_SELF(Surface, surface, self);
 
   SDL_Surface *result = sge_transform_surface(surface,
-                                              VALUE2COLOR(bgcolor, surface->format),
+                                              VALUE2COLOR(bgcolor),
                                               NUM2FLT(angle),
                                               NUM2FLT(xscale),
                                               NUM2FLT(yscale),
@@ -971,7 +949,7 @@ static VALUE Font_render(VALUE self, VALUE dst, VALUE text, VALUE c) {
   SDL_Surface *result;
   SDL_Color fg;
 
-  SDL_GetRGBA(VALUE2COLOR(c, surface->format), surface->format,
+  SDL_GetRGBA(VALUE2COLOR(c), surface->format,
               &(fg.r), &(fg.g), &(fg.b), &(fg.a));
 
   ExportStringValue(text);
