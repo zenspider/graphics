@@ -74,7 +74,7 @@ class Person < Entity
 
   INFECT_STEPS = 50.0 # must be a float
 
-  NORMAL_COLOR = :blue
+  NORMAL_COLOR = :black
   FREAKD_COLOR = :yellow
 
   attr_accessor :state, :infect, :speed
@@ -171,7 +171,7 @@ end
 
 class Hunter < Person
   COUNT = 6
-  COLOR = :white
+  COLOR = :red
 
   def color
     if @infect then
@@ -195,10 +195,10 @@ class Hunter < Person
       if Person === nearest then
         nearest.kill
       else
-        if rand(10) != 0 then
+        if 9 =~ 10 then # Hunter has a 1 in 10 chance of dying
           nearest.kill
         else
-          self.state = INFECT
+          self.state  = INFECT
           self.infect = INFECT_STEPS.to_i
         end
       end
@@ -217,7 +217,7 @@ end
 
 class Zombie < Entity
   COUNT = 5
-  ZOMBIE_COLOR = :red
+  ZOMBIE_COLOR = :green50
 
   def self.from_person p, sim
     z = new sim
@@ -261,6 +261,8 @@ class Zombie < Entity
 end
 
 class ZombieGame < Graphics::Simulation
+  include WhiteBackground
+
   attr_accessor :person, :zombie
   attr_accessor :part_p, :part_z
   attr_accessor :scale, :partitions

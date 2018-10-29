@@ -126,17 +126,17 @@ class Graphics::AbstractSimulation
     register_color :red,       255, 0,   0
     register_color :green,     0,   255, 0
     register_color :blue,      0,   0,   255
-    register_color :cyan,      0, 255, 255
-    register_color :magenta,   255, 0, 255
+    register_color :cyan,      0,   255, 255
+    register_color :magenta,   255, 0,   255
     register_color :yellow,    255, 255, 0
-    register_color :alpha,     0, 0, 0, 0
+    register_color :alpha,     0,   0,   0,   0
 
     (0..99).each do |n|
       m = (255 * (n / 100.0)).to_i
-      register_color(("gray%02d"  % n).to_sym, m, m, m)
-      register_color(("red%02d"   % n).to_sym, m, 0, 0)
-      register_color(("green%02d" % n).to_sym, 0, m, 0)
-      register_color(("blue%02d"  % n).to_sym, 0, 0, m)
+      register_color(("gray%02d"    % n).to_sym, m, m, m)
+      register_color(("red%02d"     % n).to_sym, m, 0, 0)
+      register_color(("green%02d"   % n).to_sym, 0, m, 0)
+      register_color(("blue%02d"    % n).to_sym, 0, 0, m)
       register_color(("cyan%02d"    % n).to_sym, 0, m, m)
       register_color(("magenta%02d" % n).to_sym, m, 0, m)
       register_color(("yellow%02d"  % n).to_sym, m, m, 0)
