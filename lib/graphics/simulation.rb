@@ -347,14 +347,13 @@ class Graphics::AbstractSimulation
       handle_event event, n while event = SDL::Event.poll
       handle_keys
 
-      next if paused
+      break if done
+      next  if paused
 
       iter_per_tick.times { update n; n += 1 }
       draw_and_flip n
 
       log if logger and n % log_interval == 0
-
-      break if done
     end
   end
 
