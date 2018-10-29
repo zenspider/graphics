@@ -34,7 +34,7 @@ class Demo < Graphics::Simulation
   attr_accessor :ball, :img, :n
 
   def initialize
-    super 800, 800, 16, "Boid"
+    super 800, 800
     self.ball = Ball.new self
     register_body ball
 

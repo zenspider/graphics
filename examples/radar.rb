@@ -2,11 +2,11 @@
 
 require "graphics"
 
-class TargetSimulation < Graphics::Simulation
+class Radar < Graphics::Simulation
   CLEAR_COLOR = :darker_green
 
   def initialize
-    super 640, 640, 16, "Target Practice"
+    super 640, 640
 
     register_color :darker_green,  0, 16,  0
     register_color :dark_green,   64, 96, 64
@@ -30,4 +30,4 @@ class TargetSimulation < Graphics::Simulation
   end
 end
 
-TargetSimulation.new.run
+Radar.new.run

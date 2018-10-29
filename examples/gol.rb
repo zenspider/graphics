@@ -85,7 +85,7 @@ class LitoGolSimulation < Graphics::Simulation
   SIZE, WIDTH = 10, 64
 
   def initialize
-    super 640, 640, 16, "Conway's Game of Life"
+    super 640, 640, "Conway's Game of Life"
 
     self.gol = LitoGol.new WIDTH
   end

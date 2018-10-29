@@ -74,11 +74,12 @@ class Graphics::AbstractSimulation
   #
   # This also names a bunch colors and hues for convenience.
 
-  def initialize w=nil, h=nil, bpp=nil, name=self.class.name, full=false
+  def initialize w=nil, h=nil, name=self.class.name, full=false
     w ||= SDL::Screen::W/2
     h ||= SDL::Screen::H/2
 
-    warn "Do NOT pass bpp to Simulation anymore" if bpp # TODO: raise
+    # TODO: remove for 1.0.0 final
+    raise "Do NOT pass bpp to Simulation anymore" if !name || Integer === name
 
     full = full ? SDL::FULLSCREEN : 0
 
@@ -95,7 +96,6 @@ class Graphics::AbstractSimulation
     screen.title = name
 
     self.color = {}
-    # self.alpha = {}
     self.rgba  = Hash.new { |hash, k| hash[k] = screen.format.get_rgba(color[k]) }
     self.paused = false
 

@@ -2,13 +2,13 @@
 
 require "graphics"
 
-class TargetSimulation < Graphics::Simulation
+class Targeting < Graphics::Simulation
   CLEAR_COLOR = :darker_green
 
   attr_accessor :bombs
 
   def initialize
-    super 640, 640, 16, "Target Practice"
+    super 640, 640
 
     self.bombs = []
     register_color :darker_green,  0, 16,  0
@@ -45,4 +45,4 @@ class TargetSimulation < Graphics::Simulation
   end
 end
 
-TargetSimulation.new.run
+Targeting.new.run

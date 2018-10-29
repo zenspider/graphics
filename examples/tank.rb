@@ -122,14 +122,14 @@ class Bullet < Graphics::Body
   end
 end
 
-class TargetSimulation < Graphics::Simulation
+class Tanks < Graphics::Simulation
   attr_accessor :tank, :bullets
   attr_accessor :body_img
   attr_accessor :turret_img
   attr_accessor :bullet_snd
 
   def initialize
-    super 640, 640, 16, "Target Practice"
+    super 640, 640
 
     self.tank = Tank.new self
     self.bullets = []
@@ -162,4 +162,4 @@ class TargetSimulation < Graphics::Simulation
   end
 end
 
-TargetSimulation.new.run
+Tanks.new.run

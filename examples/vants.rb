@@ -43,7 +43,7 @@ class Vants < Graphics::Drawing
   CLEAR_COLOR = :white
 
   def initialize
-    super 850, 850, 16, self.class.name
+    super 850, 850
 
     self.vs = populate Vant
     register_bodies vs

@@ -38,7 +38,7 @@ class Collision < Graphics::Simulation
   attr_accessor :sprites, :cmap, :tank_img
 
   def initialize
-    super 850, 850, 16, "Collision"
+    super 850, 850
 
     self.tank_img = image "resources/images/body.png"
     self.cmap = tank_img.make_collision_map

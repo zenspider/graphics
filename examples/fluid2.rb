@@ -170,7 +170,7 @@ class FluidDynamics < Graphics::Simulation
   attr_accessor :particles, :scale
 
   def initialize
-    super WINSIZE, WINSIZE, 16, "Smoothed Particle Hydrodynamics"
+    super WINSIZE, WINSIZE, "Smoothed Particle Hydrodynamics"
 
     self.particles = []
     self.scale = SCALE

@@ -213,7 +213,7 @@ class SimulationWindow < Graphics::Simulation
   DELTA_TIME = 0.1
 
   def initialize
-    super WINSIZE, WINSIZE, 16, "Smoothed Particle Hydrodynamics"
+    super WINSIZE, WINSIZE, "Smoothed Particle Hydrodynamics"
     @simulation = SPH.new
     @scale = 15
     @s = WINSIZE.div @scale

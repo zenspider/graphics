@@ -267,7 +267,7 @@ class ZombieGame < Graphics::Simulation
   attr_accessor :start
 
   def initialize
-    super 512, 512, 16, "Zombie Epidemic Simulator"
+    super 512, 512, "Zombie Epidemic Simulator"
     self.scale = 2
     self.partitions = 64
 

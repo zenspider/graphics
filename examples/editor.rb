@@ -9,7 +9,7 @@ class Editor < Graphics::Simulation
   alias :overlay? :overlay
 
   def initialize
-    super 850, 850, 16, self.class.name
+    super 850, 850
 
     self.overlay = true
     self.s = ""

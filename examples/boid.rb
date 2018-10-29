@@ -255,7 +255,7 @@ class Boids < Graphics::Simulation
   alias :visual_debug? :visual_debug
 
   def initialize
-    super 850, 850, 16, "Boid"
+    super 850, 850
 
     self.visual_debug = false
 

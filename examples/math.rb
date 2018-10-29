@@ -6,7 +6,7 @@ class MathSimulation < Graphics::Simulation
   CLEAR_COLOR = :white
 
   def initialize
-    super 640, 640, 16, "Math"
+    super 640, 640
   end
 
   def draw n
