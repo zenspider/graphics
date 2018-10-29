@@ -322,7 +322,7 @@ class TestSimulation < Minitest::Test
         @data
       end
 
-      self.screen = s
+      self.renderer = s
     end
   end
 
@@ -350,7 +350,7 @@ class TestSimulation < Minitest::Test
     exp << [:draw_line, 50, h-50, 50.0,   h-40.0,   white, true]
     exp << [:draw_line, 50, h-50, 50+d45, h-50-d45, white, true]
 
-    assert_equal exp, t.screen.data
+    assert_equal exp, t.renderer.data
   end
 
   # def test_bezier
@@ -389,7 +389,7 @@ make_my_diffs_pretty!
     h = t.h-1
     exp << [:draw_ellipse, 0, h, 25, 25, t.color[:white], true, false]
 
-    assert_equal exp, t.screen.data
+    assert_equal exp, t.renderer.data
   end
 
   # def test_fast_rect
@@ -413,7 +413,7 @@ make_my_diffs_pretty!
     h = t.h - 1
     exp << [:draw_line, 0, h-42, 300, h-42, t.color[:white], true]
 
-    assert_equal exp, t.screen.data
+    assert_equal exp, t.renderer.data
   end
 
   # def test_image
@@ -425,14 +425,14 @@ make_my_diffs_pretty!
     h = t.h - 1
     exp << [:draw_line, 0, h, 25, h-25, t.color[:white], true]
 
-    assert_equal exp, t.screen.data
+    assert_equal exp, t.renderer.data
   end
 
   def test_point
     t.point 2, 10, :white
 
     exp = [nil, nil, t.color[:white]]
-    assert_equal exp, t.screen
+    assert_equal exp, t.renderer
 
     skip "This test isn't sufficient"
   end
@@ -484,7 +484,7 @@ make_my_diffs_pretty!
 
     exp << [:draw_line, 42, 0, 42, h, t.color[:white], true]
 
-    assert_equal exp, t.screen.data
+    assert_equal exp, t.renderer.data
   end
 
   def test_from_hsl

@@ -6,12 +6,23 @@ module SDL
   init INIT_EVERYTHING
 end
 
+module SDL
+  class Renderer
+    attr_reader :format
+    attr_reader :surface
+
+    def title= s
+      @window.title = s
+    end
+  end
+end
+
 ##
 # An abstract simulation. See Graphics::Simulation and Graphics::Drawing.
 
 class Graphics::AbstractSimulation
 
-  # The default color to clear the screen.
+  # The default color to clear the window.
   CLEAR_COLOR = :black
 
   # degrees to radians
@@ -34,8 +45,8 @@ class Graphics::AbstractSimulation
   # Collection of collections of Bodies to auto-update and draw.
   attr_accessor :_bodies
 
-  # The window the simulation is drawing in.
-  attr_accessor :screen
+  # The renderer (software or hardware backed) the simulation is drawing in.
+  attr_accessor :renderer
 
   # The window width.
   attr_accessor :w
@@ -51,9 +62,6 @@ class Graphics::AbstractSimulation
 
   # A hash of color names to their values.
   attr_accessor :color
-
-  # A hash of color values to their rgba values. For text, apparently. *shrug*
-  attr_accessor :rgba # TODO: remove?
 
   # Number of update iterations per drawing tick.
   attr_accessor :iter_per_tick
@@ -90,13 +98,12 @@ class Graphics::AbstractSimulation
     name ||= "Unknown"
     name = name.gsub(/[A-Z]/, ' \0').strip
 
-    self.screen = SDL::Screen.open w, h, 32, self.class::SCREEN_FLAGS|full
-    self.w, self.h = w, h # screen.w, screen.h
+    self.renderer = SDL::Screen.open w, h, 32, self.class::SCREEN_FLAGS|full
+    self.w, self.h = w, h
 
-    screen.title = name
+    renderer.title = name
 
     self.color = {}
-    self.rgba  = Hash.new { |hash, k| hash[k] = screen.format.get_rgba(color[k]) }
     self.paused = false
 
     self.iter_per_tick = 1
@@ -196,7 +203,7 @@ class Graphics::AbstractSimulation
   # Name a color w/ rgba values.
 
   def register_color name, r, g, b, a = 255
-    color[name] = screen.format.map_rgba r, g, b, a
+    color[name] = renderer.format.map_rgba r, g, b, a
   end
 
   ##
@@ -359,7 +366,7 @@ class Graphics::AbstractSimulation
 
   def draw_and_flip n # :nodoc:
     self.draw n
-    screen.flip
+    renderer.present
   end
 
   ##
@@ -408,10 +415,10 @@ class Graphics::AbstractSimulation
   end
 
   ##
-  # Clear the whole screen. Defaults to CLEAR_COLOR.
+  # Clear the whole window. Defaults to CLEAR_COLOR.
 
   def clear c = self.class::CLEAR_COLOR
-    screen.clear color[c]
+    renderer.clear color[c]
   end
 
   ##
@@ -419,7 +426,7 @@ class Graphics::AbstractSimulation
 
   def line x1, y1, x2, y2, c, aa = true
     h = self.h
-    screen.draw_line x1, h-y1-1, x2, h-y2-1, color[c], aa
+    renderer.draw_line x1, h-y1-1, x2, h-y2-1, color[c], aa
   end
 
   ##
@@ -459,14 +466,14 @@ class Graphics::AbstractSimulation
   # Draw a rect at x/y with w by h dimensions in color c. Ignores blending.
 
   def fast_rect x, y, w, h, c
-    screen.fast_rect x, self.h-y-h, w, h, color[c]
+    renderer.fast_rect x, self.h-y-h, w, h, color[c]
   end
 
   ##
   # Draw a point at x/y w/ color c.
 
   def point x, y, c
-    screen[x, h-y-1] = color[c]
+    renderer[x, h-y-1] = color[c]
   end
 
   ##
@@ -483,7 +490,7 @@ class Graphics::AbstractSimulation
 
   def rect x, y, w, h, c, fill = false
     y = self.h-y-h-1
-    screen.draw_rect x, y, w, h, color[c], fill
+    renderer.draw_rect x, y, w, h, color[c], fill
   end
 
   ##
@@ -491,7 +498,7 @@ class Graphics::AbstractSimulation
 
   def circle x, y, r, c, fill = false, aa = true
     y = h-y-1
-    screen.draw_circle x, y, r, color[c], aa, fill
+    renderer.draw_circle x, y, r, color[c], aa, fill
   end
 
   ##
@@ -499,7 +506,7 @@ class Graphics::AbstractSimulation
 
   def ellipse x, y, w, h, c, fill = false, aa = true
     y = self.h-y-1
-    screen.draw_ellipse x, y, w, h, color[c], aa, fill
+    renderer.draw_ellipse x, y, w, h, color[c], aa, fill
   end
 
   ##
@@ -513,7 +520,7 @@ class Graphics::AbstractSimulation
     xs, ys = points.each_slice(2).to_a.transpose
     ys.map! { |y| h-y }
 
-    screen.draw_bezier xs, ys, 5, color[c]
+    renderer.draw_bezier xs, ys, 5, color[c]
   end
 
   ## Text
@@ -529,7 +536,7 @@ class Graphics::AbstractSimulation
   # Return the rendered text s in color c in font f.
 
   def render_text s, c, f = font
-    f.render screen, s, color[c]
+    f.render renderer, s, color[c]
   end
 
   ##
@@ -537,7 +544,7 @@ class Graphics::AbstractSimulation
 
   def text s, x, y, c, f = font
     y = self.h-y-f.height-1
-    f.draw screen, s, x, y, color[c]
+    f.draw renderer, s, x, y, color[c]
   end
 
   ##
@@ -596,42 +603,39 @@ class Graphics::AbstractSimulation
   # Draw a bitmap centered at x/y with optional angle, x/y scale, and flags.
 
   def blit src, x, y, a° = nil, xscale = nil, yscale = nil, flags = nil
-    screen.blit src, x-1, h-y-src.h, a°, xscale, yscale, :center
+    renderer.blit src, x-src.w/2, h-y-src.h/2, a°, xscale, yscale, :center
   end
 
   ##
   # Draw a bitmap at x/y with optional angle, x/y scale, and flags.
 
   def put src, x, y, a° = nil, xscale = nil, yscale = nil, flags = nil
-    screen.blit src, x-1, h-y-src.h, a°, xscale, yscale, false
+    renderer.blit src, x-1, h-y-src.h, a°, xscale, yscale, false
   end
 
   ##
-  # Save the current screen to a png.
+  # Save the current window to a png.
 
   def save path
-    screen.save path
+    renderer.save path
   end
 
   ##
-  # Create a new sprite with a given width and height and yield to a
-  # block with the new sprite as the current screen. All drawing
-  # primitives will work and the resulting surface is returned.
+  # Create a new renderer with a given width and height and yield to a
+  # block for drawing. The resulting surface is returned.
 
   def sprite w, h
-    new_screen = SDL::Surface.new w, h, screen.format
-    old_screen = screen
-    old_w, old_h = self.w, self.h
+    old_renderer   = renderer
+    new_renderer   = renderer.sprite w, h
+    old_w, old_h   = renderer.w, renderer.h
     self.w, self.h = w, h
+    self.renderer  = new_renderer
 
-    self.screen = new_screen
     yield if block_given?
 
-    new_screen.set_color_key SDL::TRUE, 0
-
-    new_screen
+    new_renderer.surface # or texture?
   ensure
-    self.screen = old_screen
+    self.renderer  = old_renderer
     self.w, self.h = old_w, old_h
   end
 end

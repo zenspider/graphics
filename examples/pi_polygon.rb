@@ -64,8 +64,8 @@ class Bouncer < Graphics::Body
     self.trail = Graphics::Trail.new(w, 6, color = :red)
     @s = w
     @r = w.r
-    @x = rand(w.screen.w/4) + w.r
-    @y = rand(w.screen.h/4) + w.r
+    @x = rand(w.renderer.w/4) + w.r
+    @y = rand(w.renderer.h/4) + w.r
     @a = random_angle
     @m = magnitude
   end
@@ -137,7 +137,7 @@ class PiPolygon < Graphics::Simulation
   def update n
     super
 
-    self.screen.title = poly.compute_pi
+    self.renderer.title = poly.compute_pi
   end
 
   def draw n

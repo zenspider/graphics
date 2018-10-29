@@ -64,12 +64,14 @@ class Demo < Graphics::Simulation
     text "angle 200, 500, %.2f, %.2f, :black" % [A, L], 100, 500, :black
 
     (0..90).step(30).each do |deg|
-      put rct, 500-(rct.h*Math.sin(D2R*deg)), 600, deg
+      put rct, 500, 600, deg
       angle 500, 600, deg, 50, :red
 
       blit rct, 600, 600, deg
       angle 600, 600, deg, 50, :red
     end
+    text "put  rct, 500, 600, deg", 500, 600-30, :black
+    text "blit rct, 600, 600, deg", 600, 600-60, :black
   end
 end
 
