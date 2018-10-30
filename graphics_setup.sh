@@ -31,8 +31,9 @@ case `uname` in
 	echo "I'm on linux, using sudo where needed"
 	SUDO=sudo
 
-	$SUDO apt-get install --no-install-recommends --no-install-suggests libsdl1.2-dev libsdl-image1.2-dev libsdl-mixer1.2-dev libsdl-ttf2.0-dev
-	$SUDO apt-get install --no-install-recommends --no-install-suggests gcc g++
+	$SUDO apt-get install --no-install-recommends --no-install-suggests \
+	      libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev \
+	      libsdl2-gfx-dev gcc g++
 	;;
     *)
 	echo "Unknown OS $OSTYPE, aborting"
@@ -40,10 +41,10 @@ case `uname` in
 	;;
 esac
 
-$SUDO gem update --system -N -V
-
-gem install hoe --conservative
+$SUDO gem update --system -N
+$SUDO gem install hoe --conservative
 $SUDO rake newb
+
 rake test
 
 if [ -f $0 ]; then
@@ -53,4 +54,4 @@ else
     $SUDO gem install graphics --pre
 fi
 
-rsdl -Ilib -rgraphics -e 'Class.new(Graphics::Simulation) { def draw n; clear :white; text "hit escape to quit", 100, 100, :black; end; }.new(500, 250, 0, "Working!").run'
+ruby -Ilib -rgraphics -e 'Class.new(Graphics::Simulation) { def draw n; clear :white; text "hit escape to quit", 100, 100, :black; end; }.new(500, 250, 0, "Working!").run'
