@@ -39,18 +39,16 @@ class Boid < Graphics::Body
 
     self.velocity += v1 + v2 + v3
     limit_velocity
-    self.position += self.velocity
 
+    move
     wrap
-
-    @nearby = nil
   end
 
   def nearby
-    @nearby ||= begin
-                  p = self.position
-                  w.boids.find_all { |b| (b.position - p).magnitude.abs < @@max_distance }
-                end
+    p = self.position
+    w.boids.find_all { |b|
+      b != self && (b.position - p).magnitude < Boid.max_distance
+    }
   end
 
   def limit_velocity
@@ -60,20 +58,11 @@ class Boid < Graphics::Body
   end
 
   def center_mass
-    pos = V::ZERO
-    nearby.each do |b|
-      next if self == b
+    nearby = self.nearby
 
-      pos += b.position
-    end
+    return position if nearby.empty?
 
-    size = nearby.size - 1
-
-    return self.position if size == 0
-
-    pos /= size
-
-    pos
+    nearby.avg(V::ZERO, &:position)
   end
 
   ##
@@ -180,21 +169,17 @@ class Boid < Graphics::Body
   # enough apart for our liking.
 
   def rule2
-    c = V::ZERO
-
-    hits = 0
-
-    nearby.each do |b|
-      next if self == b
+    too_close = nearby.filter_map { |b|
       diff = b.position - self.position
-      next unless diff.magnitude.abs < TOO_CLOSE
-      hits += 1
-      c -= diff if diff.magnitude.abs < TOO_CLOSE
+      next unless diff.magnitude < TOO_CLOSE
+      diff
+    }
+
+    if too_close.empty? then
+      V::ZERO
+    else
+      -too_close.avg(V::ZERO) / 8
     end
-
-    c /= hits unless hits == 0 # average it out so they don't overdo it
-
-    c / 8
   end
 
   ##
@@ -221,21 +206,14 @@ class Boid < Graphics::Body
   #
   #   END PROCEDURE
 
-  def rule3
-    v = V::ZERO
+  def rule3 # alignment
+    nearby = self.nearby
 
-    nearby.each do |b|
-      next if self == b
-      v += b.velocity
-    end
+    return velocity if nearby.empty?
 
-    size = nearby.size - 1
+    v = nearby.avg(V::ZERO, &:velocity)
 
-    return self.velocity if size == 0
-
-    v /= size unless size == 0
-
-    (v - self.velocity) / 4
+    (v - velocity) / 4
   end
 
   class View
@@ -283,13 +261,17 @@ class Boids < Graphics::Simulation
   end
 end
 
-if $0 == __FILE__
-  if ARGV.first == "test"
-    require "minitest/autorun"
-  else
-    Boids.new.run
+module Enumerable
+  def filter_map &block
+    map(&block).select(&:itself)
+  end
+
+  def avg init=0, &block
+    sum(init, &block) / length
   end
 end
+
+Boids.new.run
 
 # Further tweaks
 #
@@ -310,8 +292,8 @@ end
 #                         v1 = rule1(b)
 #                         v2 = rule2(b)
 #                         v3 = rule3(b)
-#       v4 = rule4(b)
-#          .
+#                         v4 = rule4(b)
+#                            .
 #                            .
 #                            .
 #
@@ -473,19 +455,18 @@ end
 #         PROCEDURE move_all_boids_to_new_positions()
 #
 #                 Vector v1, v2, v3, ...
-#     Boid b
+#                 Boid b
 #
 #                 FOR EACH BOID b
 #
 #                         IF b.perching THEN
-#         IF b.perch_timer > 0 THEN
-#           b.perch_timer = b.perch_timer - 1
-#           NEXT
-#         ELSE
-#           b.perching = FALSE
-#         END IF
-#       END IF
-#
+#                           IF b.perch_timer > 0 THEN
+#                             b.perch_timer = b.perch_timer - 1
+#                             NEXT
+#                           ELSE
+#                             b.perching = FALSE
+#                           END IF
+#                         END IF
 #
 #                         v1 = rule1(b)
 #                         v2 = rule2(b)
