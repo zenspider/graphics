@@ -2,19 +2,40 @@
 
 require "sdl/sdl"
 
-module SDL
+module SDL # :nodoc:
   init INIT_EVERYTHING
 end
 
 module SDL
+  ##
+  # Renderer is the workhorse of the graphics gem. Everything
+  # graphical gets done through the renderer.
+
   class Renderer
+    ##
+    # The PixelFormat for the current renderer.
+
     attr_reader :format
+
+    ##
+    # The surface used by this renderer.
+
     attr_reader :surface
+
+    ##
+    # The window for this renderer
+
     attr_reader :window
+
+    ##
+    # The title of the window.
 
     def title
       @window.title
     end
+
+    ##
+    # Sets the title of the window.
 
     def title= s
       @window.title = s
@@ -26,6 +47,12 @@ end
 # An abstract simulation. See Graphics::Simulation and Graphics::Drawing.
 
 class Graphics::AbstractSimulation
+
+  ##
+  # Flags to be used when initializing a window. Defaults to 0. See
+  # SDL doco for more.
+
+  SCREEN_FLAGS = 0
 
   # The default color to clear the window.
   CLEAR_COLOR = :black
@@ -390,9 +417,16 @@ class Graphics::AbstractSimulation
     post_draw n
   end
 
+  ##
+  # The pre-draw phase. Defaults to clearing.
+
   def pre_draw n
     clear
   end
+
+  ##
+  # The post-draw phase. Defaults to having all bodies draw
+  # themselves.
 
   def post_draw n
     _bodies.each do |ary|
@@ -682,7 +716,7 @@ end
 # + Ball::View.draw takes a window and a ball and draws it.
 
 class Graphics::Simulation < Graphics::AbstractSimulation
-  SCREEN_FLAGS = 0
+
 end
 
 ##
@@ -692,11 +726,12 @@ end
 # See AbstractSimulation for most methods.
 
 class Graphics::Drawing < Graphics::AbstractSimulation
-  SCREEN_FLAGS = 0
+  ##
+  # The canvas used for all drawing.
 
   attr_accessor :texture
 
-  def initialize(*a)
+  def initialize(*a) # :nodoc:
     super
 
     self.texture = renderer.new_texture

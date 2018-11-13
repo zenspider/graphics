@@ -1,17 +1,20 @@
-class Graphics::Rainbow
-  attr_reader :cache
+##
+# Creates a range of colors all at once. See #initialize_rainbow.
 
-  def initialize
+class Graphics::Rainbow
+  attr_reader :cache # :nodoc:
+
+  def initialize # :nodoc:
     @cache = self.cache_colors
   end
 
-  def clamp d, min, max
+  def clamp d, min, max # :nodoc:
     [[min, d].max, max].min
   end
 
   ##
-  # Takes a value and a range,
-  # and scales that range to 0-360
+  # Takes a value and a range, and scales that range to 0-360
+
   def scale d, min, max
     range = max - min
     if range != 0
@@ -22,7 +25,7 @@ class Graphics::Rainbow
     end
   end
 
-  def cache_colors
+  def cache_colors # :nodoc:
     # Saves all the colors to a hash
     cache = {}
     (0..360).each do |degree|
@@ -31,12 +34,12 @@ class Graphics::Rainbow
     cache
   end
 
-  def color d, min=0, max=360
+  def color d, min=0, max=360 # :nodoc:
     scaled = scale d, min, max
     @cache[scaled]
   end
 
-  def _color degree
+  def _color degree # :nodoc:
     raise "Subclass responsibility"
   end
   private :_color
@@ -46,7 +49,7 @@ end
 # Black to white gradient
 #
 class Graphics::Greyscale < Graphics::Rainbow
-  def _color degree
+  def _color degree # :nodoc:
     brightness_unit = degree/360.0
     brightness = (brightness_unit*255.0).floor # Scale back to RGB
 
@@ -58,7 +61,7 @@ end
 # The full RGB spectrum
 #
 class Graphics::Hue < Graphics::Rainbow
-  def _color degree
+  def _color degree # :nodoc:
     main_color = 1 * 255 # Let chroma (saturation * brightness) always == 1
     second_strongest_color = ((1 - (degree/60.0 % 2 - 1).abs) * 255).floor
 
@@ -84,7 +87,7 @@ end
 # Spectrum with linearly increasing brightness
 #
 class Graphics::Cubehelix < Graphics::Rainbow
-  def _color degree
+  def _color degree # :nodoc:
     d = degree/360.0
     start = 0.5 # Starting position in color space - 0=blue, 1=red, 2=green
     rotations = -1.5 # How many rotations through the rainbow?
@@ -105,6 +108,9 @@ class Graphics::Cubehelix < Graphics::Rainbow
 end
 
 class Graphics::Simulation
+  ##
+  # Generate colors using a rainbow and a prefix name.
+
   def initialize_rainbow rainbow, name
     rainbow.cache.each do |degree, color|
       color_name = "#{name}_#{degree}".to_sym
