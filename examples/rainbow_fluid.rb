@@ -235,9 +235,9 @@ class SimulationWindow < Graphics::Simulation
 
       # Particles
       circle(pos.x, pos.y, 5, "cubehelix_#{color}".to_sym, true)
-
-      fps time
     end
+
+    fps time
   end
 end
 
