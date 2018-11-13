@@ -18,4 +18,5 @@ end
 
 module WhiteBackground
   CLEAR_COLOR = :white
+  DEBUG_COLOR = :black
 end

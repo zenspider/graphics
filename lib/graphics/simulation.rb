@@ -12,6 +12,10 @@ module SDL
     attr_reader :surface
     attr_reader :window
 
+    def title
+      @window.title
+    end
+
     def title= s
       @window.title = s
     end
@@ -25,6 +29,9 @@ class Graphics::AbstractSimulation
 
   # The default color to clear the window.
   CLEAR_COLOR = :black
+
+  # The default font color for `debug` calls.
+  DEBUG_COLOR = :white
 
   # degrees to radians
   D2R = Math::PI / 180.0
@@ -114,6 +121,9 @@ class Graphics::AbstractSimulation
 
     initialize_keys
     initialize_colors
+
+    clear # so you start with the right color blank window on frame 0
+    renderer.present
   end
 
   ##
@@ -196,7 +206,7 @@ class Graphics::AbstractSimulation
   # Register a single Body to be auto-updated and drawn.
 
   def register_body obj
-    _bodies << [obj]
+    register_bodies Array(obj)
     obj
   end
 
@@ -419,7 +429,12 @@ class Graphics::AbstractSimulation
   # Clear the whole window. Defaults to CLEAR_COLOR.
 
   def clear c = self.class::CLEAR_COLOR
-    renderer.clear color[c]
+    cc = color[c]
+    if cc then
+      renderer.clear cc
+    else
+      warn "Color #{c} doesn't appear to be registered. Skipping clear."
+    end
   end
 
   ##
@@ -561,18 +576,18 @@ class Graphics::AbstractSimulation
 
   def debug fmt, *args
     s = fmt % args
-    text s, 10, h-40-font.height, :white
+    text s, 10, h-40-font.height, self.class::DEBUG_COLOR
   end
 
   attr_accessor :start_time # :nodoc:
 
   ##
-  # Draw the current frames-per-second in the top left corner in green.
+  # Draw the current frames-per-second in the top left corner. Defaults to green.
 
-  def fps n
+  def fps n, color = :green
     secs = Time.now - start_time
     fps = "%5.1f fps" % [n / secs]
-    text fps, 10, h-font.height, :green
+    text fps, 10, h-font.height, color
   end
 
   ### Blitting Methods:

@@ -38,6 +38,9 @@
 #define DEFINE_SELF0(type, var, rb_var)                           \
   SDL_##type* var = RTEST(rb_var) ? ruby_to_##type(rb_var) : NULL;
 
+#define SET_SELF(type, var, rb_var)                           \
+  var = ruby_to_##type(rb_var)
+
 #define NUM2SINT32(n) (Sint32)NUM2INT(n)
 #define NUM2SINT16(n) (Sint16)NUM2INT(n)
 #define NUM2UINT32(n) (Uint32)NUM2UINT(n)
@@ -563,10 +566,17 @@ static VALUE Renderer_draw_bezier(VALUE self,
   return Qnil;
 }
 
+int aafilledCircleColor(SDL_Renderer * renderer, Sint16 x, Sint16 y, Sint16 rad, Uint32 color) {
+  int result = 0;
+  result |= filledCircleColor(renderer, x, y, rad, color);
+  result |= aacircleColor(renderer, x, y, rad, color);
+  return result;
+}
+
 static f_rxyrc f_circle[] = { &circleColor,
                               &filledCircleColor,
                               &aacircleColor,
-                              &filledCircleColor };
+                              &aafilledCircleColor };
 
 static VALUE Renderer_draw_circle(VALUE self,
                                   VALUE x,  VALUE y,
@@ -585,10 +595,17 @@ static VALUE Renderer_draw_circle(VALUE self,
   return Qnil;
 }
 
+int aafilledEllipseColor(SDL_Renderer * renderer, Sint16 x, Sint16 y, Sint16 rx, Sint16 ry, Uint32 color) {
+  int result = 0;
+  result |= filledEllipseColor(renderer, x, y, rx, ry, color);
+  result |= aaellipseColor(renderer, x, y, rx, ry, color);
+  return result;
+}
+
 static f_rxyxyc f_ellipse[] = { &ellipseColor,
                                 &filledEllipseColor,
                                 &aaellipseColor,
-                                &filledEllipseColor };
+                                &aafilledEllipseColor };
 
 static VALUE Renderer_draw_ellipse(VALUE self,
                                    VALUE x,  VALUE y,
@@ -815,9 +832,20 @@ static VALUE Renderer_blit(VALUE self, VALUE src_,
   float ws = RTEST(ws_) ? NUM2FLT(ws_) : 1.0;
   float hs = RTEST(hs_) ? NUM2FLT(hs_) : 1.0;
 
-  SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, src);
-  if (!texture)
-    FAILURE("_blit(SDL_CreateTextureFromSurface)");
+  SDL_Texture* texture;
+  VALUE vtexture = rb_attr_get(src_, id_iv_texture);
+
+  if (RTEST(vtexture)) {
+    SET_SELF(Texture, texture, vtexture);
+  } else {
+    texture = SDL_CreateTextureFromSurface(renderer, src);
+    if (!texture)
+      FAILURE("_blit(SDL_CreateTextureFromSurface)");
+
+    VALUE vtexture = TypedData_Wrap_Struct(cTexture, &_Texture_type, texture);
+
+    rb_ivar_set(src_, id_iv_texture,  vtexture);
+  }
 
   int w, h;
   if (SDL_QueryTexture(texture, NULL, NULL, &w, &h))
@@ -839,8 +867,6 @@ static VALUE Renderer_blit(VALUE self, VALUE src_,
     if (SDL_RenderCopy(renderer, texture, NULL, &dst_rect))
       FAILURE("_blit(SDL_RenderCopyEx)");
   }
-
-  SDL_DestroyTexture(texture);
 
   return Qnil;
 }
@@ -956,6 +982,14 @@ static VALUE Window_title_eq(VALUE self, VALUE title) {
   SDL_SetWindowTitle(window, StringValueCStr(title));
 
   return Qnil;
+}
+
+static VALUE Window_title(VALUE self) {
+  DEFINE_SELF(Window, window, self);
+
+  const char* title = SDL_GetWindowTitle(window);
+
+  return rb_str_new_cstr(title);
 }
 
 static VALUE Window_update(VALUE self) {
@@ -1135,6 +1169,7 @@ void Init_sdl() {
   //// SDL::Window methods:
 
   // TODO: move to top renderer?
+  rb_define_method(cWindow, "title",  Window_title, 0);
   rb_define_method(cWindow, "title=", Window_title_eq, 1);
   rb_define_method(cWindow, "update", Window_update, 0);
 
