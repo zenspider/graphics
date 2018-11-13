@@ -70,6 +70,14 @@ class Graphics::Body
     self.m = 0.0
   end
 
+  ##
+  # Update the body. Does nothing by default. Override this method to
+  # add behavior to the body.
+
+  def update
+    # do nothing
+  end
+
   def inspect # :nodoc:
     "%s(%.2fx%.2f @ %.2f°x%.2f == %p @ %p)" %
       [self.class, x, y, a, m, position, velocity]
