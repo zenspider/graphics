@@ -40,6 +40,13 @@ class V
   end
 
   ##
+  # Unary negation.
+
+  def -@
+    V[-x, -y]
+  end
+
+  ##
   # Multiply a vector by a scalar, returning a new vector.
 
   def * s
@@ -61,7 +68,7 @@ class V
   # Return the length of the vector from the origin.
 
   def magnitude
-    Math.sqrt(x*x + y*y)
+    @magnitude ||= Math.sqrt(x*x + y*y)
   end
 
   def inspect # :nodoc:
