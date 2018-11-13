@@ -1,3 +1,91 @@
+=== 1.0.0 / 2018-11-13
+
+* 4 major enhancements:
+
+  * Everything is passing around Renderer instances now.
+  * Moved all drawing primitives to Renderer.
+  * Removed rsdl dependency. Plain ruby seems to work fine now.
+  * Updated to work with SDL2. This will break some things, but mostly works.
+
+* 58 minor enhancements:
+
+  * #bezier now takes an array of any number (> 4) of points.
+  * #blit and #put now do everything in one call. Should be more performant.
+  * #blit and #put now use the clear color of their class for the background.
+  * #clear will now warn and skip if color isn't known.
+  * #fps now takes an optional color
+  * #transform/put now explicitly rotate on their bottom-left corner. Shifting x is no longer necessary.
+  * AbstractRenderer#initialize clears and presents so frame 0 is correct color.
+  * Added DEBUG_COLOR and use it in #debug. Reversed in WhiteBackground.
+  * Added Graphics::Drawing#draw_on(texture).
+  * Added Renderer#copy_texture.
+  * Added Renderer#h and #w to return the output size.
+  * Added Renderer#new_texture
+  * Added Renderer#target and Renderer#target=
+  * Added Renderer_index to read pixels. Painfully slow in comparison.
+  * Added SDL::Screen::H & SDL::Screen::W and made available to your #initialize.
+  * Added Screen#title=.
+  * Added Surface#blit.
+  * Added Surface#clear.
+  * Added Surface.color_key.
+  * Added Window#title and Renderer#title.
+  * Added Window#update ? Do I need this?
+  * Added caching to texture in Renderer#blit. Massively speeds up boids & walker.
+  * Added default (empty) Body#update.
+  * Added unary negation to V.
+  * Alpha blending is massively improved. Black on white is black.
+  * Blit now ensures blending is on.
+  * Check for done before paused so `esc` can quit while paused.
+  * Extended Renderer#point to optionally read or write a pixel.
+  * Improved default window naming to add spaces to the classname.
+  * Moved Screen#flip to Renderer#present.
+  * Moved Screen#set_title to Window#set_title.
+  * Moving everything out of Screen class. Will remove or leave just for constants.
+  * Removed KeyEvent#unicode.
+  * Removed PixelFormat#colorkey and #alpha.
+  * Removed SDL::WM and set_caption. Set titles via screen.title=
+  * Removed Screen#update.
+  * Removed Simulation#alpha, now built into pixels directly.
+  * Removed Surface#color_key and Surface#set_color_key.
+  * Removed Surface#flags and Surface#set_alpha.
+  * Removed Surface.blit class method.
+  * Removed Surface.new. You only create surfaces via Font.render_text and #sprite.
+  * Removed bpp argument to AbstractSimulation#initialize.
+  * Removed/changed a lot of constants, mostly around KeyEvent handling.
+  * Renamed AbstractSimulation#rgb to #rgba. I think this should probably just go?
+  * Renamed PixelFormat.get_rgb to get_rgba.
+  * Renderer#fast_rect now just calls Renderer#draw_rect w/ true for filled.
+  * SDL2 properly supports RGBA. Switched to it entirely.
+  * Screen#open now stores off a renderer, window, and texture in the Surface.
+  * Screen.open no longer creates or stores a surface. Saves off its own PixelFormat.
+  * Search Ubuntu font directories in #find_font. (phiggins)
+  * Simulation now defaults to half-width and half-height. No more required args to super.
+  * Surface#save now saves off PNG.
+  * Switched Renderer and Window to subclass Data, not Surface.
+  * Switching to SDL2_gfx for primitive drawing and rotozoom.
+  * Transforms now default to anti-aliased rotations.
+  * Updated graphics_setup.sh to remove SDL1 and install SDL2 (on OSX).
+  * V#magnitude is now cached.
+  * graphics_setup.sh will install hoe if necessary.
+
+* 15 bug fixes:
+
+  * Cleaned some off-by-one drawing bugs. I think it is more pixel perfect now?
+  * Cleaned up Numeric#degrees.
+  * Finished getting to 100% rdoc coverage.
+  * Fixed a memory leak in PixelFormat. Might remove it entirely.
+  * Fixed a memory leak in collision maps.
+  * Fixed an off-by-one in blitting.
+  * Fixed bugs in hline and vline not using correct defaults. (joshcheek)
+  * Fixed circle and ellipse. Filled + anti-aliased wasn't actually anti-aliased.
+  * Fixed examples/boid.rb to rotate bodies again.
+  * Fixed examples/canvas.rb to draw in black again.
+  * Fixed fps drawing bug in rainbow_fluid.rb
+  * Fixed graphics_setup.sh and Rakefile for linux.
+  * Functional GoL: use Set vs. Array for faster search. (sotoseattle)
+  * Minor fix to examples/bounce.rb for older ruby versions.
+  * Removed Graphics::Surface::VideoMemoryLost.
+
 === 1.0.0b6 / 2016-11-17
 
 I'm still not happy with the color system. I'd love some help to make it more usable.
