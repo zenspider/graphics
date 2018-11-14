@@ -14,7 +14,7 @@ game programming conventions. Particularly it:
 * Right hand rule: 0 degrees is east, 90 is north, etc.
 
 These allow simple things like Trigonometry functions to work as
-expected. It means that all that stuff you were taught it grade school
+expected. It means that all that stuff you were taught in grade school
 still work as intended. This makes one less thing you have to adjust
 when implementing your simulation.
 
