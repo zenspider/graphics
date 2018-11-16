@@ -156,7 +156,7 @@ void sge_SetError(const char *format, ...)
 	vsprintf(buf, format, ap);
 	va_end(ap);
 
-	SDL_SetError(buf);
+	SDL_SetError("%s", buf);
 }
 
 
