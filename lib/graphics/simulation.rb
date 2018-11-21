@@ -206,7 +206,7 @@ class Graphics::AbstractSimulation
     File.expand_path("~/Library/Fonts/"),
 
     # Ubuntu
-    "/usr/share/fonts/truetype/**/",
+    "/usr/share/fonts/**/",
   ]
   FONT_GLOB = "{#{font_dirs.join(",")}}" # :nodoc:
 
